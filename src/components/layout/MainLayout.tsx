@@ -1,30 +1,47 @@
-import { Outlet, useNavigate } from 'react-router';
-import { DraftingCompass, History as HistoryIcon, LibraryBig } from 'lucide-react';
+import { Outlet, useLocation, useNavigate } from 'react-router';
+import { BarChart3, BookOpen, Compass, Hammer, Target } from 'lucide-react';
 import { useTheme } from '../theme-provider';
 import { AnimatedThemeToggler } from '../ui/animated-theme-toggler';
 import { Dock, DockIcon, DockItem, DockLabel } from '../ui/dock';
+import { cn } from '@/lib/utils';
 
-const data = [
+const dockItems = [
   {
-    title: 'Question Bank',
-    icon: <LibraryBig className="text-foreground/80 h-full w-full" />,
+    title: 'Library',
+    icon: <BookOpen className="h-full w-full" />,
     href: '/',
+    matcher: (path: string) => path === '/' || path === '/papers',
   },
   {
-    title: 'Test Builder',
-    icon: <DraftingCompass className="text-foreground/80 h-full w-full" />,
+    title: 'Practice',
+    icon: <Compass className="h-full w-full" />,
+    href: '/practice',
+    matcher: (path: string) => path.startsWith('/practice') || path.startsWith('/atlas'),
+  },
+  {
+    title: 'Builder',
+    icon: <Hammer className="h-full w-full" />,
     href: '/builder',
+    matcher: (path: string) => path.startsWith('/builder'),
   },
   {
-    title: 'Past Attempts',
-    icon: <HistoryIcon className="text-foreground/80 h-full w-full" />,
-    href: '/history',
+    title: 'Analysis',
+    icon: <BarChart3 className="h-full w-full" />,
+    href: '/analysis',
+    matcher: (path: string) => path.startsWith('/analysis'),
+  },
+  {
+    title: 'Mistakes',
+    icon: <Target className="h-full w-full" />,
+    href: '/mistakes',
+    matcher: (path: string) => path.startsWith('/mistakes'),
   },
 ];
 
 export function MainLayout() {
   const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <div className="bg-background text-foreground relative flex h-screen w-screen flex-col overflow-hidden safe-area-top safe-area-bottom">
@@ -36,11 +53,11 @@ export function MainLayout() {
         <div className="flex items-center gap-1.5 pointer-events-none pl-18 sm:pl-2">
           <span className="size-2 rounded-full bg-primary/70 inline-block animate-pulse" />
           <span className="font-semibold tracking-wide uppercase text-[10px] text-base-content/70">
-            TakeMock Assessment Suite
+            TakeMock
           </span>
         </div>
         <div className="hidden sm:block text-[10px] font-mono text-base-content/40 pointer-events-none">
-          Native CBT Engine • 100% Offline
+          Offline
         </div>
       </div>
 
@@ -49,22 +66,36 @@ export function MainLayout() {
         <Outlet />
       </main>
 
-      <Dock magnification={90}>
-        {data.map((item, idx) => (
-          <DockItem
-            key={idx}
-            onClick={() => navigate(item.href)}
-            className="bg-card hover:bg-muted text-card-foreground border-border/60 aspect-square rounded-full border shadow-sm cursor-pointer"
-          >
-            <DockLabel>{item.title}</DockLabel>
-            <DockIcon>{item.icon}</DockIcon>
-          </DockItem>
-        ))}
+      <Dock
+        magnification={76}
+        distance={130}
+        direction="horizontal"
+        placement="bottom"
+        containerClassName="bottom-3 left-1/2 -translate-x-1/2"
+      >
+        {dockItems.map((item, idx) => {
+          const isActive = location.pathname ? item.matcher(location.pathname) : false;
+          return (
+            <DockItem
+              key={idx}
+              onClick={() => navigate(item.href)}
+              className={cn(
+                'rounded-full border cursor-pointer transition-colors duration-150 flex items-center justify-center',
+                isActive
+                  ? 'bg-primary text-primary-content border-primary shadow-md'
+                  : 'bg-card/90 hover:bg-muted text-card-foreground border-border/70 shadow-xs'
+              )}
+            >
+              <DockLabel>{item.title}</DockLabel>
+              <DockIcon>{item.icon}</DockIcon>
+            </DockItem>
+          );
+        })}
         <DockItem
           key="theme-icon"
-          className="bg-card hover:bg-muted text-card-foreground border-border/60 aspect-square rounded-full border shadow-sm"
+          className="bg-card/90 hover:bg-muted text-card-foreground border-border/70 rounded-full border shadow-xs cursor-pointer transition-colors duration-150 flex items-center justify-center"
         >
-          <DockLabel>{resolvedTheme === 'dark' ? 'Cupcake (Light)' : 'Dracula (Dark)'}</DockLabel>
+          <DockLabel>{resolvedTheme === 'dark' ? 'Light Theme' : 'Dark Theme'}</DockLabel>
           <DockIcon>
             <AnimatedThemeToggler className="h-full w-full" />
           </DockIcon>

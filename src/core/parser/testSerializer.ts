@@ -151,40 +151,104 @@ export function parseFullTestMarkdown(rawText: string): FullTestParsedResult {
   let testMeta: Record<string, any> = {};
   let bodyStartIndex = 0;
 
-  // Extract top-level frontmatter ONLY if it is an actual Test Blueprint header (has title, mode, timing, scoring, or sections)
-  // and NOT a question frontmatter (which has type: single_choice or id: coa-1)
-  if (lines[0]?.trim() === '---') {
-    let closingDashIndex = -1;
-    for (let i = 1; i < lines.length; i++) {
-      if (lines[i].trim() === '---') {
-        closingDashIndex = i;
+  const isDivider = (line: string) => /^[ \t]*[-=_]{3,}[ \t]*$/.test(line);
+
+  let firstNonEmptyLine = 0;
+  while (firstNonEmptyLine < lines.length && !lines[firstNonEmptyLine].trim()) {
+    firstNonEmptyLine++;
+  }
+
+  let startIndex = -1;
+  if (firstNonEmptyLine < lines.length) {
+    const line = lines[firstNonEmptyLine];
+    if (isDivider(line)) {
+      startIndex = firstNonEmptyLine + 1;
+    } else if (/^[ \t]*title[ \t]*:/i.test(line)) {
+      startIndex = firstNonEmptyLine;
+    }
+  }
+
+  if (startIndex !== -1) {
+    let closingIndex = -1;
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = lines[i];
+      if (/^[ \t]*# Section:/i.test(line)) {
+        closingIndex = i;
+        break;
+      }
+      if (/^[ \t]*(?:#{1,6}[ \t]*)?===[ \t]*question[ \t]*===/i.test(line)) {
+        closingIndex = i;
+        break;
+      }
+      if (isDivider(line)) {
+        closingIndex = i;
         break;
       }
     }
 
-    if (closingDashIndex !== -1) {
-      const candidateYaml = lines.slice(1, closingDashIndex).join('\n');
+    if (closingIndex !== -1) {
+      const candidateYaml = lines.slice(startIndex, closingIndex).join('\n');
+      let candidateMeta: Record<string, any> = {};
       try {
         const parsed = YAML.parse(candidateYaml);
-        // Ensure it is a test blueprint header, NOT a question
-        if (
-          parsed &&
-          typeof parsed === 'object' &&
-          !parsed.type &&
-          (parsed.title !== undefined ||
-            parsed.mode !== undefined ||
-            parsed.timing !== undefined ||
-            parsed.scoring !== undefined ||
-            parsed.sections !== undefined)
-        ) {
-          testMeta = parsed;
-          bodyStartIndex = closingDashIndex + 1;
+        if (parsed && typeof parsed === 'object' && !parsed.type) {
+          candidateMeta = { ...parsed };
         }
-      } catch (e: any) {
-        // If YAML parsing failed, only report if not question-like
-        const isQuestionLike = candidateYaml.includes('type:') || candidateYaml.includes('id:');
-        if (!isQuestionLike) {
-          errors.push(`Invalid top-level YAML frontmatter: ${e.message}`);
+      } catch {
+        // Fallback to resilient regex extraction below
+      }
+
+      // Resilient regex fallbacks if candidate is not a question
+      const isQuestionLike =
+        candidateYaml.includes('type:') ||
+        candidateYaml.includes('schemaVersion:') ||
+        candidateYaml.includes('options:') ||
+        candidateYaml.includes(':::solution');
+
+      if (!isQuestionLike) {
+        if (!candidateMeta.title) {
+          const m = candidateYaml.match(/^[ \t]*title[ \t]*:[ \t]*(.+)$/m);
+          if (m) candidateMeta.title = m[1].replace(/^["']|["']$/g, '').trim();
+        }
+        if (candidateMeta.durationMinutes === undefined) {
+          const m = candidateYaml.match(/^[ \t]*(?:durationMinutes|duration)[ \t]*:[ \t]*(\d+)/m);
+          if (m) candidateMeta.durationMinutes = parseInt(m[1], 10);
+        }
+        if (!candidateMeta.mode) {
+          const m = candidateYaml.match(/^[ \t]*mode[ \t]*:[ \t]*([a-zA-Z_]+)/m);
+          if (m) candidateMeta.mode = m[1].toUpperCase();
+        }
+        if (!candidateMeta.instructions) {
+          const m = candidateYaml.match(/^[ \t]*instructions[ \t]*:[ \t]*([|>]-?)?\s*\n?([\s\S]*?)(?=(?:^[ \t]*[a-zA-Z0-9_-]+[ \t]*:)|$)/m);
+          if (m) candidateMeta.instructions = (m[2] || m[0].replace(/^[ \t]*instructions[ \t]*:[ \t]*/, '')).replace(/^["']|["']$/g, '').trim();
+        }
+        if (!candidateMeta.description) {
+          const m = candidateYaml.match(/^[ \t]*description[ \t]*:[ \t]*(.+)$/m);
+          if (m) candidateMeta.description = m[1].replace(/^["']|["']$/g, '').trim();
+        }
+      }
+
+      const hasTestBlueprint = Boolean(
+        candidateMeta.title ||
+        candidateMeta.mode ||
+        candidateMeta.durationMinutes !== undefined ||
+        candidateMeta.timing ||
+        candidateMeta.sections
+      );
+
+      if (hasTestBlueprint && !isQuestionLike) {
+        testMeta = candidateMeta;
+        bodyStartIndex = closingIndex;
+        if (isDivider(lines[closingIndex])) {
+          bodyStartIndex = closingIndex + 1;
+          // Skip decorative divider lines or blank lines between frontmatter and the first section/question
+          while (
+            bodyStartIndex < lines.length &&
+            (isDivider(lines[bodyStartIndex]) || !lines[bodyStartIndex].trim()) &&
+            !/^[ \t]*# Section:/i.test(lines[bodyStartIndex])
+          ) {
+            bodyStartIndex++;
+          }
         }
       }
     }
@@ -243,12 +307,12 @@ export function parseFullTestMarkdown(rawText: string): FullTestParsedResult {
     description: testMeta.description,
     instructions: testMeta.instructions,
     mode: testMeta.mode,
-    timingMode: testMeta.timing?.mode,
-    durationMinutes: testMeta.timing?.durationMinutes,
+    timingMode: testMeta.timingMode || testMeta.timing?.mode,
+    durationMinutes: testMeta.durationMinutes ?? testMeta.timing?.durationMinutes,
     navigation: testMeta.navigation,
-    defaultMarks: testMeta.scoring?.defaultMarks,
-    negativeMarks: testMeta.scoring?.negativeMarks,
-    allowPartialCredit: testMeta.scoring?.allowPartialCredit,
+    defaultMarks: testMeta.defaultMarks ?? testMeta.scoring?.defaultMarks,
+    negativeMarks: testMeta.negativeMarks ?? testMeta.scoring?.negativeMarks,
+    allowPartialCredit: testMeta.allowPartialCredit ?? testMeta.scoring?.allowPartialCredit,
     sections,
     allQuestions,
     errors,
@@ -294,12 +358,12 @@ export function parseFullTestJson(rawJson: string): FullTestParsedResult {
       description: data.description,
       instructions: data.instructions,
       mode: data.mode,
-      timingMode: data.timing?.mode,
-      durationMinutes: data.timing?.durationMinutes,
+      timingMode: data.timingMode || data.timing?.mode,
+      durationMinutes: data.durationMinutes ?? data.timing?.durationMinutes,
       navigation: data.navigation,
-      defaultMarks: data.scoring?.defaultMarks,
-      negativeMarks: data.scoring?.negativeMarks,
-      allowPartialCredit: data.scoring?.allowPartialCredit,
+      defaultMarks: data.defaultMarks ?? data.scoring?.defaultMarks,
+      negativeMarks: data.negativeMarks ?? data.scoring?.negativeMarks,
+      allowPartialCredit: data.allowPartialCredit ?? data.scoring?.allowPartialCredit,
       sections: sections.length > 0 ? sections : [{ id: 'sec_1', title: 'Section 1: General', questions: [] }],
       allQuestions,
       errors,

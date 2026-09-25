@@ -63,6 +63,7 @@ export function splitQuestionBlocks(rawText: string): string[] {
   const blocks: string[] = [];
   let currentBlockLines: string[] = [];
   let inCodeFence = false;
+  const hasCanonicalDelimiter = normalized.includes('=== question ===');
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -74,13 +75,27 @@ export function splitQuestionBlocks(rawText: string): string[] {
     }
 
     // Check for delimiter only outside code fences
-    if (!inCodeFence && trimmed === '=== question ===') {
-      const blockContent = currentBlockLines.join('\n').trim();
-      if (blockContent) {
-        blocks.push(blockContent);
+    if (!inCodeFence) {
+      if (trimmed === '=== question ===') {
+        const blockContent = currentBlockLines.join('\n').trim();
+        if (blockContent) {
+          blocks.push(blockContent);
+        }
+        currentBlockLines = [];
+        continue;
       }
-      currentBlockLines = [];
-      continue;
+
+      // Resilient fallback for questions separated by YAML frontmatter without === question ===
+      if (!hasCanonicalDelimiter && trimmed === '---' && currentBlockLines.length > 0) {
+        const nextLine = lines[i + 1] ? lines[i + 1].trim() : '';
+        if (/^(?:schemaVersion|id|type)\s*:/i.test(nextLine)) {
+          const blockContent = currentBlockLines.join('\n').trim();
+          if (blockContent) {
+            blocks.push(blockContent);
+          }
+          currentBlockLines = [];
+        }
+      }
     }
 
     currentBlockLines.push(line);
@@ -363,7 +378,9 @@ export function parseSingleQuestionBlock(block: string, blockIndex: number = 0):
   // Construct QuestionModel
   const question: QuestionModel = {
     schemaVersion: String(rawMetadata.schemaVersion || '2.0'),
-    id: String(rawMetadata.id || `q_${blockIndex + 1}`),
+    id: String(
+      rawMetadata.id || `q_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}_${blockIndex + 1}`
+    ),
     version: Number(rawMetadata.version) || 1,
     type: resolvedType,
     subject: String(rawMetadata.subject || 'General'),

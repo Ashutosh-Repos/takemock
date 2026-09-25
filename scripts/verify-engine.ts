@@ -12,6 +12,8 @@
 
 import assert from 'node:assert';
 import YAML from 'yaml';
+import { parseFullTestMarkdown } from '../src/core/parser/testSerializer';
+import { parseMarkdownQuestions } from '../src/core/parser/markdownParser';
 
 console.log('--- [TAKEMOCK ARCHITECTURE VERIFICATION] ---');
 
@@ -185,7 +187,7 @@ const snapshot = {
 Object.freeze(snapshot);
 Object.freeze(snapshot.questions[0]);
 assert.throws(() => {
-  // @ts-ignore
+  // @ts-expect-error Testing that frozen snapshot rejects mutation
   snapshot.questions[0].marks = 10;
 }, 'Frozen snapshot cannot be mutated');
 console.log('✓ Attempt Snapshot Immutability verified');
@@ -489,7 +491,68 @@ assert.strictEqual(parsedGpt.allQuestions[1].correctValue, 45);
 assert.strictEqual(parsedGpt.allQuestions[1].toleranceAbsolute, 0);
 assert.strictEqual(parsedGpt.allQuestions[1].unit, '');
 
-console.log('✓ LLM Prompt generation, Contract Suffix, and Noise Sanitizer verified');
+// 4. Test Unclosed Code Fence + Conversational Intro + Trailing Chatter + Math Preservation
+const rawUnclosedWithChatter = `Sure! Here are the questions you requested formatted according to standard:
+\`\`\`markdown
+schemaVersion: "2.0"
+id: unclosed-q1
+type: single_choice
+subject: Electronics
+topic: Digital Logic
+difficulty: easy
+marks: 1
+negativeMarks: 0.33
+
+For the Boolean function $F(A,B) = A + B$, which gate directly implements $F$?
+
+- [x] OR gate
+- [ ] AND gate
+- [ ] NOT gate
+
+:::solution
+Using Boolean Algebra, $F(A,B) = A + B$ is the canonical representation of an OR gate.
+:::
+
+Hope these questions help with your exam preparation! Good luck!`;
+
+const detectedUnclosed = detectContentFormat(rawUnclosedWithChatter);
+assert.strictEqual(detectedUnclosed, 'MARKDOWN_QUESTIONS', 'Must detect as MARKDOWN_QUESTIONS');
+
+const sanitizedUnclosed = sanitizeLlmMarkdown(rawUnclosedWithChatter);
+assert.ok(!sanitizedUnclosed.includes('Sure! Here are'), 'Must strip leading conversational greeting');
+assert.ok(!sanitizedUnclosed.includes('Hope these questions help'), 'Must strip trailing conversational notes');
+assert.ok(sanitizedUnclosed.includes(':::solution'), 'Must preserve 100% of :::solution');
+assert.ok(sanitizedUnclosed.includes('$F(A,B) = A + B$'), 'Must preserve math expressions intact');
+assert.ok(sanitizedUnclosed.startsWith('---'), 'Must insert opening frontmatter dashes if omitted');
+
+const parsedUnclosed = parseMarkdownQuestions(sanitizedUnclosed);
+assert.strictEqual(parsedUnclosed.questions.length, 1);
+assert.strictEqual(parsedUnclosed.questions[0].id, 'unclosed-q1');
+assert.strictEqual(parsedUnclosed.questions[0].options?.length, 3);
+assert.strictEqual(parsedUnclosed.questions[0].options?.[0].isCorrect, true);
+
+// 5. Test Full Paper Auto-Detection vs Question Pack
+const rawFullPaperText = `title: "GATE CS 2026 Full Length Mock"
+durationMinutes: 180
+mode: EXAM
+
+# Section: General Aptitude
+
+---
+schemaVersion: "2.0"
+id: ga-1
+type: single_choice
+marks: 1
+---
+
+What is 2 + 2?
+
+- [x] 4
+- [ ] 5
+`;
+assert.strictEqual(detectContentFormat(rawFullPaperText), 'MARKDOWN_FULL_TEST', 'Must detect as MARKDOWN_FULL_TEST');
+
+console.log('✓ LLM Prompt generation, Contract Suffix, Two-Pass Sanitizer & Auto-Detection verified');
 
 // 11. Test CBT Navigation Engine & Multi-Section Question Traversal
 console.log('\n[11/11] Testing CBT Navigation Engine & Multi-Section Traversal...');
@@ -573,6 +636,104 @@ assert.strictEqual(prevBeforeStart, null);
 assert.strictEqual(canNavigateTo('FREE', 'sec_1', 'sec_2', 'coa-1', 'coa-5', flatList), true);
 
 console.log('✓ Question switching, multi-section next/previous traversal, and fallback search verified');
+
+// 8. Test Resilient Real-World Paper & Question Pack Parsing
+console.log('\n[8/8] Testing Resilient Real-World Paper & Question Pack Parsing...');
+const realGatePaper = `---
+title: GATE 2026 Computer Science & Information Technology — PYQ-Based Full Paper
+durationMinutes: 180
+mode: EXAM
+instructions: This paper is an original practice reconstruction based on the concepts, difficulty, structure, and topic distribution of GATE 2026 CS-1. It is not a verbatim reproduction of the official question paper. Questions 1–10 are General Aptitude. Questions 11–65 are Computer Science & Information Technology. MCQs have one correct answer; MSQs may have multiple correct answers; NAT questions require numerical answers.
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+# Section: General Aptitude
+
+---
+schemaVersion: "2.0"
+id: gate26-cs-ga-01
+type: single_choice
+subject: General Aptitude
+topic: Vocabulary
+marks: 1
+---
+Which word is the closest synonym?
+- [x] Correct Option
+- [ ] Incorrect Option
+
+:::solution
+Explanation here.
+:::
+
+# Section: Computer Science
+
+---
+schemaVersion: "2.0"
+id: gate26-cs-core-01
+type: numerical
+subject: Computer Science
+topic: Algorithms
+marks: 2
+correctValue: 42
+---
+What is the time complexity coefficient?
+:::solution
+Derived value is 42.
+:::
+`;
+
+const parsedGate = parseFullTestMarkdown(realGatePaper);
+assert.strictEqual(
+  parsedGate.title,
+  'GATE 2026 Computer Science & Information Technology — PYQ-Based Full Paper',
+  'Must extract title accurately despite decorative dividers and em-dashes'
+);
+assert.strictEqual(parsedGate.durationMinutes, 180, 'Must extract top-level durationMinutes correctly');
+assert.strictEqual(parsedGate.mode, 'EXAM', 'Must extract mode accurately');
+assert.strictEqual(parsedGate.sections.length, 2, 'Must split into 2 sections');
+assert.strictEqual(parsedGate.allQuestions.length, 2, 'Must extract all questions');
+assert.strictEqual(parsedGate.errors.length, 0, 'Must have zero parsing errors');
+console.log('✓ Resilient Full Paper Frontmatter & Sectioning verified');
+
+// Multi-question parsing without === question === delimiter
+const packWithoutDelim = `
+---
+schemaVersion: "2.0"
+id: q1
+type: single_choice
+subject: General
+topic: Logic
+marks: 1
+---
+Question 1?
+- [x] Yes
+- [ ] No
+:::solution
+Yes is correct.
+:::
+
+---
+schemaVersion: "2.0"
+id: q2
+type: single_choice
+subject: General
+topic: Logic
+marks: 1
+---
+Question 2?
+- [x] True
+- [ ] False
+:::solution
+True is correct.
+:::
+`;
+
+const parsedPack = parseMarkdownQuestions(packWithoutDelim);
+assert.strictEqual(parsedPack.questions.length, 2, 'Must split 2 questions even without === question ===');
+assert.strictEqual(parsedPack.questions[0].id, 'q1');
+assert.strictEqual(parsedPack.questions[1].id, 'q2');
+assert.strictEqual(parsedPack.hasErrors, false);
+console.log('✓ Question pack splitting without === question === verified');
 
 console.log('\n======================================================');
 console.log('ALL TAKEMOCK ARCHITECTURAL INVARIANTS & ENGINES PASSED');

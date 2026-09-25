@@ -14,6 +14,7 @@
  */
 
 export type OutputFormat = 'MARKDOWN' | 'JSON';
+export type GenerationTarget = 'QUESTION_PACK' | 'FULL_PAPER';
 
 export interface QuestionTypeDefinition {
   id: string;
@@ -85,6 +86,17 @@ Calculate the final velocity in m/s:`,
 ---
 Determine the integer value of n:`,
     jsonExample: `"correctValue": 42`,
+  },
+  {
+    id: 'fill_blank',
+    label: 'Fill in the Blank',
+    description: 'Exact formula or phrase verification against accepted answers.',
+    markdownExample: `acceptedAnswers: ["binary search", "binary-search"]
+caseSensitive: false
+---
+The searching algorithm with logarithmic time complexity $O(\\log n)$ on sorted arrays is ___________.`,
+    jsonExample: `"acceptedAnswers": ["binary search", "binary-search"],
+"caseSensitive": false`,
   },
   {
     id: 'match',
@@ -261,12 +273,186 @@ Note for numerical questions: Omit options and include "correctValue": <number>,
 }
 
 /**
+ * Builds the authoritative Full Paper Markdown blueprint contract suffix.
+ */
+export function buildFullPaperMarkdownSuffix(selectedTypes?: string[]): string {
+  const typesToInclude =
+    selectedTypes && selectedTypes.length > 0
+      ? SUPPORTED_QUESTION_TYPES.filter((t) => selectedTypes.includes(t.id))
+      : SUPPORTED_QUESTION_TYPES;
+
+  const typeRules = typesToInclude
+    .map((t) => `• Type "${t.id}" (${t.label}):\n${t.markdownExample}`)
+    .join('\n\n');
+
+  return `
+--------------------------------------------------------------------------------
+takemock — MANDATORY FULL PAPER BLUEPRINT CONTRACT (Zero Conversational Text Allowed)
+--------------------------------------------------------------------------------
+CRITICAL INSTRUCTION: Output ONLY a complete, machine-readable mock paper starting immediately with '---'.
+- NO conversational greetings ("Here is your exam paper:").
+- NO markdown code block wrappers (do NOT wrap in \`\`\`markdown or \`\`\`).
+- NO closing commentary, explanations, or sign-offs.
+
+MANDATORY PAPER STRUCTURE:
+1. Top-Level Paper Frontmatter: The document MUST begin with the exam parameters between '---' and '---':
+---
+title: <Exam Title>
+durationMinutes: <Duration in minutes, e.g. 90>
+mode: EXAM
+instructions: <Optional candidate instructions>
+---
+
+2. Section Delimiters: Separate distinct subjects or exam sections using '# Section: <Section Name>' on its own line:
+# Section: <Section Name>
+
+3. Question Formatting (Takemock Markdown v2):
+- Each question MUST have its own YAML frontmatter between '---' and '---' containing: schemaVersion: "2.0", id, type, subject, topic, marks, negativeMarks.
+- Options: Mark correct with '- [x]' and incorrect with '- [ ]'.
+- Numerical: 'correctValue: <number>', 'toleranceAbsolute: <number>', 'unit: "<unit>"' in frontmatter.
+- Solutions: Every question MUST include ':::solution\\n...\\n:::'.
+- Delimiter: Separate multiple questions within a section with '=== question ==='.
+
+Full Paper Layout Example:
+---
+title: Advanced Science Full Mock
+durationMinutes: 90
+mode: EXAM
+---
+
+# Section: Physics
+
+---
+schemaVersion: "2.0"
+id: phy-01
+type: single_choice
+subject: Physics
+topic: Mechanics
+marks: 4
+negativeMarks: 1
+---
+A body starts from rest with acceleration $a = 2\\text{ m/s}^2$. Find its velocity after $5\\text{ s}$:
+- [x] $10\\text{ m/s}$
+- [ ] $20\\text{ m/s}$
+- [ ] $5\\text{ m/s}$
+- [ ] $25\\text{ m/s}$
+
+:::solution
+$v = u + at = 0 + 2 \\times 5 = 10\\text{ m/s}$.
+:::
+
+=== question ===
+
+---
+schemaVersion: "2.0"
+id: phy-02
+type: numerical
+subject: Physics
+topic: Energy
+marks: 4
+negativeMarks: 0
+correctValue: 50
+toleranceAbsolute: 0.5
+unit: "J"
+---
+Calculate work done in Joules:
+
+:::solution
+$W = F \\times d = 10 \\times 5 = 50\\text{ J}$.
+:::
+
+# Section: Chemistry
+
+---
+schemaVersion: "2.0"
+id: chem-01
+type: single_choice
+subject: Chemistry
+topic: Atomic Structure
+marks: 4
+negativeMarks: 1
+---
+Question text here...
+- [x] Correct Option
+- [ ] Distractor
+
+:::solution
+Explanation here.
+:::
+
+Question Type Reference:
+${typeRules}
+`.trim();
+}
+
+/**
+ * Builds the authoritative Full Paper JSON contract suffix.
+ */
+export function buildFullPaperJsonSuffix(selectedTypes?: string[]): string {
+  const typesList =
+    selectedTypes && selectedTypes.length > 0
+      ? selectedTypes.join(' | ')
+      : 'single_choice | multiple_choice | numerical | true_false | integer';
+
+  return `
+--------------------------------------------------------------------------------
+takemock — MANDATORY FULL PAPER JSON CONTRACT (Zero Conversational Text Allowed)
+--------------------------------------------------------------------------------
+CRITICAL INSTRUCTION: Output ONLY a valid JSON object starting immediately with '{'.
+- NO conversational greetings.
+- NO code block wrappers (do NOT wrap in \`\`\`json or \`\`\`).
+- NO closing commentary.
+
+Structure:
+{
+  "schemaVersion": "2.0",
+  "title": "<Exam Title>",
+  "durationMinutes": 90,
+  "mode": "EXAM",
+  "sections": [
+    {
+      "id": "sec_1",
+      "title": "Section 1: <Section Name>",
+      "questions": [
+        {
+          "schemaVersion": "2.0",
+          "id": "q-01",
+          "type": "${typesList}",
+          "subject": "<Subject>",
+          "topic": "<Topic>",
+          "difficulty": "medium",
+          "marks": 4,
+          "negativeMarks": 1,
+          "tags": ["tag1"],
+          "body": "Question text with LaTeX like $F = ma$...",
+          "options": [
+            { "id": "opt_0", "text": "Option A", "isCorrect": false },
+            { "id": "opt_1", "text": "Option B", "isCorrect": true }
+          ],
+          "solution": "Step-by-step derivation proving the stored answer."
+        }
+      ]
+    }
+  ]
+}
+
+Note for numerical questions: Omit options and include "correctValue": <number>, "toleranceAbsolute": <number>, "unit": "<unit>".
+`.trim();
+}
+
+/**
  * Returns the authoritative format suffix.
  */
 export function buildLlmFormatSuffix(
   format: OutputFormat = 'MARKDOWN',
-  selectedTypes?: string[]
+  selectedTypes?: string[],
+  target: GenerationTarget = 'QUESTION_PACK'
 ): string {
+  if (target === 'FULL_PAPER') {
+    return format === 'JSON'
+      ? buildFullPaperJsonSuffix(selectedTypes)
+      : buildFullPaperMarkdownSuffix(selectedTypes);
+  }
   return format === 'JSON'
     ? buildJsonFormatSuffix(selectedTypes)
     : buildMarkdownFormatSuffix(selectedTypes);
@@ -279,23 +465,34 @@ export function buildLlmFullPrompt(params: {
   userPrompt: string;
   format?: OutputFormat;
   selectedTypes?: string[];
+  target?: GenerationTarget;
 }): string {
-  const suffix = buildLlmFormatSuffix(params.format, params.selectedTypes);
+  const suffix = buildLlmFormatSuffix(params.format, params.selectedTypes, params.target);
   return `${params.userPrompt.trim()}\n\n${suffix}`;
 }
 
 /**
  * Universal System Prompt for Custom GPTs, Claude Projects, or Ollama Modelfile.
  */
-export function buildLlmSystemPrompt(format: OutputFormat = 'MARKDOWN'): string {
+export function buildLlmSystemPrompt(
+  format: OutputFormat = 'MARKDOWN',
+  target: GenerationTarget = 'QUESTION_PACK'
+): string {
+  const targetDesc = target === 'FULL_PAPER' ? 'complete mock exam papers' : 'assessment questions';
   return `You are the Takemock Exam Authoring Assistant.
-Your sole role is to produce rigorous, authentic assessment questions formatted strictly according to the Takemock Specification.
+Your sole role is to produce rigorous, authentic ${targetDesc} formatted strictly according to the Takemock Specification.
 
 Format Rules:
 1. Always output ONLY valid ${
-    format === 'JSON' ? 'JSON array' : 'takemock Markdown v2'
+    format === 'JSON'
+      ? target === 'FULL_PAPER' ? 'JSON object' : 'JSON array'
+      : 'takemock Markdown v2'
   } without conversational text or greetings.
-2. In Markdown, begin directly with '---' YAML frontmatter and separate questions with '=== question ==='.
+2. In Markdown, begin directly with '---' YAML frontmatter.${
+    target === 'FULL_PAPER'
+      ? " Separate sections with '# Section: <Name>'."
+      : " Separate questions with '=== question ==='."
+  }
 3. Always format all math and scientific expressions with LaTeX $...$ or $$...$$.
 4. Always provide an authentic, step-by-step derivation in the solution.
 5. Distractors (incorrect options) must be realistic misconceptions.

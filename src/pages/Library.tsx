@@ -1,776 +1,613 @@
-/**
- * Library & Question Bank Page.
- * Browse, search, filter, preview questions with KaTeX math, and import/export Markdown v2 & JSON.
- * Adheres strictly to docs/master_architecture_prompt_v2.md & docs/markdown_format_spec_v2.md.
- */
-
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
-  AlertCircle,
+  Award,
+  BarChart3,
   BookOpen,
+  Calendar,
   CheckCircle2,
-  ChevronDown,
-  ChevronLeft,
   ChevronRight,
+  Clock,
   Download,
-  FileCode2,
-  FileJson,
-  Info,
+  ExternalLink,
   Layers,
+  Play,
   Plus,
-  Search,
-  Sparkles,
-  Upload,
+  Target,
+  Trash2,
+  Zap,
 } from 'lucide-react';
-import { MathRenderer } from '@/components/shared/MathRenderer';
-import { AiPromptModal } from '@/components/shared/AiPromptModal';
-import { pickImportFile, saveExportFile } from '@/core/native/tauriBridge';
-import { parseJsonQuestions, serializeJsonQuestions, type JsonParseResult } from '@/core/parser/jsonConverter';
-import { parseMarkdownQuestions, type ParseResult } from '@/core/parser/markdownParser';
-import { serializeMarkdownQuestions } from '@/core/parser/markdownSerializer';
+import { formatTimeSeconds } from '@/core/engine/timingEngine';
+import { saveExportFile } from '@/core/native/tauriBridge';
+import { serializeTestToMarkdown } from '@/core/parser/testSerializer';
 import { assessmentRepository } from '@/core/storage/repository';
 import type { QuestionModel } from '@/types/question';
+import type { TestDefinition } from '@/types/test';
 
 export function Library() {
   const navigate = useNavigate();
 
-  const [questions, setQuestions] = useState<QuestionModel[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [subjects, setSubjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [papers, setPapers] = useState<TestDefinition[]>([]);
+  const [paperStats, setPaperStats] = useState<
+    Record<
+      string,
+      {
+        attemptsCount: number;
+        latestAttemptId?: string;
+        latestScore?: number;
+        bestScore?: number;
+        lastAttemptedAt?: string;
+      }
+    >
+  >({});
 
-  // Filters
-  const [search, setSearch] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState('ALL');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('ALL');
-  const [selectedType, setSelectedType] = useState('ALL');
+  // Mistake Analytics
+  const [mistakes, setMistakes] = useState<{
+    unresolvedQuestions: QuestionModel[];
+    timeSinkQuestions: QuestionModel[];
+    bookmarkedQuestions: QuestionModel[];
+    resolvedCount: number;
+  }>({
+    unresolvedQuestions: [],
+    timeSinkQuestions: [],
+    bookmarkedQuestions: [],
+    resolvedCount: 0,
+  });
 
-  // Solution preview drawer
-  const [expandedSolutions, setExpandedSolutions] = useState<Record<string, boolean>>({});
+  // Zero-Hardcoded Performance Analytics Snapshot
+  const [analytics, setAnalytics] = useState<
+    Awaited<ReturnType<typeof assessmentRepository.getComprehensiveAnalytics>> | null
+  >(null);
 
-  // Importer Modal State
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [showAiStudio, setShowAiStudio] = useState(false);
-  const [importFormat, setImportFormat] = useState<'MARKDOWN' | 'JSON'>('MARKDOWN');
-  const [textInput, setTextInput] = useState('');
-  const [importResult, setImportResult] = useState<ParseResult | JsonParseResult | null>(null);
-  const [importSuccessMsg, setImportSuccessMsg] = useState('');
-
-  // High-performance database-level paginated query (Section 38: Low time & space complexity)
-  const loadQuestions = useCallback(async (targetPage = page) => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await assessmentRepository.getQuestionsPaged({
-        page: targetPage,
-        pageSize,
-        filters: {
-          subject: selectedSubject,
-          difficulty: selectedDifficulty,
-          type: selectedType,
-          search,
-        },
-      });
-      setQuestions(res.items);
-      setTotalCount(res.totalCount);
-      setTotalPages(res.totalPages);
-      setPage(res.page);
+      const [allTests, mistakeData, compAnalytics] = await Promise.all([
+        assessmentRepository.getTests(),
+        assessmentRepository.getMistakeAnalytics(),
+        assessmentRepository.getComprehensiveAnalytics(),
+      ]);
 
-      // Load distinct subjects directly from B-tree index
-      const distSubjects = await assessmentRepository.getDistinctSubjects();
-      setSubjects(distSubjects);
+      setPapers(allTests);
+      setMistakes(mistakeData);
+      setAnalytics(compAnalytics);
+
+      // Load analytics for each test
+      const statsMap: Record<string, any> = {};
+      for (const t of allTests) {
+        statsMap[t.id] = await assessmentRepository.getPaperAnalytics(t.id);
+      }
+      setPaperStats(statsMap);
     } catch (err) {
-      console.error('Failed to load questions:', err);
+      console.error('Failed to load library data:', err);
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, selectedSubject, selectedDifficulty, selectedType, search]);
+  }, []);
 
   useEffect(() => {
-    loadQuestions(1);
-  }, [selectedSubject, selectedDifficulty, selectedType, search]);
+    loadData();
+  }, [loadData]);
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages) return;
-    loadQuestions(newPage);
-  };
-
-  const toggleSolution = (id: string) => {
-    setExpandedSolutions((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  // Live validation on text change
-  const handleTextChange = (text: string, format = importFormat) => {
-    setTextInput(text);
-    if (!text.trim()) {
-      setImportResult(null);
-      return;
-    }
-    if (format === 'MARKDOWN') {
-      const result = parseMarkdownQuestions(text);
-      setImportResult(result);
-    } else {
-      const result = parseJsonQuestions(text);
-      setImportResult(result);
-    }
-  };
-
-  // Perform import
-  const handleExecuteImport = async () => {
-    if (!textInput.trim()) return;
+  // Launch Paper as CBT Timed Exam
+  const handleLaunchPaperExam = async (testId: string) => {
     try {
-      let result: ParseResult | JsonParseResult;
-      if (importFormat === 'MARKDOWN') {
-        result = await assessmentRepository.importQuestionsFromMarkdown(textInput);
-      } else {
-        result = await assessmentRepository.importQuestionsFromJson(textInput);
-      }
-
-      setImportResult(result);
-
-      const errorQIds = new Set<string>();
-      for (const d of result.diagnostics) {
-        if (d.diagnostics.some((item) => item.level === 'ERROR')) {
-          if (d.questionId) errorQIds.add(d.questionId);
-        }
-      }
-      const validCount = result.questions.filter((q) => !errorQIds.has(q.id)).length;
-
-      if (validCount > 0) {
-        if (result.hasErrors) {
-          setImportSuccessMsg(`Imported ${validCount} valid question(s). Please fix the questions with errors.`);
-        } else {
-          setImportSuccessMsg(`Successfully imported all ${validCount} question(s) into Question Bank!`);
-        }
-        await loadQuestions();
-        if (!result.hasErrors) {
-          setTimeout(() => {
-            setShowImportModal(false);
-            setTextInput('');
-            setImportResult(null);
-            setImportSuccessMsg('');
-          }, 1200);
-        }
-      } else {
-        setImportSuccessMsg('');
-      }
+      const attempt = await assessmentRepository.startAttempt(testId);
+      navigate(`/runner/${attempt.id}`);
     } catch (err: any) {
-      alert(`Import failed: ${err.message || 'Unknown error'}`);
+      alert(`Could not launch exam: ${err.message || 'Unknown error'}`);
     }
   };
 
-  // Native / Web File Picker handler (.md or .json)
-  const handleNativeFilePick = async () => {
-    const picked = await pickImportFile();
-    if (!picked) return;
-
-    const isJson = picked.name.toLowerCase().endsWith('.json');
-    const newFormat = isJson ? 'JSON' : 'MARKDOWN';
-    setImportFormat(newFormat);
-    setShowImportModal(true);
-    handleTextChange(picked.content, newFormat);
-  };
-
-  // Export all questions matching current filters as Markdown v2
-  const handleExportMarkdown = async () => {
-    const allQ = await assessmentRepository.getQuestions({
-      subject: selectedSubject !== 'ALL' ? selectedSubject : undefined,
-      difficulty: selectedDifficulty !== 'ALL' ? selectedDifficulty : undefined,
-      type: selectedType !== 'ALL' ? selectedType : undefined,
-      search: search.trim() ? search : undefined,
-    });
-    if (allQ.length === 0) {
-      alert('No questions found to export matching current filters.');
-      return;
+  // Launch Paper in Practice Mode (Untimed, Instant Feedback)
+  const handleLaunchPaperPractice = async (paper: TestDefinition) => {
+    try {
+      let testIdToRun = paper.id;
+      if (paper.mode !== 'PRACTICE' || paper.timing.mode !== 'NONE') {
+        const practiceClone: TestDefinition = {
+          ...paper,
+          id: `${paper.id}_practice_${Date.now()}`,
+          title: `${paper.title} (Practice)`,
+          mode: 'PRACTICE',
+          timing: { ...paper.timing, mode: 'NONE', totalDurationSeconds: 0, allowPause: true },
+          feedback: {
+            ...paper.feedback,
+            showImmediateSolution: true,
+            showHint: true,
+            allowCheckAnswer: true,
+            showDetailedSolutionsAfterSubmit: true,
+          },
+        };
+        await assessmentRepository.saveTest(practiceClone);
+        testIdToRun = practiceClone.id;
+      }
+      const attempt = await assessmentRepository.startAttempt(testIdToRun);
+      navigate(`/runner/${attempt.id}`);
+    } catch (err: any) {
+      alert(`Could not start practice: ${err.message || 'Unknown error'}`);
     }
-    const md = serializeMarkdownQuestions(allQ);
-    await saveExportFile(
-      `takemock_questions_${new Date().toISOString().slice(0, 10)}.md`,
-      md,
-      'text/markdown;charset=utf-8;'
-    );
   };
 
-  // Export all questions matching current filters as JSON
-  const handleExportJson = async () => {
-    const allQ = await assessmentRepository.getQuestions({
-      subject: selectedSubject !== 'ALL' ? selectedSubject : undefined,
-      difficulty: selectedDifficulty !== 'ALL' ? selectedDifficulty : undefined,
-      type: selectedType !== 'ALL' ? selectedType : undefined,
-      search: search.trim() ? search : undefined,
-    });
-    if (allQ.length === 0) {
-      alert('No questions found to export matching current filters.');
-      return;
+  // 1-Click Mistake Drill Launcher
+  const handleLaunchMistakeDrill = async (maxCount = 10) => {
+    try {
+      const attempt = await assessmentRepository.generateMistakeDrill(maxCount);
+      navigate(`/runner/${attempt.id}`);
+    } catch (err: any) {
+      alert(err.message || 'No mistakes available to practice.');
     }
-    const jsonStr = serializeJsonQuestions(allQ);
-    await saveExportFile(
-      `takemock_questions_${new Date().toISOString().slice(0, 10)}.json`,
-      jsonStr,
-      'application/json;charset=utf-8;'
-    );
   };
 
-  const sampleMarkdownTemplate = `---
-schemaVersion: "2.0"
-id: sample-math-101
-type: single_choice
-subject: Mathematics
-topic: Calculus
-difficulty: medium
-marks: 4
-negativeMarks: 1
-tags: [integration, calculus]
----
+  // Delete Paper
+  const handleDeletePaper = async (e: React.MouseEvent, testId: string) => {
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this paper?')) return;
+    try {
+      await assessmentRepository.deleteTest(testId);
+      await loadData();
+    } catch (err: any) {
+      alert(`Failed to delete paper: ${err.message || 'Unknown error'}`);
+    }
+  };
 
-Evaluate the definite integral:
+  // Export Paper as Markdown
+  const handleExportPaper = async (e: React.MouseEvent, paper: TestDefinition) => {
+    e.stopPropagation();
+    try {
+      const allQ = await assessmentRepository.getQuestions();
+      const qMap = new Map(allQ.map((q) => [q.id, q]));
 
-$$
-\\int_{0}^{1} x^2 \\, dx
-$$
+      const sectionsWithQuestions = paper.sections.map((s) => ({
+        id: s.id,
+        title: s.title,
+        questions: (s.selection.staticQuestionIds || [])
+          .map((item) => qMap.get(item.id))
+          .filter((q): q is QuestionModel => !!q),
+      }));
 
-- [ ] $1$
-- [ ] $\\frac{1}{2}$
-- [x] $\\frac{1}{3}$
-- [ ] $\\frac{1}{4}$
+      const md = serializeTestToMarkdown(
+        {
+          title: paper.title,
+          description: paper.description || '',
+          instructions: paper.instructions,
+          mode: paper.mode,
+          timingMode: paper.timing.mode,
+          durationMinutes: Math.round(paper.timing.totalDurationSeconds / 60),
+          navigation: paper.navigation,
+          defaultMarks: paper.scoring.defaultMarks,
+          negativeMarks: paper.scoring.defaultNegativeMarks,
+          allowPartialCredit: paper.scoring.allowPartialCredit,
+        },
+        sectionsWithQuestions
+      );
 
-:::solution
-Using the power rule for integration:
-$$
-\\int x^2 \\, dx = \\frac{x^3}{3}
-$$
-Evaluating between limits $0$ and $1$:
-$$
-\\left[ \\frac{x^3}{3} \\right]_0^1 = \\frac{1}{3} - 0 = \\frac{1}{3}
-$$
-:::
-`;
-
-  const sampleJsonTemplate = `[
-  {
-    "schemaVersion": "2.0",
-    "id": "sample-cs-201",
-    "type": "single_choice",
-    "subject": "Computer Science",
-    "topic": "Algorithms",
-    "difficulty": "medium",
-    "marks": 4,
-    "negativeMarks": 1,
-    "tags": ["algorithms", "searching"],
-    "body": "What is the worst-case time complexity of Binary Search on a sorted array of $n$ elements?",
-    "options": [
-      { "id": "opt_0", "text": "$\\\\mathcal{O}(1)$", "isCorrect": false },
-      { "id": "opt_1", "text": "$\\\\mathcal{O}(\\\\log n)$", "isCorrect": true },
-      { "id": "opt_2", "text": "$\\\\mathcal{O}(n)$", "isCorrect": false },
-      { "id": "opt_3", "text": "$\\\\mathcal{O}(n \\\\log n)$", "isCorrect": false }
-    ],
-    "solution": "Binary search repeatedly halves the search space, giving a logarithmic recurrence $T(n) = T(n/2) + \\\\mathcal{O}(1) = \\\\mathcal{O}(\\\\log n)$."
-  }
-]`;
+      const safeName = paper.title.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+      await saveExportFile(`${safeName}_blueprint.md`, md, 'text/markdown;charset=utf-8;');
+    } catch (err: any) {
+      alert(`Export failed: ${err.message || 'Unknown error'}`);
+    }
+  };
 
   return (
-    <div className="mx-auto min-h-screen max-w-7xl space-y-8 p-6 pb-36 md:p-10">
-      {/* Header */}
-      <div className="border-base-300 flex flex-col justify-between gap-4 border-b pb-6 md:flex-row md:items-center">
+    <div className="mx-auto max-w-7xl space-y-8 p-4 pb-36 md:p-8">
+      {/* Top Banner / Navigation */}
+      <div className="border-base-300 flex flex-col justify-between gap-4 border-b pb-5 md:flex-row md:items-center">
         <div>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="badge badge-primary gap-1 font-medium shadow-sm">
-              <Layers className="size-3.5" />
-              Question Bank
-            </span>
-            <span className="badge badge-outline border-base-300 gap-1 text-xs">
-              <BookOpen className="size-3" />
-              {questions.length} Questions Stored Offline
-            </span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">Repository & Question Bank</h1>
-          <p className="text-base-content/70 mt-1 text-sm md:text-base">
-            Search, filter, and author questions adhering strictly to Canonical Markdown v2 and JSON with KaTeX math.
+          <h1 className="text-xl font-bold tracking-tight md:text-2xl">Your Library</h1>
+          <p className="text-base-content/50 mt-0.5 text-xs">
+            {papers.length} paper{papers.length !== 1 ? 's' : ''} saved
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowAiStudio(true)}
-            className="btn btn-secondary gap-2 shadow-xs"
-            title="Copy AI format contract suffix for ChatGPT, Claude, etc."
+            onClick={() => navigate('/analysis')}
+            className="btn btn-ghost btn-sm gap-1.5"
           >
-            <Sparkles className="size-4" />
-            AI Format Suffix
+            <BarChart3 className="size-3.5" />
+            Analysis
           </button>
           <button
-            onClick={handleNativeFilePick}
-            className="btn btn-outline border-base-300 gap-2"
-            title="Upload or pick .md or .json file"
+            onClick={() => navigate('/builder')}
+            className="btn btn-primary btn-sm gap-1.5 shadow-sm"
           >
-            <Upload className="size-4" />
-            Upload File
+            <Plus className="size-3.5" />
+            New Paper
           </button>
-          <button onClick={() => setShowImportModal(true)} className="btn btn-primary gap-2 shadow-sm">
-            <FileCode2 className="size-4" />
-            Paste / Import
-          </button>
-          <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-outline border-base-300 gap-2">
-              <Download className="size-4" />
-              Export
-              <ChevronDown className="size-3" />
+        </div>
+      </div>
+
+      {/* SECTION 2: Mistake Vault Summary & Quick Exam Button */}
+      {mistakes.unresolvedQuestions.length > 0 && (
+        <div className="bg-card border-error/40 overflow-hidden rounded-2xl border p-5 shadow-xs">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="bg-error/15 text-error rounded-xl p-2.5 shrink-0">
+                <Target className="size-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-sm">Mistakes</h3>
+                  <span className="badge badge-error badge-xs font-bold text-error-content">
+                    {mistakes.unresolvedQuestions.length}
+                  </span>
+                </div>
+                <p className="text-base-content/50 mt-0.5 text-xs">
+                  Questions you got wrong — practise them again.
+                </p>
+              </div>
             </div>
-            <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box border border-base-300 z-10 w-44 p-2 shadow-lg">
-              <li>
-                <button onClick={handleExportMarkdown} className="gap-2 text-xs">
-                  <FileCode2 className="size-3.5 text-primary" /> Export Markdown v2
-                </button>
-              </li>
-              <li>
-                <button onClick={handleExportJson} className="gap-2 text-xs">
-                  <FileJson className="size-3.5 text-secondary" /> Export JSON
-                </button>
-              </li>
-            </ul>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => navigate('/mistakes')}
+                className="btn btn-ghost btn-sm gap-1 text-xs"
+              >
+                View All
+                <ChevronRight className="size-3.5" />
+              </button>
+              <button
+                onClick={() => handleLaunchMistakeDrill(10)}
+                className="btn btn-error btn-sm text-error-content font-bold gap-1.5 shadow-sm"
+              >
+                <Play className="size-3.5" />
+                Practise ({Math.min(10, mistakes.unresolvedQuestions.length)})
+              </button>
+            </div>
           </div>
-          <button onClick={() => navigate('/builder')} className="btn btn-secondary gap-2 shadow-sm">
-            <Plus className="size-4" />
-            Build Test
-          </button>
-        </div>
-      </div>
 
-      {/* Filter and Search Bar */}
-      <div className="bg-base-200/50 border-base-300 rounded-box flex flex-col gap-4 border p-4 shadow-sm md:flex-row md:items-center">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="text-base-content/40 absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search by topic, formula, text, or tag..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input input-bordered w-full pl-9"
-          />
-        </div>
-
-        {/* Filter Dropdowns */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Subject */}
-          <select
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="select select-bordered select-sm"
-          >
-            <option value="ALL">All Subjects</option>
-            {subjects.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
+          {/* Inline Preview of Mistakes */}
+          <div className="mt-4 grid grid-cols-1 gap-2 pt-3 border-t border-border/40 sm:grid-cols-2 lg:grid-cols-3">
+            {mistakes.unresolvedQuestions.slice(0, 3).map((q, idx) => (
+              <div
+                key={q.id}
+                onClick={() => navigate('/mistakes')}
+                className="bg-base-200/50 hover:bg-base-200/80 rounded-xl p-3 text-xs cursor-pointer border border-border/60 transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between text-[11px] mb-1">
+                    <span className="font-bold text-error">Error #{idx + 1}</span>
+                    <span className="badge badge-ghost badge-xs">{q.subject}</span>
+                  </div>
+                  <p className="line-clamp-2 text-base-content/80 text-[11px] leading-relaxed">
+                    {q.body.replace(/[*#_`$]/g, '')}
+                  </p>
+                </div>
+                <span className="text-primary hover:underline text-[10px] font-semibold mt-2 block">
+                  Inspect in Vault →
+                </span>
+              </div>
             ))}
-          </select>
-
-          {/* Difficulty */}
-          <select
-            value={selectedDifficulty}
-            onChange={(e) => setSelectedDifficulty(e.target.value)}
-            className="select select-bordered select-sm"
-          >
-            <option value="ALL">All Difficulties</option>
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
-
-          {/* Question Type */}
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            className="select select-bordered select-sm"
-          >
-            <option value="ALL">All Types</option>
-            <option value="single_choice">Single Choice</option>
-            <option value="multiple_choice">Multiple Choice</option>
-            <option value="true_false">True / False</option>
-            <option value="numerical">Numerical</option>
-            <option value="integer">Integer</option>
-            <option value="fill_blank">Fill Blank</option>
-            <option value="match">Match</option>
-            <option value="assertion_reason">Assertion-Reason</option>
-            <option value="passage">Passage</option>
-            <option value="image_based">Image Based</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Questions List */}
-      {loading ? (
-        <div className="flex items-center justify-center p-12">
-          <span className="loading loading-spinner loading-lg text-primary" />
-        </div>
-      ) : questions.length === 0 ? (
-        <div className="bg-base-200/40 border-base-300 rounded-box border p-12 text-center">
-          <BookOpen className="text-base-content/30 mx-auto size-12" />
-          <h3 className="mt-4 text-lg font-bold">No questions found</h3>
-          <p className="text-base-content/60 mt-1 text-sm">
-            Try adjusting your search filters or import new questions using the Import tool.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="text-base-content/70 flex items-center justify-between text-xs font-semibold uppercase tracking-wider">
-            <span>
-              Showing {totalCount === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalCount)} of {totalCount} questions
-            </span>
-            <span>Page {page} of {totalPages}</span>
           </div>
+        </div>
+      )}
 
-          <div className="grid grid-cols-1 gap-5">
-            {questions.map((q, idx) => {
-              const isSolutionOpen = expandedSolutions[q.id];
+      {/* SECTION 1: All Papers List */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">Papers</h2>
+            <p className="text-base-content/50 text-xs">
+              Mock exams and practice sets.
+            </p>
+          </div>
+          <span className="badge badge-ghost text-xs">{papers.length} paper{papers.length !== 1 ? 's' : ''}</span>
+        </div>
+
+        {loading ? (
+          <div className="flex min-h-[30vh] items-center justify-center">
+            <span className="loading loading-spinner text-primary loading-md" />
+          </div>
+        ) : papers.length === 0 ? (
+          <div className="border-border/60 bg-card flex flex-col items-center justify-center rounded-2xl border p-12 text-center shadow-xs">
+            <BookOpen className="text-base-content/30 size-12" />
+            <h3 className="mt-3 text-base font-bold">No Papers Yet</h3>
+            <p className="text-base-content/60 mx-auto mt-1 max-w-sm text-xs">
+              Import a full exam paper from ChatGPT/Claude, or build your own test in seconds.
+            </p>
+            <button
+              onClick={() => navigate('/builder')}
+              className="btn btn-primary btn-sm mt-4 gap-1.5 shadow-sm"
+            >
+              <Plus className="size-3.5" />
+              Build or Ingest Papers
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {papers.map((paper) => {
+              const stats = paperStats[paper.id];
+              const totalQ = paper.sections.reduce(
+                (sum, s) => sum + (s.selection.staticQuestionIds?.length || 0),
+                0
+              );
+              const durationMin = Math.round(paper.timing.totalDurationSeconds / 60);
 
               return (
                 <div
-                  key={q.id}
-                  className="bg-base-100 border-base-300 hover:border-primary/40 rounded-box flex flex-col justify-between border p-6 shadow-sm transition-all"
+                  key={paper.id}
+                  className="bg-card border-border/80 flex flex-col justify-between rounded-2xl border p-5 shadow-xs transition-all hover:border-primary/50 space-y-4"
                 >
-                  <div className="space-y-4">
-                    {/* Top Metadata Badges */}
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="badge badge-neutral font-mono text-xs font-bold">
-                          #{idx + 1} · {q.id}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="badge badge-primary text-[10px] font-bold">
+                        {paper.mode}
+                      </span>
+                      {stats?.attemptsCount ? (
+                        <span className="badge badge-success badge-sm font-bold gap-1 text-success-content">
+                          <CheckCircle2 className="size-3" />
+                          {stats.attemptsCount} Attempt(s)
                         </span>
-                        <span className="badge badge-primary badge-outline text-xs font-medium">
-                          {q.subject} / {q.topic}
+                      ) : (
+                        <span className="badge badge-ghost text-[10px] text-base-content/60">
+                          Unattempted
                         </span>
-                        <span className="badge badge-ghost text-xs font-mono">{q.type}</span>
-                        <span
-                          className={`badge badge-sm font-semibold capitalize ${
-                            q.difficulty === 'easy'
-                              ? 'badge-success text-success-content'
-                              : q.difficulty === 'hard'
-                              ? 'badge-error text-error-content'
-                              : 'badge-warning text-warning-content'
-                          }`}
-                        >
-                          {q.difficulty}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-xs font-mono">
-                        <span className="text-success font-semibold">+{q.marks}</span>
-                        <span className="text-error font-semibold">-{q.negativeMarks}</span>
-                        <span className="text-base-content/50">v{q.version || 1}</span>
-                      </div>
+                      )}
                     </div>
 
-                    {/* Question Image if any */}
-                    {q.imageUrl && (
-                      <div className="overflow-hidden rounded-xl border border-base-300 max-w-md">
-                        <img src={q.imageUrl} alt={q.imageAlt || 'Question diagram'} className="w-full object-cover" />
-                      </div>
+                    <h3 className="font-bold text-base leading-snug line-clamp-2">{paper.title}</h3>
+                    {paper.description && (
+                      <p className="text-base-content/60 text-xs line-clamp-2 leading-relaxed">
+                        {paper.description}
+                      </p>
                     )}
 
-                    {/* Question Body with KaTeX Math */}
-                    <div className="text-base leading-relaxed">
-                      <MathRenderer content={q.body} />
+                    <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-semibold text-base-content/70">
+                      <span className="flex items-center gap-1">
+                        <Clock className="size-3.5 text-warning" />
+                        {durationMin > 0 ? `${durationMin} mins` : 'Untimed'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Layers className="size-3.5 text-info" />
+                        {paper.sections.length} Section(s)
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Award className="size-3.5 text-success" />
+                        {totalQ} Qs
+                      </span>
                     </div>
 
-                    {/* Options Preview */}
-                    {q.options && q.options.length > 0 && (
-                      <div className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2">
-                        {q.options.map((opt, oIdx) => (
-                          <div
-                            key={opt.id}
-                            className={`flex items-start gap-2.5 rounded-lg border p-3 text-sm transition-all ${
-                              opt.isCorrect
-                                ? 'border-success/60 bg-success/10 font-medium'
-                                : 'border-base-300/80 bg-base-200/40 text-base-content/80'
-                            }`}
-                          >
-                            <span
-                              className={`badge badge-xs mt-0.5 font-bold ${
-                                opt.isCorrect ? 'badge-success text-success-content' : 'badge-ghost'
-                              }`}
+                    {/* Historical Score Highlight if available */}
+                    {stats?.latestScore !== undefined && (
+                      <div className="bg-base-200/50 rounded-xl p-2.5 mt-2 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="text-base-content/50 text-[10px] block uppercase font-bold">Latest Score</span>
+                          <span className="font-bold text-sm">{stats.latestScore}%</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {stats.bestScore !== undefined && (
+                            <div className="text-right">
+                              <span className="text-base-content/50 text-[10px] block uppercase font-bold">Best Score</span>
+                              <span className="font-bold text-sm text-success">{stats.bestScore}%</span>
+                            </div>
+                          )}
+                          {stats.latestAttemptId && (
+                            <button
+                              onClick={() => navigate(`/result/${stats.latestAttemptId}`)}
+                              className="btn btn-ghost btn-xs text-primary gap-1 ml-1"
+                              title="View Scorecard"
                             >
-                              {String.fromCharCode(65 + oIdx)}
-                            </span>
-                            <div className="flex-1">
-                              <MathRenderer content={opt.text} />
-                            </div>
-                            {opt.isCorrect && (
-                              <CheckCircle2 className="text-success size-4 shrink-0" />
-                            )}
-                          </div>
-                        ))}
+                              Scorecard
+                              <ExternalLink className="size-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
+                  </div>
 
-                    {/* Numerical / Value answer display */}
-                    {q.correctValue !== undefined && (
-                      <div className="bg-success/10 border-success/30 rounded-lg border p-3 text-sm">
-                        <span className="font-semibold text-success">Correct Value: </span>
-                        <span className="font-mono font-bold">{q.correctValue}</span>
-                        {q.unit && <span className="ml-1 text-xs">{q.unit}</span>}
-                        {q.toleranceAbsolute ? (
-                          <span className="text-xs text-base-content/60 ml-2">(±{q.toleranceAbsolute})</span>
-                        ) : null}
-                      </div>
-                    )}
+                  {/* Actions Bar */}
+                  <div className="border-border/50 pt-3 border-t flex flex-col gap-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleLaunchPaperExam(paper.id)}
+                        className="btn btn-primary btn-sm font-bold shadow-xs gap-1"
+                      >
+                        <Play className="size-3.5 fill-current" />
+                        Start Exam
+                      </button>
 
-                    {/* Fill blank answer display */}
-                    {q.acceptedAnswers && q.acceptedAnswers.length > 0 && (
-                      <div className="bg-success/10 border-success/30 rounded-lg border p-3 text-sm">
-                        <span className="font-semibold text-success">Accepted Answers: </span>
-                        <span className="font-mono font-medium">{q.acceptedAnswers.join(' | ')}</span>
-                      </div>
-                    )}
+                      <button
+                        onClick={() => handleLaunchPaperPractice(paper)}
+                        className="btn btn-outline btn-sm font-bold gap-1"
+                      >
+                        <Zap className="size-3.5" />
+                        Practice
+                      </button>
+                    </div>
 
-                    {/* Tags */}
-                    {q.tags && q.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {q.tags.map((t) => (
-                          <span key={t} className="badge badge-ghost badge-sm text-[0.6875rem]">
-                            #{t}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Solution Accordion */}
-                    {q.solution && (
-                      <div className="border-base-300 border-t pt-3">
+                    <div className="flex items-center justify-between pt-1 text-xs">
+                      {stats?.latestAttemptId ? (
                         <button
-                          type="button"
-                          onClick={() => toggleSolution(q.id)}
-                          className="btn btn-ghost btn-xs text-primary gap-1 font-semibold"
+                          onClick={() => navigate(`/result/${stats.latestAttemptId}`)}
+                          className="btn btn-ghost btn-xs text-primary gap-1"
                         >
-                          <Sparkles className="size-3.5" />
-                          {isSolutionOpen ? 'Hide Solution' : 'View Verified Solution'}
-                          <ChevronDown className={`size-3 transition-transform ${isSolutionOpen ? 'rotate-180' : ''}`} />
+                          Scorecard
+                          <ExternalLink className="size-3" />
                         </button>
+                      ) : (
+                        <button
+                          disabled
+                          className="btn btn-ghost btn-xs text-base-content/30 gap-1 cursor-not-allowed opacity-50"
+                          title="Complete an attempt first"
+                        >
+                          Scorecard
+                          <ExternalLink className="size-3" />
+                        </button>
+                      )}
 
-                        {isSolutionOpen && (
-                          <div className="bg-base-200/70 border-base-300 mt-2.5 rounded-xl border p-4 text-sm">
-                            <div className="text-primary mb-2 text-xs font-bold tracking-wide uppercase">
-                              Verified Derivation & Explanation
-                            </div>
-                            <MathRenderer content={q.solution} />
-                          </div>
-                        )}
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => handleExportPaper(e, paper)}
+                          className="btn btn-ghost btn-xs btn-square text-base-content/60 hover:text-base-content"
+                          title="Export as Markdown"
+                        >
+                          <Download className="size-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDeletePaper(e, paper.id)}
+                          className="btn btn-ghost btn-xs btn-square text-base-content/40 hover:text-error"
+                          title="Delete Paper"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
+        )}
+      </div>
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-base-300">
-              <div className="text-xs text-base-content/70">
-                Showing page <span className="font-semibold text-base-content">{page}</span> of{' '}
-                <span className="font-semibold text-base-content">{totalPages}</span> ({totalCount} total questions)
-              </div>
-              <div className="join shadow-xs">
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(page - 1)}
-                  disabled={page <= 1}
-                  className="join-item btn btn-sm btn-outline gap-1"
-                >
-                  <ChevronLeft className="size-4" />
-                  Prev
-                </button>
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  let p = i + 1;
-                  if (totalPages > 7) {
-                    if (page > 4 && page < totalPages - 2) {
-                      p = page - 3 + i;
-                    } else if (page >= totalPages - 2) {
-                      p = totalPages - 6 + i;
-                    }
-                  }
-                  return (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => handlePageChange(p)}
-                      className={`join-item btn btn-sm ${p === page ? 'btn-primary' : 'btn-outline'}`}
-                    >
-                      {p}
-                    </button>
-                  );
-                })}
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(page + 1)}
-                  disabled={page >= totalPages}
-                  className="join-item btn btn-sm btn-outline gap-1"
-                >
-                  Next
-                  <ChevronRight className="size-4" />
-                </button>
-              </div>
+      {/* SECTION: Recent Completed Attempts & Scorecards */}
+      {analytics && analytics.recentScoreTrends.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold tracking-tight">Recent Attempts</h2>
+              <p className="text-base-content/50 text-xs">Test scorecards and completion history.</p>
             </div>
-          )}
-        </div>
-      )}
+            <button
+              onClick={() => navigate('/analysis')}
+              className="text-primary hover:underline text-xs font-semibold"
+            >
+              View all in analysis →
+            </button>
+          </div>
 
-      {/* ======================================================================
-          Import Modal (Markdown v2 & JSON tabs)
-         ====================================================================== */}
-      {showImportModal && (
-        <div className="modal modal-open modal-bottom sm:modal-middle bg-black/60 backdrop-blur-xs">
-          <div className="modal-box border-base-300 max-w-4xl border p-6">
-            <div className="flex items-center justify-between pb-4">
-              <div>
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Upload className="text-primary size-5" />
-                  Import Questions
-                </h3>
-                <p className="text-base-content/70 text-xs">
-                  Paste or upload questions in Canonical Markdown v2 or JSON format.
-                </p>
-              </div>
-              <button onClick={() => setShowImportModal(false)} className="btn btn-sm btn-circle btn-ghost">
-                ✕
-              </button>
-            </div>
-
-            {/* Format Segmented Switch */}
-            <div className="tabs tabs-boxed bg-base-200/60 p-1 mb-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setImportFormat('MARKDOWN');
-                  handleTextChange(textInput, 'MARKDOWN');
-                }}
-                className={`tab tab-sm font-semibold gap-1.5 ${importFormat === 'MARKDOWN' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''}`}
-              >
-                <FileCode2 className="size-3.5" />
-                Markdown v2 Format
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setImportFormat('JSON');
-                  handleTextChange(textInput, 'JSON');
-                }}
-                className={`tab tab-sm font-semibold gap-1.5 ${importFormat === 'JSON' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''}`}
-              >
-                <FileJson className="size-3.5" />
-                JSON Format
-              </button>
-            </div>
-
-            {importSuccessMsg ? (
-              <div className="alert alert-success my-3 shadow-sm">
-                <CheckCircle2 className="size-5" />
-                <span>{importSuccessMsg}</span>
-              </div>
-            ) : null}
-
-            {/* Template loader */}
-            <div className="flex items-center justify-between py-1 text-xs">
-              <span className="text-base-content/60 font-medium">
-                {importFormat === 'MARKDOWN'
-                  ? 'Canonical delimiter: === question ==='
-                  : 'JSON array of QuestionModel objects'}
-              </span>
-              <button
-                type="button"
-                onClick={() =>
-                  handleTextChange(importFormat === 'MARKDOWN' ? sampleMarkdownTemplate : sampleJsonTemplate)
-                }
-                className="btn btn-ghost btn-xs text-primary font-semibold"
-              >
-                Load Sample Template
-              </button>
-            </div>
-
-            {/* Textarea */}
-            <textarea
-              rows={11}
-              placeholder={
-                importFormat === 'MARKDOWN'
-                  ? 'Paste Markdown here starting with --- ...'
-                  : 'Paste JSON array here [ { "id": "...", ... } ]'
-              }
-              value={textInput}
-              onChange={(e) => handleTextChange(e.target.value)}
-              className="textarea textarea-bordered w-full font-mono text-sm leading-relaxed"
-            />
-
-            {/* Real-time Diagnostics Display */}
-            {importResult && (
-              <div className="mt-3 space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold">
-                  <span>Detected: {importResult.questions.length} valid question(s)</span>
-                  <span className={importResult.hasErrors ? 'text-error' : 'text-success'}>
-                    {importResult.hasErrors ? 'Validation Errors Present' : 'Ready to Import'}
-                  </span>
-                </div>
-
-                {/* Diagnostic Items */}
-                <div className="max-h-36 overflow-y-auto space-y-1.5">
-                  {importResult.diagnostics.map((diagGroup, gIdx) =>
-                    diagGroup.diagnostics.map((d, dIdx) => (
-                      <div
-                        key={`${gIdx}_${dIdx}`}
-                        className={`alert alert-sm p-2 text-xs shadow-xs ${
-                          d.level === 'ERROR'
-                            ? 'alert-error'
-                            : d.level === 'WARNING'
-                            ? 'alert-warning'
-                            : 'alert-info'
+          <div className="bg-card border-border/80 overflow-x-auto rounded-2xl border shadow-xs">
+            <table className="table table-zebra w-full text-xs">
+              <thead>
+                <tr className="border-border/60 bg-base-200/50">
+                  <th>Exam / Paper</th>
+                  <th>Date</th>
+                  <th>Score</th>
+                  <th>Accuracy</th>
+                  <th>Duration</th>
+                  <th className="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.recentScoreTrends.slice(0, 5).map((att) => (
+                  <tr key={att.attemptId} className="hover:bg-base-200/30">
+                    <td className="font-semibold">{att.testTitle}</td>
+                    <td className="text-base-content/60">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="size-3" />
+                        {new Date(att.date).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="font-bold text-sm">{att.scorePercentage}%</span>
+                      <span className="text-base-content/50 ml-1 text-[11px]">
+                        ({att.totalMarks}/{att.maxMarks})
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className={`badge badge-xs font-semibold ${
+                          att.accuracy >= 75
+                            ? 'badge-success text-success-content'
+                            : att.accuracy >= 50
+                            ? 'badge-warning text-warning-content'
+                            : 'badge-error text-error-content'
                         }`}
                       >
-                        {d.level === 'ERROR' ? (
-                          <AlertCircle className="size-3.5 shrink-0" />
-                        ) : d.level === 'WARNING' ? (
-                          <AlertCircle className="size-3.5 shrink-0" />
-                        ) : (
-                          <Info className="size-3.5 shrink-0" />
-                        )}
-                        <div>
-                          <span className="font-bold mr-1">
-                            [{d.level}] {diagGroup.questionId ? `(${diagGroup.questionId})` : ''}:
-                          </span>
-                          <span>{d.message}</span>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="modal-action pt-3">
-              <button onClick={() => setShowImportModal(false)} className="btn btn-ghost btn-sm">
-                Cancel
-              </button>
-              <button
-                onClick={handleExecuteImport}
-                disabled={!importResult || importResult.questions.length === 0 || importResult.hasErrors}
-                className="btn btn-primary btn-sm gap-2"
-              >
-                <Upload className="size-4" />
-                Import {importResult?.questions.length || 0} Questions
-              </button>
-            </div>
+                        {att.accuracy}%
+                      </span>
+                    </td>
+                    <td className="text-base-content/60">
+                      <span className="flex items-center gap-1 font-mono">
+                        <Clock className="size-3" />
+                        {formatTimeSeconds(att.timeSpentSeconds)}
+                      </span>
+                    </td>
+                    <td className="text-right">
+                      <button
+                        onClick={() => navigate(`/result/${att.attemptId}`)}
+                        className="btn btn-ghost btn-xs text-primary gap-1"
+                      >
+                        Scorecard
+                        <ExternalLink className="size-3" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      {/* AI Format Suffix Modal */}
-      {showAiStudio && (
-        <AiPromptModal
-          isOpen={showAiStudio}
-          onClose={() => setShowAiStudio(false)}
-        />
+      {/* SECTION 3: Dynamic Subject Performance Snapshot (Zero Hardcoding) */}
+      {analytics && analytics.subjectBreakdown.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold tracking-tight">Subject Accuracy</h2>
+              <p className="text-base-content/50 text-xs">
+                Performance across subjects from your practice history.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/analysis')}
+              className="text-primary hover:underline text-xs font-semibold"
+            >
+              View all analysis →
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {analytics.subjectBreakdown.slice(0, 6).map((subj) => (
+              <div
+                key={subj.subject}
+                onClick={() => navigate(`/practice?subject=${encodeURIComponent(subj.subject)}`)}
+                className="bg-card border-border/80 hover:border-primary/50 flex cursor-pointer flex-col justify-between rounded-xl border p-4 shadow-2xs transition-all"
+              >
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="font-bold text-sm truncate">{subj.subject}</span>
+                    <span
+                      className={`badge badge-sm font-bold ${
+                        subj.accuracy >= 75
+                          ? 'badge-success text-success-content'
+                          : subj.accuracy >= 50
+                          ? 'badge-warning text-warning-content'
+                          : 'badge-error text-error-content'
+                      }`}
+                    >
+                      {subj.accuracy}%
+                    </span>
+                  </div>
+                  <p className="text-base-content/50 text-[11px]">
+                    {subj.correct} of {subj.total} questions answered correctly
+                  </p>
+                </div>
+
+                <div className="mt-3">
+                  <progress
+                    className={`progress h-1.5 w-full ${
+                      subj.accuracy >= 75
+                        ? 'progress-success'
+                        : subj.accuracy >= 50
+                        ? 'progress-warning'
+                        : 'progress-error'
+                    }`}
+                    value={subj.accuracy}
+                    max="100"
+                  />
+                  <div className="flex items-center justify-between text-[10px] text-base-content/50 mt-1">
+                    <span>{subj.topics.length} topic(s)</span>
+                    <span className="text-primary font-medium">Practice →</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

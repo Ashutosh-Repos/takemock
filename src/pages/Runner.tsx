@@ -78,7 +78,7 @@ export function Runner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Time tracking per question
-  const questionEnteredTimeRef = useRef<number>(Date.now());
+  const questionEnteredTimeRef = useRef<number>(0);
 
   // Toggle fullscreen mode (Native Tauri Window or Web Fullscreen)
   const toggleFullscreen = async () => {
@@ -184,7 +184,7 @@ export function Runner() {
         const att = await assessmentRepository.getAttemptById(attemptId);
         if (!att) {
           alert('Attempt not found!');
-          navigate('/builder');
+          navigate('/');
           return;
         }
 
@@ -449,7 +449,16 @@ export function Runner() {
       isExam: attempt?.snapshot?.mode === 'EXAM',
       isInProgress: attempt?.status === 'IN_PROGRESS',
     };
-  });
+  }, [
+    handleSaveAndNext,
+    handlePrevious,
+    handleMarkForReviewAndNext,
+    handleClearResponse,
+    setShowSubmitModal,
+    toggleFullscreen,
+    attempt?.snapshot?.mode,
+    attempt?.status,
+  ]);
 
   // Keyboard shortcut & native proctoring listeners (bound once)
   useEffect(() => {

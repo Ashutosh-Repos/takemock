@@ -19,7 +19,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content, className =
     const parts: Array<{ type: 'text' | 'math'; isBlock?: boolean; value: string }> = [];
 
     // Regex matching $$...$$ or $...$
-    const mathRegex = /(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g;
+    const mathRegex = /(\$\$[\s\S]*?\$\$|\$[^$\n]+?\$)/g;
     let lastIndex = 0;
     let match: RegExpExecArray | null;
 

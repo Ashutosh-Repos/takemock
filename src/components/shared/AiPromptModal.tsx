@@ -22,17 +22,18 @@ import {
   buildLlmFormatSuffix,
   buildLlmSystemPrompt,
   SUPPORTED_QUESTION_TYPES,
+  type GenerationTarget,
   type OutputFormat,
 } from '@/core/ai/promptHelper';
 
 export interface AiPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultTarget?: GenerationTarget;
 }
 
-export function AiPromptModal({ isOpen, onClose }: AiPromptModalProps) {
-  if (!isOpen) return null;
-
+export function AiPromptModal({ isOpen, onClose, defaultTarget = 'QUESTION_PACK' }: AiPromptModalProps) {
+  const [target, setTarget] = useState<GenerationTarget>(defaultTarget);
   const [format, setFormat] = useState<OutputFormat>('MARKDOWN');
   const [selectedTypes, setSelectedTypes] = useState<string[]>([
     'single_choice',
@@ -58,19 +59,22 @@ export function AiPromptModal({ isOpen, onClose }: AiPromptModalProps) {
   const suffix = useMemo(() => {
     return buildLlmFormatSuffix(
       format,
-      selectedTypes.length > 0 ? selectedTypes : undefined
+      selectedTypes.length > 0 ? selectedTypes : undefined,
+      target
     );
-  }, [format, selectedTypes]);
+  }, [format, selectedTypes, target]);
 
   const systemPrompt = useMemo(() => {
-    return buildLlmSystemPrompt(format);
-  }, [format]);
+    return buildLlmSystemPrompt(format, target);
+  }, [format, target]);
 
   const handleCopy = (text: string, type: 'SUFFIX' | 'SYSTEM') => {
     navigator.clipboard.writeText(text);
     setCopiedType(type);
     setTimeout(() => setCopiedType(null), 2500);
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-base-900/80 backdrop-blur-md animate-in fade-in duration-200">
@@ -82,15 +86,11 @@ export function AiPromptModal({ isOpen, onClose }: AiPromptModalProps) {
               <Bot className="size-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black tracking-tight text-base-content">
-                  AI Format Contract Suffix
-                </h2>
-                <span className="badge badge-primary badge-sm font-semibold">Contract v2.0</span>
-              </div>
-              <p className="text-xs text-base-content/60">
-                Append this suffix to your prompt in ChatGPT, Claude, DeepSeek, or Gemini to get
-                strictly formatted questions.
+              <h2 className="text-base font-bold tracking-tight text-base-content">
+                AI Prompt Helper
+              </h2>
+              <p className="text-xs text-base-content/50">
+                Append this suffix to ChatGPT, Claude, Gemini, or DeepSeek to format questions automatically.
               </p>
             </div>
           </div>
@@ -108,6 +108,44 @@ export function AiPromptModal({ isOpen, onClose }: AiPromptModalProps) {
         <div className="p-6 space-y-5">
           {/* Format & Question Types Controls */}
           <div className="p-4 rounded-2xl border border-base-200 bg-base-200/40 space-y-3.5">
+            {/* Target Selection: Question Pack vs Full Exam Paper */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-base-200">
+              <div>
+                <span className="text-xs font-bold uppercase text-base-content/70 block">
+                  Target Scope
+                </span>
+                <span className="text-[11px] text-base-content/50">
+                  Select whether you need a full timed exam paper or a question pack.
+                </span>
+              </div>
+
+              <div className="join">
+                <button
+                  type="button"
+                  onClick={() => setTarget('QUESTION_PACK')}
+                  className={`join-item btn btn-sm text-xs font-bold ${
+                    target === 'QUESTION_PACK'
+                      ? 'btn-primary shadow-xs'
+                      : 'btn-outline border-base-300'
+                  }`}
+                >
+                  🧩 Question Pack
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTarget('FULL_PAPER')}
+                  className={`join-item btn btn-sm text-xs font-bold ${
+                    target === 'FULL_PAPER'
+                      ? 'btn-primary shadow-xs'
+                      : 'btn-outline border-base-300'
+                  }`}
+                >
+                  📄 Full Exam Paper
+                </button>
+              </div>
+            </div>
+
+            {/* Format Selection: Markdown v2 vs JSON */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
                 <span className="text-xs font-bold uppercase text-base-content/70 block">
@@ -140,7 +178,7 @@ export function AiPromptModal({ isOpen, onClose }: AiPromptModalProps) {
                       : 'btn-outline border-base-300'
                   }`}
                 >
-                  JSON Array
+                  {target === 'FULL_PAPER' ? 'JSON Object' : 'JSON Array'}
                 </button>
               </div>
             </div>
@@ -222,8 +260,8 @@ export function AiPromptModal({ isOpen, onClose }: AiPromptModalProps) {
             <div>
               <span className="font-bold text-primary block">How to use:</span>
               Paste this suffix at the end of your prompt in ChatGPT, Claude, Gemini, or DeepSeek.
-              When the AI responds, paste its output directly into the <b>Custom Designer code editor</b>.
-              Takemock will automatically clean any code fences, greetings, or commentary!
+              When the AI responds, paste its output directly into the <b>Builder</b> text input.
+              Takemock will automatically parse questions, options, and math formulas!
             </div>
           </div>
         </div>

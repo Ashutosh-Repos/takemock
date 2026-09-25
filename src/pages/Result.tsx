@@ -7,17 +7,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
-  Award,
   BarChart3,
   CheckCircle2,
+  ChevronRight,
   Clock,
   HelpCircle,
   RotateCcw,
-  Sparkles,
-  Trophy,
+  Target,
   XCircle,
 } from 'lucide-react';
 import { MathRenderer } from '@/components/shared/MathRenderer';
+import { QuestionDetailModal } from '@/components/shared/QuestionDetailModal';
 import { formatTimeSeconds } from '@/core/engine/timingEngine';
 import { assessmentRepository } from '@/core/storage/repository';
 import type { AttemptState } from '@/types/attempt';
@@ -32,6 +32,7 @@ export function Result() {
 
   // Review filter
   const [filterStatus, setFilterStatus] = useState<'ALL' | QuestionScoreStatus>('ALL');
+  const [modalIndex, setModalIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchResult = async () => {
@@ -105,28 +106,27 @@ export function Result() {
   return (
     <div className="mx-auto min-h-screen max-w-7xl space-y-8 p-6 pb-36 md:p-10">
       {/* Header */}
-      <div className="border-base-300 flex flex-col justify-between gap-4 border-b pb-6 md:flex-row md:items-center">
+      <div className="border-base-300 flex flex-col justify-between gap-4 border-b pb-5 md:flex-row md:items-center">
         <div>
-          <div className="mb-2 flex items-center gap-2">
-            <span className={`badge ${badgeColor} gap-1 font-bold shadow-sm`}>
-              <Trophy className="size-3.5" />
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight md:text-2xl">Scorecard</h1>
+            <span className={`badge ${badgeColor} badge-sm font-bold`}>
               {performanceTier}
             </span>
-            <span className="badge badge-outline border-base-300 gap-1 text-xs">
-              <Award className="size-3" />
-              Evaluated via Pure Scoring Engine
-            </span>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">Performance Scorecard</h1>
-          <p className="text-base-content/70 mt-1 text-sm md:text-base">
-            Detailed score breakdown and verified derivations for <span className="font-semibold text-base-content">{snapshot.testTitle}</span>
+          <p className="text-base-content/50 mt-0.5 text-xs">
+            {snapshot.testTitle}
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/builder')} className="btn btn-primary gap-2 shadow-sm font-bold">
-            <RotateCcw className="size-4" />
-            Retake or Build Test
+        <div className="flex items-center gap-2">
+          <button onClick={() => navigate('/mistakes')} className="btn btn-ghost btn-sm gap-1.5">
+            <Target className="size-3.5" />
+            Mistakes
+          </button>
+          <button onClick={() => navigate('/')} className="btn btn-primary btn-sm gap-1.5 font-bold shadow-sm">
+            <RotateCcw className="size-3.5" />
+            Library
           </button>
         </div>
       </div>
@@ -134,7 +134,7 @@ export function Result() {
       {/* Hero Stats Section */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total Score */}
-        <div className="bg-base-100 border-base-300 rounded-box border p-5 shadow-sm">
+        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
           <div className="text-xs font-semibold uppercase tracking-wider text-base-content/60">Total Score</div>
           <div className="text-primary mt-1 text-3xl font-black">
             {scoreResult.totalMarksAwarded}{' '}
@@ -144,7 +144,7 @@ export function Result() {
         </div>
 
         {/* Accuracy */}
-        <div className="bg-base-100 border-base-300 rounded-box border p-5 shadow-sm">
+        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
           <div className="text-xs font-semibold uppercase tracking-wider text-base-content/60">Accuracy</div>
           <div className="text-secondary mt-1 text-3xl font-black">{scoreResult.accuracy}%</div>
           <div className="text-xs text-base-content/70 mt-1">
@@ -153,7 +153,7 @@ export function Result() {
         </div>
 
         {/* Breakdown Counts */}
-        <div className="bg-base-100 border-base-300 rounded-box border p-5 shadow-sm">
+        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
           <div className="text-xs font-semibold uppercase tracking-wider text-base-content/60">Breakdown</div>
           <div className="flex items-center gap-2 mt-1 font-bold text-sm">
             <span className="text-success">{scoreResult.totalCorrect} Correct</span> ·
@@ -166,7 +166,7 @@ export function Result() {
         </div>
 
         {/* Time Spent */}
-        <div className="bg-base-100 border-base-300 rounded-box border p-5 shadow-sm">
+        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
           <div className="text-xs font-semibold uppercase tracking-wider text-base-content/60">Total Time</div>
           <div className="text-accent mt-1 text-3xl font-black font-mono">
             {formatTimeSeconds(scoreResult.totalTimeSpentSeconds)}
@@ -178,18 +178,18 @@ export function Result() {
       </div>
 
       {/* Section-Wise Breakdown Table */}
-      <div className="bg-base-100 border-base-300 rounded-box overflow-hidden border shadow-sm">
-        <div className="border-base-300 border-b p-5">
-          <h3 className="text-lg font-bold flex items-center gap-2">
-            <BarChart3 className="text-primary size-5" />
-            Section-Wise Performance
+      <div className="bg-card border-border/80 rounded-2xl overflow-hidden border shadow-xs">
+        <div className="border-border/60 border-b p-4 sm:p-5">
+          <h3 className="text-base font-bold flex items-center gap-2">
+            <BarChart3 className="text-primary size-4" />
+            Section Performance
           </h3>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table table-zebra w-full text-sm">
+          <table className="table table-zebra w-full text-xs">
             <thead>
-              <tr className="text-base-content/70 text-xs">
+              <tr className="text-base-content/60 text-[11px] uppercase tracking-wider">
                 <th>Section</th>
                 <th>Questions</th>
                 <th>Attempted</th>
@@ -197,7 +197,7 @@ export function Result() {
                 <th>Incorrect</th>
                 <th>Accuracy</th>
                 <th>Score</th>
-                <th>Time Spent</th>
+                <th>Time</th>
               </tr>
             </thead>
             <tbody>
@@ -211,7 +211,7 @@ export function Result() {
                   <td>
                     <div className="flex items-center gap-2">
                       <progress
-                        className="progress progress-primary w-16"
+                        className="progress progress-primary w-14 h-1.5"
                         value={sec.accuracy}
                         max="100"
                       />
@@ -237,38 +237,35 @@ export function Result() {
       <div className="space-y-4">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div>
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <Sparkles className="text-primary size-5" />
-              Detailed Solutions & Question Review
-            </h3>
-            <p className="text-xs text-base-content/60">
-              Review full step-by-step mathematical derivations and compare your answers.
+            <h3 className="text-lg font-bold">Solutions & Explanations</h3>
+            <p className="text-xs text-base-content/50">
+              Step-by-step review for each question.
             </p>
           </div>
 
           {/* Filter Tabs */}
-          <div className="tabs tabs-boxed bg-base-200/60 p-1 flex-wrap">
+          <div className="join bg-base-200/60 p-0.5 rounded-xl border border-border/60">
             <button
               onClick={() => setFilterStatus('ALL')}
-              className={`tab tab-sm font-semibold ${filterStatus === 'ALL' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''}`}
+              className={`btn btn-xs join-item font-semibold ${filterStatus === 'ALL' ? 'btn-primary' : 'btn-ghost'}`}
             >
               All ({allQuestionsWithScores.length})
             </button>
             <button
               onClick={() => setFilterStatus('CORRECT')}
-              className={`tab tab-sm font-semibold ${filterStatus === 'CORRECT' ? 'tab-active bg-success text-success-content shadow-xs' : ''}`}
+              className={`btn btn-xs join-item font-semibold ${filterStatus === 'CORRECT' ? 'btn-success text-success-content' : 'btn-ghost'}`}
             >
               Correct ({scoreResult.totalCorrect})
             </button>
             <button
               onClick={() => setFilterStatus('INCORRECT')}
-              className={`tab tab-sm font-semibold ${filterStatus === 'INCORRECT' ? 'tab-active bg-error text-error-content shadow-xs' : ''}`}
+              className={`btn btn-xs join-item font-semibold ${filterStatus === 'INCORRECT' ? 'btn-error text-error-content' : 'btn-ghost'}`}
             >
               Incorrect ({scoreResult.totalIncorrect})
             </button>
             <button
               onClick={() => setFilterStatus('UNATTEMPTED')}
-              className={`tab tab-sm font-semibold ${filterStatus === 'UNATTEMPTED' ? 'tab-active bg-neutral text-neutral-content shadow-xs' : ''}`}
+              className={`btn btn-xs join-item font-semibold ${filterStatus === 'UNATTEMPTED' ? 'btn-neutral' : 'btn-ghost'}`}
             >
               Skipped ({scoreResult.totalUnattempted})
             </button>
@@ -276,33 +273,33 @@ export function Result() {
         </div>
 
         {/* Questions Cards */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {filteredQuestions.map((item, idx) => {
             const { question, score, sectionTitle } = item;
             const status = score?.status || 'UNATTEMPTED';
 
             let statusBadge = (
               <span className="badge badge-neutral gap-1 text-xs font-semibold">
-                <HelpCircle className="size-3" /> Unattempted (0 marks)
+                <HelpCircle className="size-3" /> Unattempted
               </span>
             );
 
             if (status === 'CORRECT') {
               statusBadge = (
                 <span className="badge badge-success text-success-content gap-1 text-xs font-semibold">
-                  <CheckCircle2 className="size-3" /> Correct (+{score?.marksAwarded} marks)
+                  <CheckCircle2 className="size-3" /> Correct (+{score?.marksAwarded})
                 </span>
               );
             } else if (status === 'INCORRECT') {
               statusBadge = (
                 <span className="badge badge-error text-error-content gap-1 text-xs font-semibold">
-                  <XCircle className="size-3" /> Incorrect ({score?.marksAwarded} marks)
+                  <XCircle className="size-3" /> Incorrect ({score?.marksAwarded})
                 </span>
               );
             } else if (status === 'PARTIAL') {
               statusBadge = (
                 <span className="badge badge-warning text-warning-content gap-1 text-xs font-semibold">
-                  Partial (+{score?.marksAwarded} marks)
+                  Partial (+{score?.marksAwarded})
                 </span>
               );
             }
@@ -310,7 +307,8 @@ export function Result() {
             return (
               <div
                 key={question.id}
-                className="bg-base-100 border-base-300 rounded-box border p-6 shadow-sm space-y-4"
+                onClick={() => setModalIndex(idx)}
+                className="bg-card border-border/80 hover:border-primary/50 cursor-pointer rounded-2xl border p-5 shadow-xs space-y-4 transition-all group"
               >
                 {/* Top Badge Banner */}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-base-300/70 pb-3">
@@ -331,58 +329,54 @@ export function Result() {
                 </div>
 
                 {/* Question Body with KaTeX */}
-                <div className="text-base leading-relaxed">
+                <div className="text-sm leading-relaxed line-clamp-3">
                   <MathRenderer content={question.body} />
                 </div>
 
-                {/* Answer Comparison */}
-                <div className="bg-base-200/50 rounded-xl border border-base-300 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="text-xs font-bold uppercase tracking-wider text-base-content/60 mb-1">
-                      Your Response
-                    </div>
-                    <div className="font-mono font-medium">
-                      {score?.candidateResponse !== null && score?.candidateResponse !== undefined ? (
-                        typeof score.candidateResponse === 'object' ? (
-                          <pre className="text-xs">{JSON.stringify(score.candidateResponse, null, 2)}</pre>
-                        ) : (
-                          String(score.candidateResponse)
-                        )
-                      ) : (
-                        <span className="text-base-content/40 italic">Not attempted</span>
-                      )}
-                    </div>
+                {/* Candidate Response Summary & Card Action */}
+                <div className="flex flex-wrap items-center justify-between border-t border-border/40 pt-3 text-xs gap-2">
+                  <div className="flex items-center gap-2 text-base-content/60">
+                    {score?.candidateResponse !== null && score?.candidateResponse !== undefined ? (
+                      <span className="font-mono text-xs">
+                        Attempted:{' '}
+                        <span className="font-bold">
+                          {typeof score.candidateResponse === 'object'
+                            ? JSON.stringify(score.candidateResponse)
+                            : String(score.candidateResponse)}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="italic text-base-content/40">Unattempted</span>
+                    )}
                   </div>
 
-                  <div>
-                    <div className="text-xs font-bold uppercase tracking-wider text-success mb-1">
-                      Correct Answer
-                    </div>
-                    <div className="font-mono font-bold text-success">
-                      {typeof score?.correctAnswer === 'object' ? (
-                        <pre className="text-xs">{JSON.stringify(score?.correctAnswer, null, 2)}</pre>
-                      ) : (
-                        String(score?.correctAnswer || 'N/A')
-                      )}
-                    </div>
-                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setModalIndex(idx);
+                    }}
+                    className="btn btn-ghost btn-xs text-primary gap-1 font-semibold group-hover:bg-primary/10"
+                  >
+                    View Answer & Explanation
+                    <ChevronRight className="size-3.5" />
+                  </button>
                 </div>
-
-                {/* Verified Derivation & Solution */}
-                {question.solution && (
-                  <div className="bg-primary/5 border-primary/20 rounded-xl border p-4 text-sm">
-                    <div className="text-primary flex items-center gap-1.5 mb-2 text-xs font-bold uppercase tracking-wider">
-                      <Sparkles className="size-4" />
-                      Verified Derivation & Explanation
-                    </div>
-                    <MathRenderer content={question.solution} />
-                  </div>
-                )}
               </div>
             );
           })}
         </div>
       </div>
+
+      {/* Interactive Question Detail Modal with Arrow Keys Navigation */}
+      <QuestionDetailModal
+        isOpen={modalIndex !== null}
+        onClose={() => setModalIndex(null)}
+        questions={filteredQuestions.map((i) => i.question)}
+        currentIndex={modalIndex ?? 0}
+        onNavigateIndex={(newIdx) => setModalIndex(newIdx)}
+        scores={scoreResult.questionScores}
+        titlePrefix="Q"
+      />
     </div>
   );
 }

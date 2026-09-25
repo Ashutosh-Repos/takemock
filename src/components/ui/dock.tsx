@@ -19,7 +19,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
 
 const DEFAULT_MAGNIFICATION = 80;
@@ -97,17 +96,14 @@ function Dock({
   const mousePos = useMotionValue(Infinity);
   const isHovered = useMotionValue(0);
   const toolbarRef = useRef<HTMLDivElement>(null);
-  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   // Determine smart placement:
-  // Desktop defaults to 'left' (vertical on left screen edge)
-  // Mobile defaults to 'bottom' (horizontal on bottom screen edge)
+  // Defaults to bottom centered dock (classic macOS dock experience)
   const effectivePlacement: 'right' | 'left' | 'bottom' | 'top' = useMemo(() => {
     if (placement && placement !== 'auto') return placement;
     if (direction === 'vertical') return 'left';
-    if (direction === 'horizontal') return 'bottom';
-    return isDesktop ? 'left' : 'bottom';
-  }, [placement, direction, isDesktop]);
+    return 'bottom';
+  }, [placement, direction]);
 
   const isVertical = effectivePlacement === 'right' || effectivePlacement === 'left';
 
@@ -264,7 +260,8 @@ function DockItem({ children, className, onClick }: DockItemProps) {
   const sizeTransform = useTransform(
     mouseDistance,
     [-distance, 0, distance],
-    [40, magnification, 40],
+    [44, magnification, 44],
+    { clamp: true }
   );
 
   const size = useSpring(sizeTransform, spring);
