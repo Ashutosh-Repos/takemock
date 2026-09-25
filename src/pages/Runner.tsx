@@ -565,16 +565,21 @@ export function Runner() {
   });
 
   return (
-    <div className="bg-base-200/30 flex min-h-screen flex-col font-sans select-none">
+    <div className="bg-background text-foreground flex min-h-screen flex-col font-sans select-none">
       {/* ======================================================================
-          CBT Header Bar
+          CBT Header Bar (Native Window Drag Region)
          ====================================================================== */}
-      <header className="bg-base-100 border-base-300 sticky top-0 z-40 flex items-center justify-between border-b px-4 py-2.5 shadow-xs md:px-8">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 text-primary rounded-lg p-2 font-bold hidden sm:block">CBT</div>
-          <div>
-            <h1 className="text-base font-bold md:text-lg line-clamp-1">{attempt.snapshot.testTitle}</h1>
-            <div className="text-xs text-base-content/60 flex items-center gap-2">
+      <header
+        data-tauri-drag-region
+        className="bg-card border-border sticky top-0 z-40 flex items-center justify-between border-b px-4 py-2 shadow-2xs md:px-6"
+      >
+        <div data-tauri-drag-region className="flex items-center gap-2.5">
+          <div className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-xs font-bold hidden sm:block pointer-events-none">
+            CBT
+          </div>
+          <div data-tauri-drag-region>
+            <h1 className="text-sm font-semibold md:text-base line-clamp-1 tracking-tight text-foreground">{attempt.snapshot.testTitle}</h1>
+            <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
               <span className="badge badge-xs badge-neutral uppercase font-mono">{attempt.snapshot.mode}</span>
               <span className="hidden sm:inline">Attempt #{attempt.id.slice(-6)}</span>
             </div>
@@ -582,16 +587,19 @@ export function Runner() {
         </div>
 
         {/* Center/Right: Timer & Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2">
           {hasTimer ? (
             <div
-              className={`flex items-center gap-1.5 sm:gap-2 rounded-xl border px-3 sm:px-4 py-1.5 font-mono text-sm sm:text-base font-bold shadow-xs transition-colors ${
+              role="timer"
+              aria-live="polite"
+              aria-label={`Time remaining: ${formatTimeSeconds(timerSnapshot.remainingSeconds)}`}
+              className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-xs sm:text-sm font-semibold shadow-2xs transition-colors ${
                 timerSnapshot.isWarning
                   ? 'border-error/60 bg-error/15 text-error animate-pulse'
-                  : 'border-base-300 bg-base-200/80 text-base-content'
+                  : 'border-border bg-muted/60 text-foreground'
               }`}
             >
-              <Clock className="size-3.5 sm:size-4 shrink-0" />
+              <Clock className="size-3.5 shrink-0" />
               <span>{formatTimeSeconds(timerSnapshot.remainingSeconds)}</span>
               {isPractice && (
                 <button
@@ -601,14 +609,19 @@ export function Runner() {
                     else timerEngineRef.current?.resume();
                     setTimerSnapshot(timerEngineRef.current!.getSnapshot());
                   }}
-                  className="btn btn-ghost btn-xs btn-circle ml-1"
+                  className="btn btn-ghost btn-xs btn-circle ml-0.5 active:scale-90"
+                  aria-label={timerSnapshot.state === 'RUNNING' ? 'Pause timer' : 'Resume timer'}
                 >
                   {timerSnapshot.state === 'RUNNING' ? <Pause className="size-3" /> : <Play className="size-3" />}
                 </button>
               )}
             </div>
           ) : (
-            <div className="badge badge-outline border-base-300 gap-1.5 py-3 font-mono text-xs">
+            <div
+              role="timer"
+              aria-label={`Elapsed time: ${formatTimeSeconds(timerSnapshot.elapsedSeconds)}`}
+              className="badge badge-outline border-border gap-1 py-2 font-mono text-xs text-muted-foreground"
+            >
               <Clock className="size-3" />
               Elapsed: {formatTimeSeconds(timerSnapshot.elapsedSeconds)}
             </div>
@@ -619,24 +632,29 @@ export function Runner() {
             type="button"
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-            className="btn btn-ghost btn-sm btn-circle hidden md:flex"
+            aria-label={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+            className="btn btn-ghost btn-xs btn-circle hidden md:flex text-muted-foreground hover:text-foreground active:scale-90"
           >
-            {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+            {isFullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
           </button>
 
           {/* Mobile Palette Button */}
           <button
             type="button"
             onClick={() => setShowMobilePalette(true)}
-            className="btn btn-outline btn-sm gap-1 lg:hidden"
+            aria-label="Open Question Palette"
+            className="btn btn-outline btn-xs gap-1 lg:hidden active:scale-95"
           >
-            <Grid className="size-4" />
-            <span className="text-xs">Palette</span>
+            <Grid className="size-3.5" />
+            <span>Palette</span>
           </button>
 
           {/* Finish / Submit Test button */}
-          <button onClick={() => setShowSubmitModal(true)} className="btn btn-primary btn-sm gap-1.5 font-bold shadow-sm">
-            <Send className="size-3.5" />
+          <button
+            onClick={() => setShowSubmitModal(true)}
+            className="btn btn-primary btn-sm gap-1.5 font-medium shadow-xs active:scale-95"
+          >
+            <Send className="size-3" />
             <span className="hidden sm:inline">Finish & Submit</span>
             <span className="sm:hidden">Submit</span>
           </button>
@@ -646,9 +664,9 @@ export function Runner() {
       {/* ======================================================================
           Section Navigation Bar
          ====================================================================== */}
-      <div className="bg-base-100 border-base-300 flex items-center gap-2 border-b px-4 py-2 overflow-x-auto md:px-8">
-        <span className="text-xs font-semibold text-base-content/60 uppercase mr-1 shrink-0">Sections:</span>
-        <div className="flex items-center gap-2">
+      <nav aria-label="Exam Sections" className="bg-card border-border flex items-center gap-1.5 border-b px-4 py-1.5 overflow-x-auto md:px-6">
+        <span className="text-[11px] font-semibold text-muted-foreground uppercase mr-1 shrink-0">Sections:</span>
+        <div className="flex items-center gap-1.5">
           {attempt.snapshot.sections.map((sec) => {
             const isActive = sec.id === currentSectionId;
             return (
@@ -658,8 +676,9 @@ export function Runner() {
                   const firstQ = sec.questions[0];
                   if (firstQ) navigateToQuestion(sec.id, firstQ.id);
                 }}
-                className={`btn btn-sm font-semibold transition-all shrink-0 ${
-                  isActive ? 'btn-primary shadow-xs' : 'btn-ghost text-base-content/80 hover:bg-base-200'
+                aria-current={isActive ? 'true' : undefined}
+                className={`btn btn-xs font-medium transition-all shrink-0 rounded-md active:scale-95 ${
+                  isActive ? 'btn-primary shadow-2xs' : 'btn-ghost text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
                 {sec.title}
@@ -668,40 +687,40 @@ export function Runner() {
             );
           })}
         </div>
-      </div>
+      </nav>
 
       {/* ======================================================================
           Main Examination Split Layout
          ====================================================================== */}
       <div className="flex flex-1 flex-col lg:flex-row overflow-hidden pb-6 md:pb-0">
         {/* Left/Center: Question Stimulus & Response Form */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
           {currentQuestion ? (
-            <div className="bg-base-100 border-base-300 rounded-box border p-5 md:p-6 shadow-sm space-y-6">
+            <div className="bg-card border-border rounded-lg border p-4 md:p-6 shadow-2xs space-y-5">
               {/* Question Header */}
-              <div className="border-base-300 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+              <div className="border-border/60 flex flex-wrap items-center justify-between gap-2 border-b pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-primary text-lg font-extrabold tracking-tight">
+                  <span className="text-primary text-base font-bold tracking-tight">
                     Question {currentSection.questions.findIndex((q) => q.id === currentQuestion.id) + 1}
                   </span>
-                  <span className="badge badge-outline border-base-300 text-xs font-mono">
+                  <span className="badge badge-outline border-border/80 text-[11px] font-mono">
                     {currentQuestion.type}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 sm:gap-3 text-xs font-semibold">
-                  <span className="text-success bg-success/10 rounded-md px-2 py-1">
-                    Correct: +{currentQuestion.marks}
+                <div className="flex items-center gap-2 text-xs font-medium">
+                  <span className="text-success bg-success/10 rounded px-1.5 py-0.5">
+                    +{currentQuestion.marks}
                   </span>
-                  <span className="text-error bg-error/10 rounded-md px-2 py-1">
-                    Incorrect: -{currentQuestion.negativeMarks}
+                  <span className="text-error bg-error/10 rounded px-1.5 py-0.5">
+                    -{currentQuestion.negativeMarks}
                   </span>
                 </div>
               </div>
 
               {/* Question Image if any */}
               {currentQuestion.imageUrl && (
-                <div className="max-w-md overflow-hidden rounded-xl border border-base-300">
+                <div className="max-w-md overflow-hidden rounded-md border border-border/60">
                   <img
                     src={currentQuestion.imageUrl}
                     alt={currentQuestion.imageAlt || 'Question diagram'}
@@ -710,13 +729,13 @@ export function Runner() {
                 </div>
               )}
 
-              {/* Question Body with KaTeX Math */}
-              <div className="text-base leading-relaxed md:text-lg">
+              {/* Question Body with KaTeX Math (Selectable for student copying) */}
+              <div className="selectable-content text-sm leading-relaxed md:text-base">
                 <MathRenderer content={currentQuestion.body} />
               </div>
 
               {/* Interactive Candidate Response Input */}
-              <div className="border-base-300 border-t pt-6">
+              <div className="border-border/60 border-t pt-4">
                 <QuestionInput
                   key={currentQuestion.id}
                   question={currentQuestion}
@@ -727,10 +746,10 @@ export function Runner() {
 
               {/* Practice Mode: Instant Check Answer & Verified Solution */}
               {isPractice && (
-                <div className="border-base-300 border-t pt-4 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <button onClick={handleCheckAnswer} className="btn btn-secondary btn-sm gap-2">
-                      <CheckCircle2 className="size-4" />
+                <div className="border-border/60 border-t pt-3 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <button onClick={handleCheckAnswer} className="btn btn-outline btn-xs gap-1.5 active:scale-95">
+                      <CheckCircle2 className="size-3.5 text-success" />
                       Check Answer
                     </button>
                     {currentQuestion.solution && (
@@ -741,19 +760,19 @@ export function Runner() {
                             [currentQuestion.id]: !prev[currentQuestion.id],
                           }))
                         }
-                        className="btn btn-ghost btn-sm gap-1.5 text-primary font-semibold"
+                        className="btn btn-ghost btn-xs gap-1 text-primary font-medium active:scale-95"
                       >
-                        <Eye className="size-4" />
+                        <Eye className="size-3.5" />
                         {showSolutionInstant[currentQuestion.id] ? 'Hide Solution' : 'Show Solution'}
                       </button>
                     )}
                   </div>
 
                   {showSolutionInstant[currentQuestion.id] && currentQuestion.solution && (
-                    <div className="bg-base-200/80 border-base-300 rounded-xl border p-4 text-sm animate-fade-in">
-                      <div className="text-primary flex items-center gap-1.5 mb-2 text-xs font-bold uppercase tracking-wider">
-                        <Sparkles className="size-4" />
-                        Verified Derivation & Explanation
+                    <div className="bg-muted/40 border-border/60 rounded-md border p-3.5 text-xs animate-fade-in selectable-content">
+                      <div className="text-primary flex items-center gap-1.5 mb-1.5 text-[11px] font-bold uppercase tracking-wider">
+                        <Sparkles className="size-3.5" />
+                        Explanation & Solution
                       </div>
                       <MathRenderer content={currentQuestion.solution} />
                     </div>
@@ -762,113 +781,115 @@ export function Runner() {
               )}
             </div>
           ) : (
-            <div className="text-center p-8">Question not found.</div>
+            <div className="text-center p-8 text-muted-foreground text-sm">Question not found.</div>
           )}
 
           {/* Bottom Action Controls */}
-          <div className="bg-base-100 border-base-300 rounded-box flex flex-wrap items-center justify-between gap-3 border p-4 shadow-sm">
-            <div className="flex items-center gap-2">
+          <div className="bg-card border-border rounded-lg flex flex-wrap items-center justify-between gap-2 border p-3 shadow-2xs">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleMarkForReviewAndNext}
-                className="btn btn-outline border-purple-500/50 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 btn-sm gap-1.5"
+                className="btn btn-outline border-border text-foreground/80 hover:bg-muted btn-sm gap-1.5 text-xs font-medium rounded-md active:scale-95"
               >
-                <Bookmark className="size-4" />
+                <Bookmark className="size-3.5 text-amber-500" />
                 <span className="hidden sm:inline">Mark for Review & Next</span>
                 <span className="sm:hidden">Review</span>
               </button>
               <button
                 type="button"
                 onClick={handleClearResponse}
-                className="btn btn-ghost btn-sm text-base-content/70 gap-1.5"
+                className="btn btn-ghost btn-sm text-xs text-muted-foreground hover:text-foreground gap-1.5 rounded-md active:scale-95"
               >
-                <RotateCcw className="size-3.5" />
+                <RotateCcw className="size-3" />
                 Clear
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={handlePrevious} className="btn btn-outline border-base-300 btn-sm gap-1">
-                <ChevronLeft className="size-4" />
+            <div className="flex items-center gap-1.5">
+              <button type="button" onClick={handlePrevious} className="btn btn-outline border-border btn-sm text-xs font-medium rounded-md gap-1 active:scale-95">
+                <ChevronLeft className="size-3.5" />
                 Previous
               </button>
-              <button type="button" onClick={handleSaveAndNext} className="btn btn-primary btn-sm gap-1 font-bold">
+              <button type="button" onClick={handleSaveAndNext} className="btn btn-primary btn-sm text-xs font-medium rounded-md gap-1 active:scale-95">
                 Save & Next
-                <ChevronRight className="size-4" />
+                <ChevronRight className="size-3.5" />
               </button>
             </div>
           </div>
-        </div>
+        </main>
 
         {/* ====================================================================
             Right Column: Official CBT Question Palette (Desktop Split View)
            ==================================================================== */}
-        <aside className="bg-base-100 border-base-300 w-full border-t lg:w-80 lg:border-t-0 lg:border-l p-4 hidden lg:flex flex-col justify-between overflow-y-auto">
-          <div className="space-y-5">
+        <aside aria-label="Question Palette" className="bg-card border-border w-full border-t lg:w-72 lg:border-t-0 lg:border-l p-3.5 hidden lg:flex flex-col justify-between overflow-y-auto">
+          <div className="space-y-4">
             {/* Palette Status Legend (Section 37 Non-color accessible) */}
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-base-content/70">Question Palette</h4>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="size-5 rounded-md bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Question Palette</h4>
+              <div className="grid grid-cols-2 gap-1.5 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <span className="size-4.5 rounded bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">
                     ✓
                   </span>
-                  <span>Answered ({answeredCount})</span>
+                  <span className="text-[11px]">Answered ({answeredCount})</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="size-5 rounded-md bg-rose-500 text-white flex items-center justify-center text-[10px] font-bold">
+                <div className="flex items-center gap-1.5">
+                  <span className="size-4.5 rounded bg-rose-600 text-white flex items-center justify-center text-[10px] font-bold">
                     ✕
                   </span>
-                  <span>Not Answered ({skippedCount})</span>
+                  <span className="text-[11px]">Skipped ({skippedCount})</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="size-5 rounded-md bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold">
+                <div className="flex items-center gap-1.5">
+                  <span className="size-4.5 rounded bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold">
                     •
                   </span>
-                  <span>Review ({markedCount})</span>
+                  <span className="text-[11px]">Review ({markedCount})</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="size-5 rounded-md bg-purple-600 text-white border-2 border-emerald-400 flex items-center justify-center text-[10px] font-bold">
+                <div className="flex items-center gap-1.5">
+                  <span className="size-4.5 rounded bg-amber-500 text-white ring-2 ring-emerald-400 flex items-center justify-center text-[10px] font-bold">
                     ★
                   </span>
-                  <span>Ans & Review ({answeredMarkedCount})</span>
+                  <span className="text-[11px]">Ans & Rev ({answeredMarkedCount})</span>
                 </div>
-                <div className="flex items-center gap-2 col-span-2">
-                  <span className="size-5 rounded-md bg-base-300 flex items-center justify-center text-[10px] font-bold">
-                    —
+                <div className="flex items-center gap-1.5 col-span-2">
+                  <span className="size-4.5 rounded bg-muted text-muted-foreground border border-border flex items-center justify-center text-[10px] font-bold">
+                    -
                   </span>
-                  <span>Not Visited ({notVisitedCount})</span>
+                  <span className="text-[11px]">Unvisited ({notVisitedCount})</span>
                 </div>
               </div>
             </div>
 
             {/* Questions Grid for Current Section */}
-            <div className="border-base-300 border-t pt-4">
-              <div className="text-xs font-semibold text-base-content/60 mb-2">
+            <div className="border-border/60 border-t pt-3">
+              <div className="text-[11px] font-semibold text-muted-foreground mb-2">
                 Questions in {currentSection.title}:
               </div>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-5 gap-1.5">
                 {currentSection.questions.map((q, idx) => {
                   const isCurrent = q.id === currentQuestionId;
                   const status = visitStatuses[q.id] || 'NOT_VISITED';
 
-                  let bgStyle = 'bg-base-200 text-base-content/70 border-base-300';
+                  let bgStyle = 'bg-muted/60 text-muted-foreground border-border hover:bg-muted';
                   if (status === 'ANSWERED') {
-                    bgStyle = 'bg-emerald-500 text-white border-emerald-600 shadow-xs';
+                    bgStyle = 'bg-emerald-600 text-white border-emerald-700 shadow-2xs';
                   } else if (status === 'SKIPPED') {
-                    bgStyle = 'bg-rose-500 text-white border-rose-600 shadow-xs';
+                    bgStyle = 'bg-rose-600 text-white border-rose-700 shadow-2xs';
                   } else if (status === 'MARKED_FOR_REVIEW') {
-                    bgStyle = 'bg-purple-600 text-white border-purple-700 shadow-xs';
+                    bgStyle = 'bg-amber-500 text-white border-amber-600 shadow-2xs';
                   } else if (status === 'ANSWERED_AND_MARKED') {
-                    bgStyle = 'bg-purple-600 text-white border-emerald-400 ring-2 ring-emerald-400 shadow-xs';
+                    bgStyle = 'bg-amber-500 text-white border-amber-600 ring-2 ring-emerald-400 shadow-2xs';
                   }
 
                   return (
                     <button
                       key={q.id}
                       onClick={() => navigateToQuestion(currentSection.id, q.id)}
-                      className={`btn btn-sm aspect-square p-0 font-bold border transition-all ${bgStyle} ${
-                        isCurrent ? 'ring-2 ring-primary ring-offset-2' : ''
+                      aria-label={`Question ${idx + 1}, ${status.replace(/_/g, ' ').toLowerCase()}`}
+                      aria-current={isCurrent ? 'page' : undefined}
+                      className={`btn btn-xs aspect-square p-0 font-bold border rounded-md transition-all active:scale-90 ${bgStyle} ${
+                        isCurrent ? 'ring-2 ring-primary ring-offset-1' : ''
                       }`}
                     >
                       {idx + 1}
@@ -880,13 +901,13 @@ export function Runner() {
           </div>
 
           {/* Quick Submit button at bottom of drawer */}
-          <div className="border-base-300 border-t pt-4 mt-6">
+          <div className="border-border border-t pt-3 mt-4">
             <button
               onClick={() => setShowSubmitModal(true)}
-              className="btn btn-outline btn-primary w-full gap-2 font-bold"
+              className="btn btn-outline btn-primary btn-sm w-full gap-1.5 font-medium rounded-md"
             >
-              <Send className="size-4" />
-              Submit Entire Test
+              <Send className="size-3.5" />
+              Submit Test
             </button>
           </div>
         </aside>
@@ -896,57 +917,68 @@ export function Runner() {
           Mobile Palette Modal / Drawer
          ====================================================================== */}
       {showMobilePalette && (
-        <div className="modal modal-open modal-bottom lg:hidden bg-black/60 backdrop-blur-xs z-50">
-          <div className="modal-box border-base-300 max-w-lg border p-5">
-            <div className="flex items-center justify-between border-b pb-3 mb-4">
-              <h3 className="font-bold text-base">Question Palette — {currentSection.title}</h3>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mobile-palette-title"
+          className="modal modal-open modal-bottom lg:hidden bg-black/40 backdrop-blur-xs z-50"
+        >
+          <div className="modal-box border-border max-w-sm border p-4 rounded-xl shadow-xl bg-card">
+            <div className="flex items-center justify-between border-b border-border/60 pb-2.5 mb-3">
+              <h3 id="mobile-palette-title" className="font-semibold text-sm">Question Palette: {currentSection.title}</h3>
               <button
                 type="button"
                 onClick={() => setShowMobilePalette(false)}
-                className="btn btn-ghost btn-sm btn-circle"
+                aria-label="Close palette"
+                className="btn btn-ghost btn-xs btn-circle active:scale-90"
               >
-                <X className="size-4" />
+                <X className="size-3.5" />
               </button>
             </div>
 
             {/* Mobile Status Legend */}
-            <div className="grid grid-cols-2 gap-2 text-xs mb-4">
+            <div className="grid grid-cols-2 gap-1.5 text-xs mb-3">
               <div className="flex items-center gap-1.5">
-                <span className="size-4 rounded-md bg-emerald-500 text-white flex items-center justify-center text-[9px] font-bold">✓</span>
-                <span>Answered ({answeredCount})</span>
+                <span className="size-4 rounded bg-emerald-600 text-white flex items-center justify-center text-[9px] font-bold">✓</span>
+                <span className="text-[11px]">Answered ({answeredCount})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="size-4 rounded-md bg-rose-500 text-white flex items-center justify-center text-[9px] font-bold">✕</span>
-                <span>Skipped ({skippedCount})</span>
+                <span className="size-4 rounded bg-rose-600 text-white flex items-center justify-center text-[9px] font-bold">✕</span>
+                <span className="text-[11px]">Skipped ({skippedCount})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="size-4 rounded-md bg-purple-600 text-white flex items-center justify-center text-[9px] font-bold">•</span>
-                <span>Review ({markedCount + answeredMarkedCount})</span>
+                <span className="size-4 rounded bg-amber-500 text-white flex items-center justify-center text-[9px] font-bold">•</span>
+                <span className="text-[11px]">Review ({markedCount + answeredMarkedCount})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="size-4 rounded-md bg-base-300 flex items-center justify-center text-[9px] font-bold">—</span>
-                <span>Unvisited ({notVisitedCount})</span>
+                <span className="size-4 rounded bg-muted text-muted-foreground border border-border flex items-center justify-center text-[9px] font-bold">-</span>
+                <span className="text-[11px]">Unvisited ({notVisitedCount})</span>
               </div>
             </div>
 
             {/* Mobile Grid */}
-            <div className="grid grid-cols-5 gap-2 max-h-60 overflow-y-auto p-1">
+            <div className="grid grid-cols-5 gap-1.5 max-h-56 overflow-y-auto p-0.5">
               {currentSection.questions.map((q, idx) => {
                 const isCurrent = q.id === currentQuestionId;
                 const status = visitStatuses[q.id] || 'NOT_VISITED';
 
-                let bgStyle = 'bg-base-200 text-base-content/70 border-base-300';
-                if (status === 'ANSWERED') bgStyle = 'bg-emerald-500 text-white border-emerald-600';
-                else if (status === 'SKIPPED') bgStyle = 'bg-rose-500 text-white border-rose-600';
-                else if (status === 'MARKED_FOR_REVIEW') bgStyle = 'bg-purple-600 text-white border-purple-700';
-                else if (status === 'ANSWERED_AND_MARKED') bgStyle = 'bg-purple-600 text-white border-emerald-400 ring-2 ring-emerald-400';
+                let bgStyle = 'bg-muted/60 text-muted-foreground border-border';
+                if (status === 'ANSWERED') bgStyle = 'bg-emerald-600 text-white border-emerald-700';
+                else if (status === 'SKIPPED') bgStyle = 'bg-rose-600 text-white border-rose-700';
+                else if (status === 'MARKED_FOR_REVIEW') bgStyle = 'bg-amber-500 text-white border-amber-600';
+                else if (status === 'ANSWERED_AND_MARKED') bgStyle = 'bg-amber-500 text-white border-amber-600 ring-2 ring-emerald-400';
 
                 return (
                   <button
                     key={q.id}
-                    onClick={() => navigateToQuestion(currentSection.id, q.id)}
-                    className={`btn btn-sm aspect-square p-0 font-bold border transition-all ${bgStyle} ${
-                      isCurrent ? 'ring-2 ring-primary ring-offset-2' : ''
+                    onClick={() => {
+                      navigateToQuestion(currentSection.id, q.id);
+                      setShowMobilePalette(false);
+                    }}
+                    aria-label={`Question ${idx + 1}, ${status.replace(/_/g, ' ').toLowerCase()}`}
+                    aria-current={isCurrent ? 'page' : undefined}
+                    className={`btn btn-xs aspect-square p-0 font-bold border rounded-md transition-all active:scale-90 ${bgStyle} ${
+                      isCurrent ? 'ring-2 ring-primary ring-offset-1' : ''
                     }`}
                   >
                     {idx + 1}
@@ -955,16 +987,16 @@ export function Runner() {
               })}
             </div>
 
-            <div className="modal-action border-t pt-3 mt-4">
+            <div className="modal-action border-t border-border/60 pt-2.5 mt-3">
               <button
                 type="button"
                 onClick={() => {
                   setShowMobilePalette(false);
                   setShowSubmitModal(true);
                 }}
-                className="btn btn-primary btn-sm w-full gap-2 font-bold"
+                className="btn btn-primary btn-sm w-full gap-1.5 font-medium rounded-md active:scale-95"
               >
-                <Send className="size-4" />
+                <Send className="size-3.5" />
                 Finish & Submit Test
               </button>
             </div>
@@ -976,42 +1008,47 @@ export function Runner() {
           Submit Confirmation Modal
          ====================================================================== */}
       {showSubmitModal && (
-        <div className="modal modal-open modal-bottom sm:modal-middle bg-black/60 backdrop-blur-xs z-50">
-          <div className="modal-box border-base-300 max-w-lg border p-6">
-            <div className="flex items-center gap-3 text-warning mb-2">
-              <AlertTriangle className="size-6" />
-              <h3 className="text-xl font-bold text-base-content">Submit Test Confirmation</h3>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="submit-modal-title"
+          className="modal modal-open modal-bottom sm:modal-middle bg-black/40 backdrop-blur-xs z-50"
+        >
+          <div className="modal-box border-border max-w-md border p-5 rounded-xl shadow-xl bg-card">
+            <div className="flex items-center gap-2.5 text-warning mb-2">
+              <AlertTriangle className="size-5 shrink-0" />
+              <h3 id="submit-modal-title" className="text-base font-semibold text-foreground tracking-tight">Submit Exam</h3>
             </div>
-            <p className="text-sm text-base-content/70">
+            <p className="text-xs text-muted-foreground">
               Are you sure you want to finish your test? You will not be able to change your answers once submitted.
             </p>
 
             {/* Candidate Summary Stats */}
-            <div className="bg-base-200/60 rounded-xl border border-base-300 my-4 p-4 grid grid-cols-2 gap-3 text-sm">
+            <div className="bg-muted/40 rounded-lg border border-border my-3 p-3 grid grid-cols-2 gap-2 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-base-content/70">Total Answered:</span>
-                <span className="font-bold text-emerald-500">{answeredCount}</span>
+                <span className="text-muted-foreground">Answered:</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-mono">{answeredCount}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-base-content/70">Not Answered:</span>
-                <span className="font-bold text-rose-500">{skippedCount}</span>
+                <span className="text-muted-foreground">Skipped:</span>
+                <span className="font-semibold text-rose-600 dark:text-rose-400 font-mono">{skippedCount}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-base-content/70">Marked for Review:</span>
-                <span className="font-bold text-purple-500">{markedCount + answeredMarkedCount}</span>
+                <span className="text-muted-foreground">Review:</span>
+                <span className="font-semibold text-amber-600 dark:text-amber-400 font-mono">{markedCount + answeredMarkedCount}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-base-content/70">Not Visited:</span>
-                <span className="font-bold text-base-content/60">{notVisitedCount}</span>
+                <span className="text-muted-foreground">Unvisited:</span>
+                <span className="font-semibold text-muted-foreground font-mono">{notVisitedCount}</span>
               </div>
             </div>
 
-            <div className="modal-action">
+            <div className="modal-action mt-3">
               <button
                 type="button"
                 onClick={() => setShowSubmitModal(false)}
                 disabled={isSubmitting}
-                className="btn btn-ghost"
+                className="btn btn-ghost btn-sm text-xs rounded-md active:scale-95"
               >
                 Continue Test
               </button>
@@ -1019,12 +1056,12 @@ export function Runner() {
                 type="button"
                 onClick={() => handleFinalSubmit(false)}
                 disabled={isSubmitting}
-                className="btn btn-primary gap-2 font-bold"
+                className="btn btn-primary btn-sm gap-1.5 font-medium rounded-md active:scale-95 shadow-xs"
               >
                 {isSubmitting ? (
-                  <span className="loading loading-spinner loading-sm" />
+                  <span className="loading loading-spinner loading-xs" />
                 ) : (
-                  <Send className="size-4" />
+                  <Send className="size-3.5" />
                 )}
                 Confirm & Submit
               </button>

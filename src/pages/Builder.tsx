@@ -353,22 +353,22 @@ export function Builder() {
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 pb-36 md:p-8">
       {/* Header */}
-      <div className="border-base-300 flex flex-col justify-between gap-4 border-b pb-5 md:flex-row md:items-center">
+      <div className="border-border flex flex-col justify-between gap-3 border-b pb-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-xl font-bold tracking-tight md:text-2xl">Builder</h1>
-          <p className="text-base-content/50 mt-0.5 text-xs">
-            Import questions from text, files, or AI — or compose a paper visually.
+          <h1 className="text-lg font-bold tracking-tight md:text-xl text-foreground">Builder</h1>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            Import questions from text, files, or AI, or compose a paper visually.
           </p>
         </div>
 
         {/* Studio Mode Selector */}
-        <div className="bg-base-200/80 border-border/80 flex items-center rounded-2xl border p-1 shadow-2xs">
+        <div className="bg-muted/50 border-border flex items-center rounded-lg border p-0.5 shadow-2xs">
           <button
             onClick={() => setMode('INGEST')}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
               mode === 'INGEST'
-                ? 'bg-primary text-primary-content shadow-xs'
-                : 'text-base-content/70 hover:text-base-content'
+                ? 'bg-primary text-primary-content shadow-2xs'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Sparkles className="size-3.5" />
@@ -376,10 +376,10 @@ export function Builder() {
           </button>
           <button
             onClick={() => setMode('COMPOSER')}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
               mode === 'COMPOSER'
-                ? 'bg-primary text-primary-content shadow-xs'
-                : 'text-base-content/70 hover:text-base-content'
+                ? 'bg-primary text-primary-content shadow-2xs'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Layers className="size-3.5" />
@@ -397,27 +397,42 @@ export function Builder() {
           <div className="bg-card border-border/80 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 shadow-xs">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-base-content/60 text-xs font-semibold uppercase tracking-wider">Format Mode:</span>
-              <div className="join">
+              <div role="radiogroup" aria-label="Format Mode" className="bg-base-200/80 p-0.5 rounded-xl border border-border/60 flex items-center gap-0.5">
                 <button
+                  type="button"
+                  role="radio"
+                  aria-checked={formatMode === 'AUTO'}
                   onClick={() => setFormatMode('AUTO')}
-                  className={`btn btn-xs join-item font-semibold ${
-                    formatMode === 'AUTO' ? 'btn-primary' : 'btn-ghost'
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                    formatMode === 'AUTO'
+                      ? 'bg-card text-foreground shadow-xs'
+                      : 'text-base-content/60 hover:text-base-content'
                   }`}
                 >
                   Auto-Detect
                 </button>
                 <button
+                  type="button"
+                  role="radio"
+                  aria-checked={formatMode === 'FULL_PAPER'}
                   onClick={() => setFormatMode('FULL_PAPER')}
-                  className={`btn btn-xs join-item font-semibold ${
-                    formatMode === 'FULL_PAPER' ? 'btn-primary' : 'btn-ghost'
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                    formatMode === 'FULL_PAPER'
+                      ? 'bg-card text-foreground shadow-xs'
+                      : 'text-base-content/60 hover:text-base-content'
                   }`}
                 >
                   📄 Full Paper
                 </button>
                 <button
+                  type="button"
+                  role="radio"
+                  aria-checked={formatMode === 'QUESTION_PACK'}
                   onClick={() => setFormatMode('QUESTION_PACK')}
-                  className={`btn btn-xs join-item font-semibold ${
-                    formatMode === 'QUESTION_PACK' ? 'btn-primary' : 'btn-ghost'
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                    formatMode === 'QUESTION_PACK'
+                      ? 'bg-card text-foreground shadow-xs'
+                      : 'text-base-content/60 hover:text-base-content'
                   }`}
                 >
                   🧩 Question Pack
@@ -433,26 +448,32 @@ export function Builder() {
 
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={handleCleanChatter}
                 disabled={!rawText.trim()}
-                className="btn btn-ghost btn-xs text-base-content/80 gap-1 border border-border/60"
+                className="btn btn-ghost btn-xs text-base-content/80 gap-1 border border-border/60 active:scale-95"
                 title="Strips conversational greetings and markdown backticks"
+                aria-label="Strip AI conversation chatter"
               >
                 <Wand2 className="size-3 text-secondary" />
                 Strip Chatter
               </button>
 
               <button
+                type="button"
                 onClick={handleNativeFilePick}
-                className="btn btn-outline btn-xs gap-1 border-border/70"
+                className="btn btn-outline btn-xs gap-1 border-border/70 active:scale-95"
+                aria-label="Pick file from computer"
               >
                 <FolderOpen className="size-3" />
                 Pick File (.md, .json)
               </button>
 
               <button
+                type="button"
                 onClick={() => setShowAiModal(true)}
-                className="btn btn-secondary btn-xs gap-1 shadow-2xs"
+                className="btn btn-secondary btn-xs gap-1 shadow-2xs active:scale-95"
+                aria-label="Open AI Prompt Generator"
               >
                 <Bot className="size-3" />
                 AI Prompt Helper
@@ -535,9 +556,10 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
 
               <div className="mt-3 flex items-center justify-between">
                 <button
+                  type="button"
                   onClick={() => setRawText('')}
                   disabled={!rawText.trim()}
-                  className="btn btn-ghost btn-xs text-base-content/50 hover:text-error"
+                  className="btn btn-ghost btn-xs text-base-content/50 hover:text-error active:scale-90"
                 >
                   <Trash2 className="size-3" />
                   Clear
@@ -545,9 +567,10 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
 
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => handleExecuteIngest(false)}
                     disabled={!rawText.trim() || ingesting}
-                    className="btn btn-outline btn-sm font-bold shadow-xs"
+                    className="btn btn-outline btn-sm font-bold shadow-xs active:scale-95"
                   >
                     {ingesting ? (
                       <span className="loading loading-spinner loading-xs" />
@@ -558,9 +581,10 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => handleExecuteIngest(true)}
                     disabled={!rawText.trim() || ingesting}
-                    className="btn btn-primary btn-sm font-bold shadow-md"
+                    className="btn btn-primary btn-sm font-bold shadow-md active:scale-95"
                   >
                     {ingesting ? (
                       <span className="loading loading-spinner loading-xs" />

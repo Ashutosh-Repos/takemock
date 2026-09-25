@@ -1,6 +1,30 @@
 {
   "version": 1,
   "skills": {
+    "accessibility": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "github",
+      "skillPath": "skills/accessibility/SKILL.md",
+      "computedHash": "612f913bcb03f0787b103c848cd7664b676a9aaf31f25d3270cc69cf5caaab95"
+    },
+    "antfu-design": {
+      "source": "antfu/skills",
+      "sourceType": "github",
+      "skillPath": "skills/antfu-design/SKILL.md",
+      "computedHash": "3fb42ec43179f38f60106e1ba20f46d660d54e916f9362e4c89ba0abaeaa3dfc"
+    },
+    "anti-slop": {
+      "source": "elithrar/dotfiles",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/anti-slop/SKILL.md",
+      "computedHash": "8206b8b4e691273fcff6068c8d07fd258f81a26a0d44b9d67a9a62ee9474359e"
+    },
+    "apple-design": {
+      "source": "dickwu/apple-design-skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "812f55b5cdda9065dbca33cf0fb81257a7ac6858b2457c69c0a5d20b19e1cec1"
+    },
     "better-colors": {
       "source": "jakubkrehel/skills",
       "sourceType": "github",

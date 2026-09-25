@@ -39,7 +39,7 @@ function applyThemeClassesToDOM(resolved: 'dark' | 'light') {
   const root = window.document.documentElement;
   root.classList.remove('light', 'dark');
   root.classList.add(resolved);
-  root.setAttribute('data-theme', resolved === 'dark' ? 'dracula' : 'cupcake');
+  root.setAttribute('data-theme', resolved === 'dark' ? 'dark' : 'light');
 }
 
 export function ThemeProvider({

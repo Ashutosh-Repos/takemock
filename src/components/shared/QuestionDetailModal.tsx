@@ -104,39 +104,44 @@ export function QuestionDetailModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
+      aria-labelledby="question-modal-title"
+      aria-describedby="question-modal-statement"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-card text-card-foreground border-border/80 flex flex-col w-full max-w-3xl max-h-[90vh] rounded-2xl border shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="bg-card text-card-foreground border-border/70 flex flex-col w-full max-w-2xl max-h-[88vh] rounded-lg border shadow-xl overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Top Header */}
-        <div className="border-border/60 bg-base-200/50 flex items-center justify-between px-5 py-3.5 border-b">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="badge badge-primary font-bold font-mono text-xs">
+        <div className="border-border/60 bg-muted/30 flex items-center justify-between px-4 py-2.5 border-b">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span
+              id="question-modal-title"
+              className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded border border-primary/30 bg-primary/10 text-primary font-semibold"
+            >
               {titlePrefix} {currentIndex + 1} of {total}
             </span>
-            <span className="badge badge-neutral text-xs font-semibold">
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-border/60 bg-muted/40 text-foreground font-medium">
               {currentQuestion.subject}
             </span>
             {currentQuestion.topic && (
-              <span className="badge badge-outline text-xs">
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-border/50 text-muted-foreground">
                 {currentQuestion.topic}
               </span>
             )}
-            <span className="badge badge-ghost badge-xs font-mono uppercase text-base-content/60">
+            <span className="text-[10px] font-mono uppercase text-muted-foreground">
               {currentQuestion.type.replace('_', ' ')}
             </span>
             {currentScore?.status && (
               <span
-                className={`badge badge-sm font-semibold text-xs ${
+                className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded border font-semibold ${
                   currentScore.status === 'CORRECT'
-                    ? 'badge-success text-success-content'
+                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                     : currentScore.status === 'INCORRECT'
-                    ? 'badge-error text-error-content'
+                    ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
                     : currentScore.status === 'PARTIAL'
-                    ? 'badge-warning text-warning-content'
-                    : 'badge-ghost text-base-content/60'
+                    ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    : 'border-border/60 bg-muted/40 text-muted-foreground'
                 }`}
               >
                 {currentScore.status}
@@ -144,76 +149,83 @@ export function QuestionDetailModal({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {/* Nav Arrows */}
-            <div className="join border-border/60 bg-base-100 rounded-lg border">
+            <div className="inline-flex items-center rounded-md border border-border/60 bg-card p-0.5">
               <button
                 onClick={handlePrev}
                 disabled={isFirst}
-                className="btn btn-ghost btn-xs join-item gap-0.5 px-2 font-medium disabled:opacity-30"
+                className="btn btn-ghost btn-xs h-6 px-1.5 gap-0.5 font-medium disabled:opacity-30 active:scale-95 text-xs text-muted-foreground hover:text-foreground"
                 title="Previous Question (←)"
+                aria-label="Previous question"
               >
-                <ChevronLeft className="size-3.5" />
+                <ChevronLeft className="size-3" />
                 <span className="hidden sm:inline">Prev</span>
               </button>
+              <span className="text-border/60 text-[10px]">|</span>
               <button
                 onClick={handleNext}
                 disabled={isLast}
-                className="btn btn-ghost btn-xs join-item gap-0.5 px-2 font-medium disabled:opacity-30"
+                className="btn btn-ghost btn-xs h-6 px-1.5 gap-0.5 font-medium disabled:opacity-30 active:scale-95 text-xs text-muted-foreground hover:text-foreground"
                 title="Next Question (→)"
+                aria-label="Next question"
               >
                 <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="size-3.5" />
+                <ChevronRight className="size-3" />
               </button>
             </div>
 
             <button
               onClick={onClose}
-              className="btn btn-ghost btn-xs btn-square text-base-content/60 hover:text-base-content"
+              className="btn btn-ghost btn-xs h-6 w-6 p-0 text-muted-foreground hover:text-foreground active:scale-95"
               title="Close (Esc)"
+              aria-label="Close dialog"
             >
-              <X className="size-4" />
+              <X className="size-3.5" />
             </button>
           </div>
         </div>
 
         {/* Scrollable Content Body */}
-        <div ref={contentRef} className="overflow-y-auto p-5 sm:p-7 space-y-6 flex-1">
+        <div ref={contentRef} className="overflow-y-auto p-4 sm:p-5 space-y-4 flex-1">
           {/* Question Prompt */}
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-base-content/60">
-              <span className="font-semibold uppercase tracking-wider text-[10px]">
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                 Question Statement
               </span>
-              <div className="flex items-center gap-3 font-mono text-xs">
+              <div className="flex items-center gap-2.5 font-mono text-[11px] tabular-nums">
                 {currentScore && (
                   <span
-                    className={`font-bold ${
+                    className={`font-semibold ${
                       currentScore.marksAwarded > 0
-                        ? 'text-success'
+                        ? 'text-emerald-600 dark:text-emerald-400'
                         : currentScore.marksAwarded < 0
-                        ? 'text-error'
-                        : 'text-base-content/70'
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-muted-foreground'
                     }`}
                   >
                     Score: {currentScore.marksAwarded > 0 ? `+${currentScore.marksAwarded}` : currentScore.marksAwarded}
                   </span>
                 )}
                 {currentScore?.timeSpentSeconds ? (
-                  <span className="flex items-center gap-1 text-base-content/60">
+                  <span className="flex items-center gap-1 text-muted-foreground/80">
                     <Clock className="size-3" />
                     {Math.floor(currentScore.timeSpentSeconds / 60)}m {currentScore.timeSpentSeconds % 60}s
                   </span>
                 ) : null}
-                <span className="flex items-center gap-1 text-base-content/70">
-                  <Award className="size-3 text-warning" />
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <Award className="size-3" />
                   +{currentQuestion.marks || 1} mark{currentQuestion.marks !== 1 ? 's' : ''}
                   {currentQuestion.negativeMarks ? ` / -${currentQuestion.negativeMarks}` : ''}
                 </span>
               </div>
             </div>
 
-            <div className="bg-base-200/30 border-border/60 rounded-xl border p-4 text-base leading-relaxed">
+            <div
+              id="question-modal-statement"
+              className="bg-muted/20 border-border/60 rounded-lg border p-3.5 text-sm leading-relaxed selectable-content text-foreground/90"
+            >
               <MathRenderer content={currentQuestion.body} />
             </div>
 
@@ -303,30 +315,30 @@ export function QuestionDetailModal({
                   return (
                     <div
                       key={opt.id || i}
-                      className={`flex items-start gap-3 rounded-xl border p-3.5 text-sm transition-all ${
+                      className={`flex items-start gap-2.5 rounded-md border p-2.5 text-xs sm:text-sm transition-colors ${
                         opt.isCorrect
-                          ? 'border-success/60 bg-success/10 shadow-xs'
+                          ? 'border-emerald-500/40 bg-emerald-500/5'
                           : isSelected
-                          ? 'border-error/60 bg-error/10 shadow-xs'
-                          : 'border-border/60 bg-base-100/50'
+                          ? 'border-red-500/40 bg-red-500/5'
+                          : 'border-border/60 bg-card'
                       }`}
                     >
                       <span
-                        className={`font-mono font-bold text-xs size-6 flex items-center justify-center rounded-md shrink-0 ${
+                        className={`font-mono text-xs size-5 flex items-center justify-center rounded shrink-0 font-medium ${
                           opt.isCorrect
-                            ? 'bg-success text-success-content'
+                            ? 'bg-emerald-500 text-white'
                             : isSelected
-                            ? 'bg-error text-error-content'
-                            : 'bg-base-200 text-base-content/70'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-muted text-muted-foreground'
                         }`}
                       >
                         {letter}
                       </span>
 
-                      <div className="flex-1 pt-0.5 leading-relaxed">
+                      <div className="flex-1 pt-0.5 leading-relaxed text-foreground">
                         <MathRenderer content={opt.text} />
                         {opt.explanation && (
-                          <p className="mt-1 text-xs text-base-content/60 italic">
+                          <p className="mt-1 text-xs text-muted-foreground italic">
                             {opt.explanation}
                           </p>
                         )}
@@ -334,21 +346,21 @@ export function QuestionDetailModal({
 
                       <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 shrink-0">
                         {isSelected && !opt.isCorrect && (
-                          <span className="badge badge-error text-error-content gap-1 text-[11px] font-bold">
-                            <XCircle className="size-3" />
+                          <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 flex items-center gap-1">
+                            <XCircle className="size-2.5" />
                             Your Pick
                           </span>
                         )}
                         {isSelected && opt.isCorrect && (
-                          <span className="badge badge-success text-success-content gap-1 text-[11px] font-bold">
-                            <CheckCircle2 className="size-3" />
+                          <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 className="size-2.5" />
                             Your Pick (Correct)
                           </span>
                         )}
                         {!isSelected && opt.isCorrect && (
-                          <span className="badge badge-success badge-outline gap-1 text-[11px] font-bold">
-                            <CheckCircle2 className="size-3" />
-                            Correct Answer
+                          <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 className="size-2.5" />
+                            Correct
                           </span>
                         )}
                       </div>
@@ -360,27 +372,27 @@ export function QuestionDetailModal({
 
             {/* Numerical / Integer Answer */}
             {(currentQuestion.type === 'numerical' || currentQuestion.type === 'integer') && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="bg-success/10 border-success/30 rounded-xl border p-4 text-sm flex flex-col justify-between">
-                  <span className="text-xs uppercase font-bold text-success block tracking-wider">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="bg-emerald-500/5 border border-emerald-500/30 rounded-md p-3 text-xs flex flex-col justify-between">
+                  <span className="text-[10px] uppercase font-mono text-emerald-600 dark:text-emerald-400 block">
                     Correct Value
                   </span>
-                  <div className="font-mono text-lg font-bold text-success mt-1">
+                  <div className="font-mono text-base font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
                     {currentQuestion.correctValue ?? 'N/A'} {currentQuestion.unit || ''}
                   </div>
                   {currentQuestion.toleranceAbsolute !== undefined && currentQuestion.toleranceAbsolute > 0 && (
-                    <div className="text-xs text-base-content/70 font-mono mt-1">
+                    <div className="text-[11px] text-muted-foreground font-mono mt-0.5">
                       Tolerance: ±{currentQuestion.toleranceAbsolute} {currentQuestion.unit || ''}
                     </div>
                   )}
                 </div>
 
                 {activeResponse !== undefined && activeResponse !== null && (
-                  <div className="bg-base-200/50 border-border/70 rounded-xl border p-4 text-sm flex flex-col justify-between">
-                    <span className="text-xs uppercase font-bold text-base-content/60 block tracking-wider">
+                  <div className="bg-muted/30 border border-border/60 rounded-md p-3 text-xs flex flex-col justify-between">
+                    <span className="text-[10px] uppercase font-mono text-muted-foreground block">
                       Your Response
                     </span>
-                    <div className="font-mono text-lg font-bold mt-1">
+                    <div className="font-mono text-base font-semibold text-foreground mt-0.5">
                       {String(activeResponse)} {currentQuestion.unit || ''}
                     </div>
                   </div>
@@ -390,20 +402,20 @@ export function QuestionDetailModal({
 
             {/* Fill in the Blank Answer */}
             {currentQuestion.type === 'fill_blank' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="bg-success/10 border-success/30 rounded-xl border p-4 text-sm space-y-1.5">
-                  <span className="text-xs uppercase font-bold text-success block tracking-wider">
-                    Accepted Answer(s)
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="bg-emerald-500/5 border border-emerald-500/30 rounded-md p-3 text-xs space-y-1">
+                  <span className="text-[10px] uppercase font-mono text-emerald-600 dark:text-emerald-400 block">
+                    Accepted Answer
                   </span>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {currentQuestion.acceptedAnswers && currentQuestion.acceptedAnswers.length > 0 ? (
                       currentQuestion.acceptedAnswers.map((ans, aIdx) => (
-                        <span key={aIdx} className="badge badge-success text-success-content font-mono font-bold">
+                        <span key={aIdx} className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium">
                           {ans}
                         </span>
                       ))
                     ) : (
-                      <span className="font-mono font-bold text-success">
+                      <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
                         {currentQuestion.correctValue ?? 'N/A'}
                       </span>
                     )}
@@ -411,11 +423,11 @@ export function QuestionDetailModal({
                 </div>
 
                 {activeResponse !== undefined && activeResponse !== null && (
-                  <div className="bg-base-200/50 border-border/70 rounded-xl border p-4 text-sm space-y-1.5">
-                    <span className="text-xs uppercase font-bold text-base-content/60 block tracking-wider">
+                  <div className="bg-muted/30 border border-border/60 rounded-md p-3 text-xs space-y-1">
+                    <span className="text-[10px] uppercase font-mono text-muted-foreground block">
                       Your Response
                     </span>
-                    <div className="font-mono font-bold text-base">
+                    <div className="font-mono font-semibold text-foreground">
                       {String(activeResponse)}
                     </div>
                   </div>
@@ -425,25 +437,25 @@ export function QuestionDetailModal({
 
             {/* Assertion-Reason Code */}
             {currentQuestion.type === 'assertion_reason' && currentQuestion.correctCode && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="bg-success/10 border-success/30 rounded-xl border p-4 text-sm flex items-center justify-between">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="bg-emerald-500/5 border border-emerald-500/30 rounded-md p-3 text-xs flex items-center justify-between">
                   <div>
-                    <span className="text-xs uppercase font-bold text-success block tracking-wider">
-                      Correct Code
+                    <span className="text-[10px] uppercase font-mono text-emerald-600 dark:text-emerald-400 block">
+                      Correct Option
                     </span>
-                    <span className="font-mono text-base font-bold text-success">
+                    <span className="font-mono text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                       Option ({currentQuestion.correctCode})
                     </span>
                   </div>
                 </div>
 
                 {activeResponse !== undefined && activeResponse !== null && (
-                  <div className="bg-base-200/50 border-border/70 rounded-xl border p-4 text-sm flex items-center justify-between">
+                  <div className="bg-muted/30 border border-border/60 rounded-md p-3 text-xs flex items-center justify-between">
                     <div>
-                      <span className="text-xs uppercase font-bold text-base-content/60 block tracking-wider">
+                      <span className="text-[10px] uppercase font-mono text-muted-foreground block">
                         Your Response
                       </span>
-                      <span className="font-mono text-base font-bold">
+                      <span className="font-mono text-sm font-semibold text-foreground">
                         Option ({String(activeResponse)})
                       </span>
                     </div>
@@ -454,51 +466,51 @@ export function QuestionDetailModal({
           </div>
 
           {/* Verified Derivation & Explanation */}
-          <div className="bg-primary/5 border-primary/25 rounded-xl border p-5 text-sm space-y-2.5">
-            <div className="flex items-center gap-1.5 text-primary font-bold text-xs uppercase tracking-wider">
-              <Sparkles className="size-4" />
-              Verified Derivation & Explanation
+          <div className="bg-muted/30 border border-border/60 rounded-md p-3.5 text-xs sm:text-sm space-y-2">
+            <div className="flex items-center gap-1.5 text-primary font-medium text-xs">
+              <Sparkles className="size-3.5" />
+              <span>Explanation & Derivation</span>
             </div>
 
             {currentQuestion.solution && currentQuestion.solution.trim() ? (
-              <div className="leading-relaxed text-base-content/90">
+              <div className="leading-relaxed text-foreground/90 selectable-content text-xs sm:text-sm">
                 <MathRenderer content={currentQuestion.solution} />
               </div>
             ) : (
-              <p className="text-xs text-base-content/60 italic leading-relaxed">
-                No formal step-by-step derivation was attached to this question in the source paper. The verified answer key is confirmed above.
+              <p className="text-xs text-muted-foreground italic leading-relaxed">
+                No step-by-step derivation was provided with this question. The verified answer key is confirmed above.
               </p>
             )}
           </div>
         </div>
 
         {/* Modal Footer with Keyboard Nav Guidance */}
-        <div className="border-border/60 bg-base-200/40 flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-t text-xs">
-          <div className="flex items-center gap-2 text-base-content/50">
-            <kbd className="kbd kbd-xs font-mono">←</kbd>
-            <kbd className="kbd kbd-xs font-mono">→</kbd>
-            <span>Flip question</span>
-            <span className="mx-1">•</span>
-            <kbd className="kbd kbd-xs font-mono">Esc</kbd>
+        <div className="border-border/60 bg-muted/20 flex flex-wrap items-center justify-between gap-2 px-4 py-2 border-t text-xs">
+          <div className="flex items-center gap-1.5 text-muted-foreground text-[11px] font-mono">
+            <kbd className="px-1 py-0.5 rounded border border-border/60 bg-card text-[10px]">←</kbd>
+            <kbd className="px-1 py-0.5 rounded border border-border/60 bg-card text-[10px]">→</kbd>
+            <span>Navigate</span>
+            <span className="text-border/80">|</span>
+            <kbd className="px-1 py-0.5 rounded border border-border/60 bg-card text-[10px]">Esc</kbd>
             <span>Close</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={handlePrev}
               disabled={isFirst}
-              className="btn btn-outline btn-xs gap-1 disabled:opacity-30"
+              className="btn btn-outline border-border/70 hover:bg-muted text-foreground btn-xs h-6 px-2 text-xs font-medium disabled:opacity-30 active:scale-95"
             >
-              <ChevronLeft className="size-3.5" />
-              Previous
+              <ChevronLeft className="size-3" />
+              Prev
             </button>
             <button
               onClick={handleNext}
               disabled={isLast}
-              className="btn btn-primary btn-xs gap-1 disabled:opacity-30"
+              className="btn btn-primary btn-xs h-6 px-2 text-xs font-medium disabled:opacity-30 active:scale-95"
             >
               Next
-              <ChevronRight className="size-3.5" />
+              <ChevronRight className="size-3" />
             </button>
           </div>
         </div>

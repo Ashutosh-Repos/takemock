@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
+  AlertCircle,
   Bookmark,
   CheckCircle2,
   ChevronRight,
   Play,
-  Target,
   Zap,
 } from 'lucide-react';
 import { MathRenderer } from '@/components/shared/MathRenderer';
@@ -65,12 +65,12 @@ export function MistakeVault() {
       : data.bookmarkedQuestions;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-4 pb-36 md:p-8">
+    <div className="mx-auto max-w-7xl space-y-5 p-4 pb-36 md:p-6">
       {/* Header */}
-      <div className="border-base-300 flex flex-col justify-between gap-4 border-b pb-5 md:flex-row md:items-center">
+      <div className="border-border flex flex-col justify-between gap-3 border-b pb-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-xl font-bold tracking-tight md:text-2xl">Mistakes</h1>
-          <p className="text-base-content/50 mt-0.5 text-xs">
+          <h1 className="text-lg font-bold tracking-tight md:text-xl text-foreground">Mistakes</h1>
+          <p className="text-muted-foreground mt-0.5 text-xs">
             {data.unresolvedQuestions.length} question{data.unresolvedQuestions.length !== 1 ? 's' : ''} to review and master.
           </p>
         </div>
@@ -80,7 +80,7 @@ export function MistakeVault() {
           <button
             onClick={() => handleLaunchMistakeDrill(10)}
             disabled={data.unresolvedQuestions.length === 0}
-            className="btn btn-error btn-sm font-bold text-error-content shadow-sm gap-1.5"
+            className="btn btn-primary btn-sm font-medium shadow-xs gap-1.5 rounded-md active:scale-95"
           >
             <Play className="size-3.5 fill-current" />
             Practise ({Math.min(10, data.unresolvedQuestions.length)})
@@ -89,52 +89,79 @@ export function MistakeVault() {
       </div>
 
       {/* Metric Category Cards */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => setActiveCategory('UNRESOLVED')}
-          className={`bg-card border-border/80 flex cursor-pointer flex-col justify-between rounded-xl border p-4 shadow-2xs transition-all ${
-            activeCategory === 'UNRESOLVED' ? 'ring-2 ring-error/70 border-error/50 bg-error/5' : 'hover:bg-base-200/40'
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setActiveCategory('UNRESOLVED');
+            }
+          }}
+          aria-pressed={activeCategory === 'UNRESOLVED'}
+          className={`bg-card flex cursor-pointer flex-col justify-between rounded-lg border p-3.5 shadow-2xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
+            activeCategory === 'UNRESOLVED' ? 'ring-2 ring-primary border-primary bg-primary/5' : 'border-border hover:bg-muted/40'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-base-content/60 text-xs font-semibold">Incorrect</span>
-            <Target className="size-3.5 text-error" />
+            <span className="text-muted-foreground text-xs font-medium">Incorrect</span>
+            <AlertCircle className="size-3.5 text-rose-500" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-error">{data.unresolvedQuestions.length}</span>
-            <span className="text-base-content/50 text-[11px]">unresolved</span>
+            <span className="text-xl font-bold font-mono text-rose-600 dark:text-rose-400 tracking-tight">{data.unresolvedQuestions.length}</span>
+            <span className="text-muted-foreground text-[11px]">unresolved</span>
           </div>
         </div>
 
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => setActiveCategory('TIME_SINKS')}
-          className={`bg-card border-border/80 flex cursor-pointer flex-col justify-between rounded-xl border p-4 shadow-2xs transition-all ${
-            activeCategory === 'TIME_SINKS' ? 'ring-2 ring-warning/70 border-warning/50 bg-warning/5' : 'hover:bg-base-200/40'
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setActiveCategory('TIME_SINKS');
+            }
+          }}
+          aria-pressed={activeCategory === 'TIME_SINKS'}
+          className={`bg-card flex cursor-pointer flex-col justify-between rounded-lg border p-3.5 shadow-2xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
+            activeCategory === 'TIME_SINKS' ? 'ring-2 ring-primary border-primary bg-primary/5' : 'border-border hover:bg-muted/40'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-base-content/60 text-xs font-semibold">Time Sinks</span>
-            <span className="text-[10px] text-warning font-mono">&gt;2.5m</span>
+            <span className="text-muted-foreground text-xs font-medium">Time Sinks</span>
+            <span className="text-[10px] text-amber-500 font-mono">&gt;2.5m</span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-warning">{data.timeSinkQuestions.length}</span>
-            <span className="text-base-content/50 text-[11px]">slow responses</span>
+            <span className="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 tracking-tight">{data.timeSinkQuestions.length}</span>
+            <span className="text-muted-foreground text-[11px]">slow responses</span>
           </div>
         </div>
 
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => setActiveCategory('BOOKMARKED')}
-          className={`bg-card border-border/80 flex cursor-pointer flex-col justify-between rounded-xl border p-4 shadow-2xs transition-all ${
-            activeCategory === 'BOOKMARKED' ? 'ring-2 ring-primary/70 border-primary/50 bg-primary/5' : 'hover:bg-base-200/40'
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setActiveCategory('BOOKMARKED');
+            }
+          }}
+          aria-pressed={activeCategory === 'BOOKMARKED'}
+          className={`bg-card flex cursor-pointer flex-col justify-between rounded-lg border p-3.5 shadow-2xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
+            activeCategory === 'BOOKMARKED' ? 'ring-2 ring-primary border-primary bg-primary/5' : 'border-border hover:bg-muted/40'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-base-content/60 text-xs font-semibold">Bookmarked</span>
+            <span className="text-muted-foreground text-xs font-medium">Bookmarked</span>
             <Bookmark className="size-3.5 text-primary" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-primary">{data.bookmarkedQuestions.length}</span>
-            <span className="text-base-content/50 text-[11px]">saved questions</span>
+            <span className="text-xl font-bold font-mono text-primary tracking-tight">{data.bookmarkedQuestions.length}</span>
+            <span className="text-muted-foreground text-[11px]">saved questions</span>
           </div>
         </div>
       </div>
@@ -142,69 +169,78 @@ export function MistakeVault() {
       {/* Question Ledger */}
       {loading ? (
         <div className="flex min-h-[30vh] items-center justify-center">
-          <span className="loading loading-spinner text-primary loading-md" />
+          <span className="loading loading-spinner text-primary loading-sm" />
         </div>
       ) : currentQuestions.length === 0 ? (
-        <div className="border-border/60 bg-card flex flex-col items-center justify-center rounded-2xl border p-12 text-center shadow-xs">
-          <CheckCircle2 className="text-success size-12" />
-          <h3 className="mt-3 text-base font-bold">No Questions in This Category</h3>
-          <p className="text-base-content/60 mx-auto mt-1 max-w-sm text-xs">
+        <div className="border-border bg-card flex flex-col items-center justify-center rounded-lg border p-10 text-center shadow-2xs">
+          <CheckCircle2 className="text-emerald-500 size-10" />
+          <h3 className="mt-3 text-sm font-semibold text-foreground">No Questions in This Category</h3>
+          <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-xs">
             {activeCategory === 'UNRESOLVED'
-              ? 'Outstanding work! You have resolved all recorded mistakes.'
+              ? 'Great job! You have resolved all recorded mistakes.'
               : activeCategory === 'TIME_SINKS'
               ? 'No questions exceeded your 2.5-minute time threshold with incorrect answers.'
               : 'You have no questions bookmarked for review.'}
           </p>
-          <button onClick={() => navigate('/')} className="btn btn-primary btn-sm mt-4 gap-1.5 shadow-sm">
-            <Play className="size-3.5" />
+          <button onClick={() => navigate('/')} className="btn btn-primary btn-sm mt-4 gap-1.5 shadow-xs rounded-md">
+            <Play className="size-3" />
             Explore Papers
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-base-content/60">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Showing {currentQuestions.length} question(s)</span>
             <button
               onClick={() => handleLaunchMistakeDrill(currentQuestions.length)}
-              className="btn btn-outline btn-xs gap-1"
+              className="btn btn-outline btn-xs gap-1 rounded-md"
             >
               <Zap className="size-3" />
               Practice All {currentQuestions.length}
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {currentQuestions.map((q, idx) => (
               <div
                 key={q.id}
                 onClick={() => setModalIndex(idx)}
-                className="bg-card border-border/80 hover:border-primary/50 cursor-pointer rounded-2xl border p-5 shadow-xs transition-all space-y-3 group"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setModalIndex(idx);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Error #${idx + 1} in ${q.subject}. Click to view problem and solution.`}
+                className="bg-card border-border hover:border-primary/50 cursor-pointer rounded-lg border p-4 shadow-2xs transition-all duration-150 active:scale-[0.99] space-y-2.5 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
               >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-border/60 pb-2.5">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="badge badge-error badge-sm font-bold text-error-content">
+                    <span className="badge badge-error badge-xs font-semibold">
                       Error #{idx + 1}
                     </span>
-                    <span className="badge badge-neutral text-xs font-bold">{q.subject}</span>
-                    {q.topic && <span className="badge badge-outline text-xs">{q.topic}</span>}
-                    <span className="badge badge-ghost text-[10px] font-mono uppercase text-base-content/60">
+                    <span className="badge badge-neutral text-[11px] font-semibold">{q.subject}</span>
+                    {q.topic && <span className="badge badge-outline text-[11px]">{q.topic}</span>}
+                    <span className="badge badge-ghost text-[10px] font-mono uppercase text-muted-foreground">
                       {q.type.replace('_', ' ')}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs font-mono text-base-content/60">
+                  <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground">
                     <span>+{q.marks || 1} mark{q.marks !== 1 ? 's' : ''}</span>
                   </div>
                 </div>
 
                 {/* Question Prompt Snippet */}
-                <div className="text-sm leading-relaxed line-clamp-3">
+                <div className="text-xs leading-relaxed line-clamp-2 md:line-clamp-3 selectable-content text-foreground/90">
                   <MathRenderer content={q.body} />
                 </div>
 
                 {/* Card Action Hint */}
-                <div className="flex items-center justify-between border-t border-border/40 pt-3 text-xs">
-                  <span className="text-base-content/40 text-[11px] group-hover:text-base-content/70 transition-colors">
+                <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs">
+                  <span className="text-muted-foreground text-[11px] group-hover:text-foreground transition-colors">
                     Click to review problem & solution
                   </span>
                   <button
@@ -212,10 +248,10 @@ export function MistakeVault() {
                       e.stopPropagation();
                       setModalIndex(idx);
                     }}
-                    className="btn btn-ghost btn-xs text-primary gap-1 font-semibold group-hover:bg-primary/10"
+                    className="btn btn-ghost btn-xs text-primary gap-1 font-medium group-hover:bg-primary/10 active:scale-95"
                   >
                     View Answer & Explanation
-                    <ChevronRight className="size-3.5" />
+                    <ChevronRight className="size-3" />
                   </button>
                 </div>
               </div>

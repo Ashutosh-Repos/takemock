@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 @plugin 'daisyui' {
   themes:
-    cupcake --default,
-    dracula --prefersdark;
+    light --default,
+    dark --prefersdark;
 }
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
@@ -10,7 +10,7 @@
 @import '@fontsource-variable/outfit';
 @import '@fontsource-variable/fira-code';
 
-@custom-variant dark (&:where([data-theme=dracula], [data-theme=dracula] *, .dark, .dark *));
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *, .dark, .dark *));
 
 @theme inline {
   --font-heading: var(--font-heading-family);
@@ -50,113 +50,180 @@
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.3);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-3xl: calc(var(--radius) * 2.0);
+  --radius-4xl: calc(var(--radius) * 2.4);
 }
 
 /* ==========================================================================
-   CUPCAKE THEME (Light Mode Default)
-   Official daisyUI cupcake palette, pill radii, and warm friendly typography
+   MINIMAL LIGHT THEME
+   Pure, clean, quiet educational canvas.
+   High-contrast typography, hairline borders, single calm accent.
    ========================================================================== */
 :root,
-[data-theme='cupcake'] {
+[data-theme='light'] {
   color-scheme: light;
 
   /* Typography */
   --font-sans-family:
-    'Schibsted Grotesk Variable', 'Schibsted Grotesk', 'Outfit', ui-sans-serif, system-ui,
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading-family: 'Schibsted Grotesk Variable', 'Schibsted Grotesk', 'Outfit', sans-serif;
+    'Schibsted Grotesk Variable', 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont,
+    'SF Pro Text', ui-sans-serif, system-ui, sans-serif;
+  --font-heading-family:
+    'Schibsted Grotesk Variable', 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont,
+    'SF Pro Display', ui-sans-serif, system-ui, sans-serif;
   --font-mono-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Seamless linkage to daisyUI tokens with exact cupcake fallback values */
-  --background: var(--color-base-100, oklch(97.788% 0.004 56.375));
-  --foreground: var(--color-base-content, oklch(23.574% 0.066 313.189));
-  --card: var(--color-base-200, oklch(93.982% 0.007 61.449));
-  --card-foreground: var(--color-base-content, oklch(23.574% 0.066 313.189));
-  --popover: var(--color-base-200, oklch(93.982% 0.007 61.449));
-  --popover-foreground: var(--color-base-content, oklch(23.574% 0.066 313.189));
-  --primary: var(--color-primary, oklch(85% 0.138 181.071));
-  --primary-foreground: var(--color-primary-content, oklch(43% 0.078 188.216));
-  --secondary: var(--color-secondary, oklch(89% 0.061 343.231));
-  --secondary-foreground: var(--color-secondary-content, oklch(45% 0.187 3.815));
-  --muted: var(--color-base-300, oklch(91.586% 0.006 53.44));
-  --muted-foreground: oklch(42% 0.04 313.189);
-  --accent: var(--color-accent, oklch(90% 0.076 70.697));
-  --accent-foreground: var(--color-accent-content, oklch(47% 0.157 37.304));
-  --destructive: var(--color-error, oklch(64% 0.246 16.439));
-  --destructive-foreground: var(--color-error-content, oklch(27% 0.105 12.094));
-  --border: var(--color-base-300, oklch(91.586% 0.006 53.44));
-  --input: var(--color-base-300, oklch(91.586% 0.006 53.44));
-  --ring: var(--color-primary, oklch(85% 0.138 181.071));
-  --radius: var(--radius-box, 1rem);
-  --sidebar: var(--color-base-200, oklch(93.982% 0.007 61.449));
-  --sidebar-foreground: var(--color-base-content, oklch(23.574% 0.066 313.189));
-  --sidebar-primary: var(--color-primary, oklch(85% 0.138 181.071));
-  --sidebar-primary-foreground: var(--color-primary-content, oklch(43% 0.078 188.216));
-  --sidebar-accent: var(--color-secondary, oklch(89% 0.061 343.231));
-  --sidebar-accent-foreground: var(--color-secondary-content, oklch(45% 0.187 3.815));
-  --sidebar-border: var(--color-base-300, oklch(91.586% 0.006 53.44));
-  --sidebar-ring: var(--color-primary, oklch(85% 0.138 181.071));
-  --chart-1: oklch(85% 0.138 181.071);
-  --chart-2: oklch(89% 0.061 343.231);
-  --chart-3: oklch(90% 0.076 70.697);
-  --chart-4: oklch(69% 0.17 162.48);
-  --chart-5: oklch(79% 0.184 86.047);
+  /* Neutral Surface Ramps (OKLCH perceived lightness) */
+  --background: oklch(99.2% 0.002 260);          /* #fcfcfd - clean, airy canvas */
+  --foreground: oklch(21% 0.012 260);            /* #18181b - deep slate ink (14.2:1 contrast) */
+  --card: oklch(100% 0 0);                      /* #ffffff - elevated crisp card */
+  --card-foreground: oklch(21% 0.012 260);
+  --popover: oklch(100% 0 0);
+  --popover-foreground: oklch(21% 0.012 260);
+  --muted: oklch(96.2% 0.004 260);              /* #f4f4f5 - subtle component fill */
+  --muted-foreground: oklch(48% 0.014 260);     /* #64748b - readable secondary text (4.8:1 contrast) */
+  --border: oklch(91.5% 0.005 260);             /* #e4e4e7 - clean 1px hairline border */
+  --input: oklch(91.5% 0.005 260);
+
+  /* Primary Accent: Focused Apple System Blue */
+  --primary: oklch(52% 0.20 255);               /* #0066cc - clean, authoritative, zero gimmick */
+  --primary-foreground: oklch(100% 0 0);        /* #ffffff (5.2:1 contrast) */
+  --secondary: oklch(95% 0.005 260);            /* #f1f2f4 - neutral secondary button */
+  --secondary-foreground: oklch(25% 0.015 260); /* #1e293b */
+  --accent: oklch(96% 0.015 255);               /* #eff6ff - soft interactive tint */
+  --accent-foreground: oklch(46% 0.19 255);     /* #1d4ed8 */
+  --destructive: oklch(58% 0.21 25);            /* #dc2626 - error red */
+  --destructive-foreground: oklch(100% 0 0);
+  --ring: oklch(52% 0.20 255);
+  --radius: 0.5rem;                             /* 8px - compact, native */
+
+  /* Sidebar & Navigation */
+  --sidebar: oklch(98.5% 0.003 260);
+  --sidebar-foreground: oklch(21% 0.012 260);
+  --sidebar-primary: oklch(52% 0.20 255);
+  --sidebar-primary-foreground: oklch(100% 0 0);
+  --sidebar-accent: oklch(95% 0.005 260);
+  --sidebar-accent-foreground: oklch(21% 0.012 260);
+  --sidebar-border: oklch(91.5% 0.005 260);
+  --sidebar-ring: oklch(52% 0.20 255);
+
+  /* Chart & Metrics */
+  --chart-1: oklch(52% 0.20 255);
+  --chart-2: oklch(60% 0.16 148);
+  --chart-3: oklch(74% 0.16 75);
+  --chart-4: oklch(58% 0.21 25);
+  --chart-5: oklch(60% 0.14 300);
+
+  /* DaisyUI Semantic Linkage */
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--muted);
+  --color-base-content: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-content: var(--accent-foreground);
+  --color-neutral: oklch(25% 0.015 260);
+  --color-neutral-content: oklch(100% 0 0);
+  --color-info: oklch(58% 0.17 245);
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(60% 0.16 148);
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(74% 0.16 75);
+  --color-warning-content: oklch(100% 0 0);
+  --color-error: oklch(58% 0.21 25);
+  --color-error-content: oklch(100% 0 0);
+  --radius-box: 0.5rem;
+  --radius-field: 0.375rem;
+  --radius-selector: 0.375rem;
 }
 
 /* ==========================================================================
-   DRACULA THEME (Dark Mode Default)
-   Official daisyUI dracula palette, technical radii, and code typography
+   MINIMAL DARK THEME
+   Deep, calm, focused neutral dark (Zero purple or garish novelty tones).
+   True slate/graphite surfaces with high-readability text.
    ========================================================================== */
 .dark,
-[data-theme='dracula'] {
+[data-theme='dark'] {
   color-scheme: dark;
 
   /* Typography */
   --font-sans-family:
-    'Schibsted Grotesk Variable', 'Schibsted Grotesk', ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading-family: 'Schibsted Grotesk Variable', 'Schibsted Grotesk', sans-serif;
-  --font-mono-family:
-    'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+    'Schibsted Grotesk Variable', 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont,
+    'SF Pro Text', ui-sans-serif, system-ui, sans-serif;
+  --font-heading-family:
+    'Schibsted Grotesk Variable', 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont,
+    'SF Pro Display', ui-sans-serif, system-ui, sans-serif;
+  --font-mono-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Seamless linkage to daisyUI tokens with exact dracula fallback values */
-  --background: var(--color-base-100, oklch(28.822% 0.022 277.508));
-  --foreground: var(--color-base-content, oklch(97.747% 0.007 106.545));
-  --card: var(--color-base-200, oklch(26.805% 0.02 277.508));
-  --card-foreground: var(--color-base-content, oklch(97.747% 0.007 106.545));
-  --popover: var(--color-base-200, oklch(26.805% 0.02 277.508));
-  --popover-foreground: var(--color-base-content, oklch(97.747% 0.007 106.545));
-  --primary: var(--color-primary, oklch(75.461% 0.183 346.812));
-  --primary-foreground: var(--color-primary-content, oklch(15.092% 0.036 346.812));
-  --secondary: var(--color-secondary, oklch(74.202% 0.148 301.883));
-  --secondary-foreground: var(--color-secondary-content, oklch(14.84% 0.029 301.883));
-  --muted: var(--color-base-300, oklch(24.787% 0.019 277.508));
-  --muted-foreground: oklch(75% 0.015 277.508);
-  --accent: var(--color-accent, oklch(83.392% 0.124 66.558));
-  --accent-foreground: var(--color-accent-content, oklch(16.678% 0.024 66.558));
-  --destructive: var(--color-error, oklch(68.22% 0.206 24.43));
-  --destructive-foreground: var(--color-error-content, oklch(13.644% 0.041 24.43));
-  --border: var(--color-neutral, oklch(39.445% 0.032 275.524));
-  --input: var(--color-neutral, oklch(39.445% 0.032 275.524));
-  --ring: var(--color-secondary, oklch(74.202% 0.148 301.883));
-  --radius: var(--radius-box, 0.5rem);
-  --sidebar: var(--color-base-200, oklch(26.805% 0.02 277.508));
-  --sidebar-foreground: var(--color-base-content, oklch(97.747% 0.007 106.545));
-  --sidebar-primary: var(--color-primary, oklch(75.461% 0.183 346.812));
-  --sidebar-primary-foreground: var(--color-primary-content, oklch(15.092% 0.036 346.812));
-  --sidebar-accent: var(--color-neutral, oklch(39.445% 0.032 275.524));
-  --sidebar-accent-foreground: var(--color-base-content, oklch(97.747% 0.007 106.545));
-  --sidebar-border: var(--color-neutral, oklch(39.445% 0.032 275.524));
-  --sidebar-ring: var(--color-secondary, oklch(74.202% 0.148 301.883));
-  --chart-1: oklch(75.461% 0.183 346.812);
-  --chart-2: oklch(74.202% 0.148 301.883);
-  --chart-3: oklch(83.392% 0.124 66.558);
-  --chart-4: oklch(87.099% 0.219 148.024);
-  --chart-5: oklch(88.263% 0.093 212.846);
+  /* Neutral Surface Ramps */
+  --background: oklch(14% 0.005 260);           /* #111113 - pure calm neutral dark */
+  --foreground: oklch(95.5% 0.003 260);         /* #f3f3f5 - crisp light text (14.5:1 contrast) */
+  --card: oklch(17.5% 0.006 260);               /* #18181b - subtle elevated card */
+  --card-foreground: oklch(95.5% 0.003 260);
+  --popover: oklch(17.5% 0.006 260);
+  --popover-foreground: oklch(95.5% 0.003 260);
+  --muted: oklch(21.5% 0.007 260);              /* #222226 - subtle component fill */
+  --muted-foreground: oklch(68% 0.01 260);      /* #a1a1aa - readable muted secondary (6.2:1 contrast) */
+  --border: oklch(25.5% 0.007 260);             /* #2a2a2e - hairline dark border */
+  --input: oklch(25.5% 0.007 260);
+
+  /* Primary Accent: Luminous Focused Blue */
+  --primary: oklch(60% 0.19 255);               /* #2563eb / #3b82f6 - vibrant clean blue, 4.8:1 with white */
+  --primary-foreground: oklch(100% 0 0);        /* white text for maximum readability */
+  --secondary: oklch(22% 0.007 260);            /* #232327 */
+  --secondary-foreground: oklch(92% 0.004 260); /* #e4e4e7 */
+  --accent: oklch(23% 0.03 255);                /* subtle dark blue tint */
+  --accent-foreground: oklch(76% 0.14 255);     /* #60a5fa */
+  --destructive: oklch(64% 0.20 25);            /* #ef4444 */
+  --destructive-foreground: oklch(100% 0 0);
+  --ring: oklch(60% 0.19 255);
+  --radius: 0.5rem;
+
+  /* Sidebar & Navigation */
+  --sidebar: oklch(16% 0.005 260);
+  --sidebar-foreground: oklch(95.5% 0.003 260);
+  --sidebar-primary: oklch(60% 0.19 255);
+  --sidebar-primary-foreground: oklch(100% 0 0);
+  --sidebar-accent: oklch(22% 0.007 260);
+  --sidebar-accent-foreground: oklch(95.5% 0.003 260);
+  --sidebar-border: oklch(25.5% 0.007 260);
+  --sidebar-ring: oklch(60% 0.19 255);
+
+  /* Chart & Metrics */
+  --chart-1: oklch(60% 0.19 255);
+  --chart-2: oklch(68% 0.16 148);
+  --chart-3: oklch(78% 0.15 75);
+  --chart-4: oklch(64% 0.20 25);
+  --chart-5: oklch(68% 0.14 300);
+
+  /* DaisyUI Semantic Linkage */
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--muted);
+  --color-base-content: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-content: var(--accent-foreground);
+  --color-neutral: oklch(30% 0.01 260);
+  --color-neutral-content: oklch(95.5% 0.003 260);
+  --color-info: oklch(68% 0.15 245);
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(68% 0.16 148);
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(78% 0.15 75);
+  --color-warning-content: oklch(100% 0 0);
+  --color-error: oklch(64% 0.20 25);
+  --color-error-content: oklch(100% 0 0);
+  --radius-box: 0.5rem;
+  --radius-field: 0.375rem;
+  --radius-selector: 0.375rem;
 }
 
 @layer base {
@@ -199,7 +266,7 @@ html[data-magicui-theme-vt='active']::view-transition-new(root) {
 }
 
 /* ==========================================================================
-   NATIVE DESKTOP & MOBILE ERGONOMICS (Section 42 & Tauri v2)
+   NATIVE DESKTOP & MOBILE ERGONOMICS (Apple Design & Tauri v2)
    ========================================================================== */
 html,
 body {
@@ -243,3 +310,96 @@ code {
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* Native macOS-style sleek overlay scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(140, 140, 140, 0.28);
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.15s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 140, 140, 0.5);
+  background-clip: content-box;
+}
+
+/* Instant tactile feedback on press — Apple Design Rule 1 (Response on pointer-down) */
+button:active:not(:disabled),
+.btn:active:not(:disabled),
+[role='button']:active:not([aria-disabled='true']),
+.interactive-press:active {
+  transform: scale(0.975);
+  transition: transform 70ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Apple optical display typography tracking */
+h1,
+.display-title {
+  letter-spacing: -0.025em;
+}
+h2 {
+  letter-spacing: -0.02em;
+}
+h3 {
+  letter-spacing: -0.015em;
+}
+
+/* Accessible visible focus states (WCAG 2.2 AA) */
+:focus-visible {
+  outline: 2px solid var(--primary, #0ea5e9) !important;
+  outline-offset: 2px !important;
+}
+
+/* Apple Translucent Glass Materials */
+.apple-glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.dark .apple-glass,
+[data-theme='dark'] .apple-glass {
+  background: rgba(18, 18, 20, 0.82);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Accessibility: Reduced motion & transparency (WCAG & Apple HIG) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  button:active:not(:disabled),
+  .btn:active:not(:disabled),
+  [role='button']:active:not([aria-disabled='true']) {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .backdrop-blur-xs,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .apple-glass {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--background) !important;
+  }
+}
+

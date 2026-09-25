@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
+  AlertCircle,
   Award,
   BarChart3,
   Calendar,
@@ -8,11 +9,9 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
-  Compass,
   ExternalLink,
   Flame,
   Play,
-  Target,
   TrendingUp,
   XCircle,
   Zap,
@@ -78,8 +77,8 @@ export function Analysis() {
             Explore Papers & Tests
           </button>
           <button onClick={() => navigate('/practice')} className="btn btn-outline">
-            <Compass className="size-4" />
-            Start Topic Practice
+            <Zap className="size-4" />
+            Start Topic Drills
           </button>
         </div>
       </div>
@@ -87,131 +86,140 @@ export function Analysis() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-4 pb-36 md:p-8">
+    <div className="mx-auto max-w-7xl space-y-6 p-4 pb-36 md:p-6">
       {/* Header */}
-      <div className="border-base-300 flex flex-col justify-between gap-4 border-b pb-5 md:flex-row md:items-center">
+      <div className="border-border flex flex-col justify-between gap-3 border-b pb-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-xl font-bold tracking-tight md:text-2xl">Analysis</h1>
-          <p className="text-base-content/50 mt-0.5 text-xs">
+          <h1 className="text-lg font-bold tracking-tight md:text-xl text-foreground">Analysis</h1>
+          <p className="text-muted-foreground mt-0.5 text-xs">
             {data.completedAttempts} test{data.completedAttempts !== 1 ? 's' : ''} completed
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={() => navigate('/mistakes')} className="btn btn-ghost btn-sm gap-1.5">
-            <Target className="size-3.5" />
+          <button onClick={() => navigate('/mistakes')} className="btn btn-ghost btn-sm gap-1.5 text-xs rounded-md">
+            <AlertCircle className="size-3.5" />
             Mistakes
           </button>
-          <button onClick={() => navigate('/practice')} className="btn btn-primary btn-sm gap-1.5 shadow-sm">
+          <button onClick={() => navigate('/practice')} className="btn btn-primary btn-sm gap-1.5 text-xs font-medium shadow-xs rounded-md">
             <Zap className="size-3.5" />
-            Practice
+            Drills
           </button>
         </div>
       </div>
 
       {/* KPI Overview Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-base-content/60 text-xs font-semibold uppercase tracking-wider">Overall Accuracy</span>
-            <div className="bg-primary/10 text-primary rounded-xl p-2">
-              <TrendingUp className="size-4" />
+            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Overall Accuracy</span>
+            <div className="bg-muted text-foreground/70 rounded-md p-1.5">
+              <TrendingUp className="size-3.5" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black tracking-tight">{data.overallAccuracy}%</span>
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold font-mono tabular-nums tracking-tight text-foreground">{data.overallAccuracy}%</span>
           </div>
-          <p className="text-base-content/50 mt-1 text-[11px]">
-            {data.totalQuestionsCorrect} correct of {data.totalQuestionsAttempted} answered
+          <p className="text-muted-foreground mt-1 text-[11px]">
+            {data.totalQuestionsCorrect} of {data.totalQuestionsAttempted} correct
           </p>
         </div>
 
-        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
+        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-base-content/60 text-xs font-semibold uppercase tracking-wider">Average Score</span>
-            <div className="bg-success/10 text-success rounded-xl p-2">
-              <Award className="size-4" />
+            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Average Score</span>
+            <div className="bg-muted text-foreground/70 rounded-md p-1.5">
+              <Award className="size-3.5" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black tracking-tight">{data.overallScorePercentage}%</span>
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold font-mono tabular-nums tracking-tight text-foreground">{data.overallScorePercentage}%</span>
           </div>
-          <p className="text-base-content/50 mt-1 text-[11px]">Across {data.completedAttempts} completed exam mock(s)</p>
+          <p className="text-muted-foreground mt-1 text-[11px]">Across {data.completedAttempts} test{data.completedAttempts !== 1 ? 's' : ''}</p>
         </div>
 
-        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
+        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-base-content/60 text-xs font-semibold uppercase tracking-wider">Speed Per Question</span>
-            <div className="bg-warning/10 text-warning rounded-xl p-2">
-              <Clock className="size-4" />
+            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Speed Per Question</span>
+            <div className="bg-muted text-foreground/70 rounded-md p-1.5">
+              <Clock className="size-3.5" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black tracking-tight">{data.averageTimePerQuestionSeconds}s</span>
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold font-mono tabular-nums tracking-tight text-foreground">{data.averageTimePerQuestionSeconds}s</span>
           </div>
-          <p className="text-base-content/50 mt-1 text-[11px]">Avg pace across answered questions</p>
+          <p className="text-muted-foreground mt-1 text-[11px]">Average response pace</p>
         </div>
 
-        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
+        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-base-content/60 text-xs font-semibold uppercase tracking-wider">Total Practice Time</span>
-            <div className="bg-info/10 text-info rounded-xl p-2">
-              <Flame className="size-4" />
+            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Total Time</span>
+            <div className="bg-muted text-foreground/70 rounded-md p-1.5">
+              <Flame className="size-3.5" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black tracking-tight">
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold font-mono tabular-nums tracking-tight text-foreground">
               {Math.round(data.totalTimeSpentSeconds / 60)}m
             </span>
           </div>
-          <p className="text-base-content/50 mt-1 text-[11px]">{formatTimeSeconds(data.totalTimeSpentSeconds)} total focus</p>
+          <p className="text-muted-foreground mt-1 text-[11px]">{formatTimeSeconds(data.totalTimeSpentSeconds)} total practice</p>
         </div>
       </div>
 
       {/* Dynamic Subject & Topic Performance */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold tracking-tight">Subject & Topic Performance</h2>
-            <p className="text-base-content/50 text-xs">
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Subject & Topic Performance</h2>
+            <p className="text-muted-foreground text-xs">
               Performance breakdown across subjects and topics.
             </p>
           </div>
-          <span className="badge badge-ghost text-xs">{data.subjectBreakdown.length} subject{data.subjectBreakdown.length !== 1 ? 's' : ''}</span>
+          <span className="badge badge-ghost badge-sm text-[11px]">{data.subjectBreakdown.length} subject{data.subjectBreakdown.length !== 1 ? 's' : ''}</span>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {data.subjectBreakdown.map((subj) => {
             const isExpanded = !!expandedSubjects[subj.subject];
             return (
               <div
                 key={subj.subject}
-                className="bg-card border-border/80 overflow-hidden rounded-2xl border shadow-xs transition-all"
+                className="bg-card border-border overflow-hidden rounded-lg border shadow-2xs transition-all"
               >
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
                   onClick={() => toggleSubject(subj.subject)}
-                  className="hover:bg-base-200/50 flex cursor-pointer flex-col gap-3 p-4 select-none sm:flex-row sm:items-center sm:justify-between"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleSubject(subj.subject);
+                    }
+                  }}
+                  className="hover:bg-muted/40 active:scale-[0.99] transition-transform flex cursor-pointer flex-col gap-2.5 p-3.5 select-none sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="flex items-center gap-3">
-                    <button className="btn btn-ghost btn-xs btn-square">
-                      {isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-                    </button>
+                  <div className="flex items-center gap-2.5">
+                    <div className="btn btn-ghost btn-xs btn-square pointer-events-none text-muted-foreground">
+                      {isExpanded ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+                    </div>
                     <div>
-                      <h3 className="font-bold">{subj.subject}</h3>
-                      <p className="text-base-content/50 text-xs">
-                        {subj.topics.length} Topic(s) • {subj.total} Question(s)
+                      <h3 className="font-semibold text-sm text-foreground">{subj.subject}</h3>
+                      <p className="text-muted-foreground text-xs">
+                        {subj.topics.length} topic{subj.topics.length !== 1 ? 's' : ''} • {subj.total} question{subj.total !== 1 ? 's' : ''}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 pl-9 sm:pl-0">
-                    <div className="w-36 text-right">
-                      <div className="flex items-center justify-between text-xs font-semibold">
-                        <span className="text-base-content/60">Accuracy</span>
-                        <span>{subj.accuracy}%</span>
+                  <div className="flex items-center gap-3.5 pl-8 sm:pl-0">
+                    <div className="w-32 text-right">
+                      <div className="flex items-center justify-between text-xs font-medium">
+                        <span className="text-muted-foreground text-[11px]">Accuracy</span>
+                        <span className="font-mono">{subj.accuracy}%</span>
                       </div>
                       <progress
-                        className={`progress mt-1.5 h-2 w-full ${
+                        className={`progress mt-1 h-1.5 w-full ${
                           subj.accuracy >= 75
                             ? 'progress-success'
                             : subj.accuracy >= 50
@@ -223,25 +231,26 @@ export function Analysis() {
                       />
                     </div>
 
-                    <div className="hidden items-center gap-2 text-xs md:flex">
-                      <span className="text-success flex items-center gap-1 font-semibold">
-                        <CheckCircle2 className="size-3.5" />
+                    <div className="hidden items-center gap-2 text-xs md:flex font-mono">
+                      <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                        <CheckCircle2 className="size-3" />
                         {subj.correct}
                       </span>
-                      <span className="text-error flex items-center gap-1 font-semibold">
-                        <XCircle className="size-3.5" />
+                      <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1 font-medium">
+                        <XCircle className="size-3" />
                         {subj.incorrect}
                       </span>
                     </div>
 
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         navigate(`/practice?subject=${encodeURIComponent(subj.subject)}`);
                       }}
-                      className="btn btn-ghost btn-xs text-primary gap-1"
+                      className="btn btn-ghost btn-xs text-primary gap-0.5 active:scale-95"
                     >
-                      Practice
+                      Drills
                       <ChevronRight className="size-3" />
                     </button>
                   </div>
@@ -249,20 +258,20 @@ export function Analysis() {
 
                 {/* Expanded Topics Sub-List */}
                 {isExpanded && subj.topics.length > 0 && (
-                  <div className="bg-base-200/30 border-border/50 border-t p-4">
-                    <h4 className="text-base-content/60 mb-3 text-xs font-bold uppercase tracking-wider">
+                  <div className="bg-muted/30 border-border border-t p-3">
+                    <h4 className="text-muted-foreground mb-2.5 text-[11px] font-semibold uppercase tracking-wider">
                       Topic Breakdown ({subj.subject})
                     </h4>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {subj.topics.map((top) => (
                         <div
                           key={top.topic}
-                          className="bg-card border-border/70 flex flex-col justify-between rounded-xl border p-3 shadow-2xs"
+                          className="bg-card border-border flex flex-col justify-between rounded-md border p-2.5 shadow-2xs"
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-sm font-semibold truncate">{top.topic}</span>
+                            <span className="text-xs font-medium truncate text-foreground">{top.topic}</span>
                             <span
-                              className={`badge badge-sm font-bold ${
+                              className={`badge badge-xs font-semibold font-mono ${
                                 top.accuracy >= 75
                                   ? 'badge-success text-success-content'
                                   : top.accuracy >= 50
@@ -274,7 +283,7 @@ export function Analysis() {
                             </span>
                           </div>
 
-                          <div className="mt-3 flex items-center justify-between text-[11px] text-base-content/60">
+                          <div className="mt-2.5 flex items-center justify-between text-[11px] text-muted-foreground font-mono">
                             <span>
                               {top.correct} / {top.total} correct
                             </span>
@@ -286,7 +295,7 @@ export function Analysis() {
                                   )}`
                                 )
                               }
-                              className="text-primary hover:underline font-medium"
+                              className="text-primary hover:underline font-sans font-medium text-[11px]"
                             >
                               Drill Topic →
                             </button>
@@ -303,17 +312,17 @@ export function Analysis() {
       </div>
 
       {/* Difficulty & Question Type Breakdown Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Difficulty Breakdown */}
-        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
-          <h3 className="font-bold text-base">Mastery by Difficulty</h3>
-          <p className="text-base-content/60 text-xs mt-0.5">Performance across calibrated difficulty tiers</p>
+        <div className="bg-card border-border rounded-lg border p-4 shadow-2xs">
+          <h3 className="font-semibold text-sm text-foreground">Mastery by Difficulty</h3>
+          <p className="text-muted-foreground text-xs mt-0.5">Performance across difficulty tiers</p>
 
-          <div className="mt-4 space-y-4">
+          <div className="mt-3.5 space-y-3">
             {(['easy', 'medium', 'hard'] as const).map((diff) => {
               const item = data.difficultyBreakdown[diff];
               const color =
-                diff === 'easy' ? 'text-success' : diff === 'medium' ? 'text-warning' : 'text-error';
+                diff === 'easy' ? 'text-emerald-600 dark:text-emerald-400' : diff === 'medium' ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400';
               const progressColor =
                 diff === 'easy'
                   ? 'progress-success'
@@ -321,15 +330,15 @@ export function Analysis() {
                   ? 'progress-warning'
                   : 'progress-error';
               return (
-                <div key={diff} className="space-y-1.5">
+                <div key={diff} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className={`font-bold capitalize ${color}`}>{diff}</span>
-                    <span className="font-mono text-base-content/70">
+                    <span className={`font-semibold capitalize ${color}`}>{diff}</span>
+                    <span className="font-mono text-muted-foreground text-[11px]">
                       {item.correct} / {item.total} ({item.accuracy}%)
                     </span>
                   </div>
                   <progress
-                    className={`progress ${progressColor} h-2 w-full`}
+                    className={`progress ${progressColor} h-1.5 w-full`}
                     value={item.accuracy}
                     max="100"
                   />
@@ -340,25 +349,25 @@ export function Analysis() {
         </div>
 
         {/* Question Type Breakdown */}
-        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
-          <h3 className="font-bold text-base">Question Format Accuracy</h3>
-          <p className="text-base-content/60 text-xs mt-0.5">Single choice, multiple selection, and numerical formats</p>
+        <div className="bg-card border-border rounded-lg border p-4 shadow-2xs">
+          <h3 className="font-semibold text-sm text-foreground">Question Format Accuracy</h3>
+          <p className="text-muted-foreground text-xs mt-0.5">Single choice, multiple selection, and numerical</p>
 
-          <div className="mt-4 space-y-4">
+          <div className="mt-3.5 space-y-3">
             {Object.entries(data.typeBreakdown).map(([typeName, tInfo]) => {
               const formattedName = typeName
                 .replace(/_/g, ' ')
                 .replace(/\b\w/g, (c) => c.toUpperCase());
               return (
-                <div key={typeName} className="space-y-1.5">
+                <div key={typeName} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold">{formattedName}</span>
-                    <span className="font-mono text-base-content/70">
+                    <span className="font-medium text-foreground">{formattedName}</span>
+                    <span className="font-mono text-muted-foreground text-[11px]">
                       {tInfo.correct} / {tInfo.total} ({tInfo.accuracy}%)
                     </span>
                   </div>
                   <progress
-                    className="progress progress-primary h-2 w-full"
+                    className="progress progress-primary h-1.5 w-full"
                     value={tInfo.accuracy}
                     max="100"
                   />
@@ -370,19 +379,19 @@ export function Analysis() {
       </div>
 
       {/* Recent Attempts History Table */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold tracking-tight">Recent Attempts</h2>
-            <p className="text-base-content/50 text-xs">Test scores and completion history.</p>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Recent Attempts</h2>
+            <p className="text-muted-foreground text-xs">Test scores and completion history.</p>
           </div>
-          <span className="badge badge-ghost text-xs">{data.recentScoreTrends.length} attempt{data.recentScoreTrends.length !== 1 ? 's' : ''}</span>
+          <span className="badge badge-ghost badge-sm text-[11px]">{data.recentScoreTrends.length} attempt{data.recentScoreTrends.length !== 1 ? 's' : ''}</span>
         </div>
 
-        <div className="bg-card border-border/80 overflow-x-auto rounded-2xl border shadow-xs">
+        <div className="bg-card border-border overflow-x-auto rounded-lg border shadow-2xs">
           <table className="table table-zebra w-full text-xs">
             <thead>
-              <tr className="border-border/60 bg-base-200/50">
+              <tr className="border-border bg-muted/40 text-muted-foreground">
                 <th>Exam / Paper</th>
                 <th>Date</th>
                 <th>Score</th>
@@ -393,23 +402,23 @@ export function Analysis() {
             </thead>
             <tbody>
               {data.recentScoreTrends.map((att) => (
-                <tr key={att.attemptId} className="hover:bg-base-200/30">
-                  <td className="font-semibold">{att.testTitle}</td>
-                  <td className="text-base-content/60">
+                <tr key={att.attemptId} className="hover:bg-muted/30">
+                  <td className="font-medium text-foreground">{att.testTitle}</td>
+                  <td className="text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="size-3" />
                       {new Date(att.date).toLocaleDateString()}
                     </span>
                   </td>
                   <td>
-                    <span className="font-bold text-sm">{att.scorePercentage}%</span>
-                    <span className="text-base-content/50 ml-1 text-[11px]">
+                    <span className="font-semibold text-xs font-mono">{att.scorePercentage}%</span>
+                    <span className="text-muted-foreground ml-1 text-[11px] font-mono">
                       ({att.totalMarks}/{att.maxMarks})
                     </span>
                   </td>
                   <td>
                     <span
-                      className={`badge badge-xs font-semibold ${
+                      className={`badge badge-xs font-semibold font-mono ${
                         att.accuracy >= 75
                           ? 'badge-success text-success-content'
                           : att.accuracy >= 50
@@ -420,7 +429,7 @@ export function Analysis() {
                       {att.accuracy}%
                     </span>
                   </td>
-                  <td className="text-base-content/60">
+                  <td className="text-muted-foreground">
                     <span className="flex items-center gap-1 font-mono">
                       <Clock className="size-3" />
                       {formatTimeSeconds(att.timeSpentSeconds)}
@@ -428,8 +437,10 @@ export function Analysis() {
                   </td>
                   <td className="text-right">
                     <button
+                      type="button"
                       onClick={() => navigate(`/result/${att.attemptId}`)}
-                      className="btn btn-ghost btn-xs text-primary gap-1"
+                      aria-label={`View scorecard for ${att.testTitle}`}
+                      className="btn btn-ghost btn-xs text-primary gap-1 active:scale-95"
                     >
                       Scorecard
                       <ExternalLink className="size-3" />

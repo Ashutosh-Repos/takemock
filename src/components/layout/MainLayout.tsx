@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from 'react-router';
-import { BarChart3, BookOpen, Compass, Hammer, Target } from 'lucide-react';
+import { AlertCircle, BarChart3, DraftingCompass, Home, Zap } from 'lucide-react';
 import { useTheme } from '../theme-provider';
 import { AnimatedThemeToggler } from '../ui/animated-theme-toggler';
 import { Dock, DockIcon, DockItem, DockLabel } from '../ui/dock';
@@ -7,20 +7,20 @@ import { cn } from '@/lib/utils';
 
 const dockItems = [
   {
-    title: 'Library',
-    icon: <BookOpen className="h-full w-full" />,
+    title: 'Home',
+    icon: <Home className="h-full w-full" />,
     href: '/',
     matcher: (path: string) => path === '/' || path === '/papers',
   },
   {
-    title: 'Practice',
-    icon: <Compass className="h-full w-full" />,
+    title: 'Drills',
+    icon: <Zap className="h-full w-full" />,
     href: '/practice',
-    matcher: (path: string) => path.startsWith('/practice') || path.startsWith('/atlas'),
+    matcher: (path: string) => path.startsWith('/practice') || path.startsWith('/drills') || path.startsWith('/atlas'),
   },
   {
     title: 'Builder',
-    icon: <Hammer className="h-full w-full" />,
+    icon: <DraftingCompass className="h-full w-full" />,
     href: '/builder',
     matcher: (path: string) => path.startsWith('/builder'),
   },
@@ -32,7 +32,7 @@ const dockItems = [
   },
   {
     title: 'Mistakes',
-    icon: <Target className="h-full w-full" />,
+    icon: <AlertCircle className="h-full w-full" />,
     href: '/mistakes',
     matcher: (path: string) => path.startsWith('/mistakes'),
   },
@@ -46,20 +46,31 @@ export function MainLayout() {
   return (
     <div className="bg-background text-foreground relative flex h-screen w-screen flex-col overflow-hidden safe-area-top safe-area-bottom">
       {/* Native Desktop Window Drag Region */}
-      <div
+      <header
         data-tauri-drag-region
-        className="h-7 w-full shrink-0 select-none bg-base-200/50 border-b border-base-300/40 flex items-center justify-between px-3 text-[11px] font-medium text-base-content/60 backdrop-blur-xs"
+        className="h-8 w-full shrink-0 select-none bg-background/80 border-b border-border/50 flex items-center justify-between px-3 text-[11px] font-medium text-muted-foreground backdrop-blur-md"
       >
-        <div className="flex items-center gap-1.5 pointer-events-none pl-18 sm:pl-2">
-          <span className="size-2 rounded-full bg-primary/70 inline-block animate-pulse" />
-          <span className="font-semibold tracking-wide uppercase text-[10px] text-base-content/70">
+        <div className="flex items-center gap-2 pointer-events-none pl-18 sm:pl-3">
+          <div className="size-1.5 rounded-full bg-emerald-500" />
+          <span className="font-semibold tracking-tight text-xs text-foreground">
             TakeMock
           </span>
+          <span className="text-[10px] text-muted-foreground/60 font-mono hidden md:inline">
+            v0.1.0
+          </span>
         </div>
-        <div className="hidden sm:block text-[10px] font-mono text-base-content/40 pointer-events-none">
-          Offline
+
+        {/* Center Title or Breadcrumb */}
+        <div className="text-[11px] font-medium text-muted-foreground pointer-events-none tracking-tight">
+          {dockItems.find((d) => d.matcher(location.pathname))?.title || 'Assessment'}
         </div>
-      </div>
+
+        <div className="flex items-center gap-2 pointer-events-none">
+          <span className="text-[10px] font-mono tracking-wide text-muted-foreground/75 px-1.5 py-0.5 rounded border border-border/60 bg-muted/40">
+            LOCAL
+          </span>
+        </div>
+      </header>
 
       {/* Main Content Area */}
       <main className="w-full flex-1 overflow-x-hidden overflow-y-auto">
@@ -67,11 +78,11 @@ export function MainLayout() {
       </main>
 
       <Dock
-        magnification={76}
-        distance={130}
+        magnification={48}
+        distance={80}
         direction="horizontal"
         placement="bottom"
-        containerClassName="bottom-3 left-1/2 -translate-x-1/2"
+        containerClassName="bottom-2.5 left-1/2 -translate-x-1/2"
       >
         {dockItems.map((item, idx) => {
           const isActive = location.pathname ? item.matcher(location.pathname) : false;
@@ -79,11 +90,13 @@ export function MainLayout() {
             <DockItem
               key={idx}
               onClick={() => navigate(item.href)}
+              aria-label={item.title}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'rounded-full border cursor-pointer transition-colors duration-150 flex items-center justify-center',
+                'rounded-lg border cursor-pointer transition-all duration-150 flex items-center justify-center relative active:scale-95',
                 isActive
-                  ? 'bg-primary text-primary-content border-primary shadow-md'
-                  : 'bg-card/90 hover:bg-muted text-card-foreground border-border/70 shadow-xs'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                  : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border/70 shadow-xs'
               )}
             >
               <DockLabel>{item.title}</DockLabel>
@@ -93,7 +106,8 @@ export function MainLayout() {
         })}
         <DockItem
           key="theme-icon"
-          className="bg-card/90 hover:bg-muted text-card-foreground border-border/70 rounded-full border shadow-xs cursor-pointer transition-colors duration-150 flex items-center justify-center"
+          aria-label={resolvedTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          className="bg-card hover:bg-muted text-muted-foreground hover:text-foreground border-border/70 rounded-lg border shadow-xs cursor-pointer transition-all duration-150 flex items-center justify-center active:scale-95"
         >
           <DockLabel>{resolvedTheme === 'dark' ? 'Light Theme' : 'Dark Theme'}</DockLabel>
           <DockIcon>

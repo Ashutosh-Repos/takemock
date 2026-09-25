@@ -10,7 +10,7 @@
         const stored = localStorage.getItem('vite-ui-theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const isDark = stored === 'dark' || (!stored && prefersDark) || (stored === 'system' && prefersDark);
-        const theme = isDark ? 'dracula' : 'cupcake';
+        const theme = isDark ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', theme);
         document.documentElement.classList.add(isDark ? 'dark' : 'light');
       } catch (e) {}

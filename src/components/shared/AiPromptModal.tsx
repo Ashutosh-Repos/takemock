@@ -9,13 +9,14 @@
  * - Response is pasted directly into the main Custom Designer code editor.
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Bot,
   Check,
   Copy,
   FileCode2,
   Terminal,
+  X,
   Zap,
 } from 'lucide-react';
 import {
@@ -41,6 +42,19 @@ export function AiPromptModal({ isOpen, onClose, defaultTarget = 'QUESTION_PACK'
     'numerical',
   ]);
   const [copiedType, setCopiedType] = useState<'SUFFIX' | 'SYSTEM' | null>(null);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const toggleType = (typeId: string) => {
     setSelectedTypes((prev) =>
@@ -77,19 +91,27 @@ export function AiPromptModal({ isOpen, onClose, defaultTarget = 'QUESTION_PACK'
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-base-900/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl bg-base-100 rounded-3xl shadow-2xl border border-base-300 flex flex-col overflow-hidden">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ai-prompt-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="relative w-full max-w-3xl bg-card/95 backdrop-blur-xl text-card-foreground rounded-3xl shadow-2xl border border-border/80 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Modal Top Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-base-200 bg-base-200/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-base-200/50">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-2xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-primary-content shadow-md shadow-primary/20">
               <Bot className="size-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold tracking-tight text-base-content">
+              <h2 id="ai-prompt-modal-title" className="text-base font-bold tracking-tight">
                 AI Prompt Helper
               </h2>
-              <p className="text-xs text-base-content/50">
+              <p className="text-xs text-base-content/60">
                 Append this suffix to ChatGPT, Claude, Gemini, or DeepSeek to format questions automatically.
               </p>
             </div>
@@ -98,20 +120,21 @@ export function AiPromptModal({ isOpen, onClose, defaultTarget = 'QUESTION_PACK'
           <button
             type="button"
             onClick={onClose}
-            className="btn btn-sm btn-circle btn-ghost text-base-content/60 hover:text-base-content"
+            aria-label="Close modal"
+            className="btn btn-sm btn-circle btn-ghost text-base-content/60 hover:text-base-content active:scale-95"
           >
-            ✕
+            <X className="size-4" />
           </button>
         </div>
 
         {/* Modal Body */}
         <div className="p-6 space-y-5">
           {/* Format & Question Types Controls */}
-          <div className="p-4 rounded-2xl border border-base-200 bg-base-200/40 space-y-3.5">
+          <div className="p-4 rounded-2xl border border-border/60 bg-base-200/40 space-y-3.5">
             {/* Target Selection: Question Pack vs Full Exam Paper */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-base-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-border/40">
               <div>
-                <span className="text-xs font-bold uppercase text-base-content/70 block">
+                <span className="text-xs font-bold uppercase tracking-wider text-base-content/70 block">
                   Target Scope
                 </span>
                 <span className="text-[11px] text-base-content/50">
@@ -119,14 +142,15 @@ export function AiPromptModal({ isOpen, onClose, defaultTarget = 'QUESTION_PACK'
                 </span>
               </div>
 
-              <div className="join">
+              {/* Apple Segmented Control */}
+              <div className="bg-base-200/80 p-0.5 rounded-lg border border-border/60 flex items-center">
                 <button
                   type="button"
                   onClick={() => setTarget('QUESTION_PACK')}
-                  className={`join-item btn btn-sm text-xs font-bold ${
+                  className={`px-3 py-1 text-xs rounded-md font-semibold transition-all ${
                     target === 'QUESTION_PACK'
-                      ? 'btn-primary shadow-xs'
-                      : 'btn-outline border-base-300'
+                      ? 'bg-primary text-primary-content shadow-xs'
+                      : 'text-base-content/70 hover:text-base-content hover:bg-base-300/40'
                   }`}
                 >
                   🧩 Question Pack
@@ -134,13 +158,13 @@ export function AiPromptModal({ isOpen, onClose, defaultTarget = 'QUESTION_PACK'
                 <button
                   type="button"
                   onClick={() => setTarget('FULL_PAPER')}
-                  className={`join-item btn btn-sm text-xs font-bold ${
+                  className={`px-3 py-1 text-xs rounded-md font-semibold transition-all ${
                     target === 'FULL_PAPER'
-                      ? 'btn-primary shadow-xs'
-                      : 'btn-outline border-base-300'
+                      ? 'bg-primary text-primary-content shadow-xs'
+                      : 'text-base-content/70 hover:text-base-content hover:bg-base-300/40'
                   }`}
                 >
-                  📄 Full Exam Paper
+                  📄 Full Paper
                 </button>
               </div>
             </div>
@@ -148,7 +172,7 @@ export function AiPromptModal({ isOpen, onClose, defaultTarget = 'QUESTION_PACK'
             {/* Format Selection: Markdown v2 vs JSON */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
-                <span className="text-xs font-bold uppercase text-base-content/70 block">
+                <span className="text-xs font-bold uppercase tracking-wider text-base-content/70 block">
                   Output Format
                 </span>
                 <span className="text-[11px] text-base-content/50">
@@ -156,26 +180,27 @@ export function AiPromptModal({ isOpen, onClose, defaultTarget = 'QUESTION_PACK'
                 </span>
               </div>
 
-              <div className="join">
+              {/* Apple Segmented Control */}
+              <div className="bg-base-200/80 p-0.5 rounded-lg border border-border/60 flex items-center">
                 <button
                   type="button"
                   onClick={() => setFormat('MARKDOWN')}
-                  className={`join-item btn btn-sm text-xs font-bold ${
+                  className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-md font-semibold transition-all ${
                     format === 'MARKDOWN'
-                      ? 'btn-primary shadow-xs'
-                      : 'btn-outline border-base-300'
+                      ? 'bg-primary text-primary-content shadow-xs'
+                      : 'text-base-content/70 hover:text-base-content hover:bg-base-300/40'
                   }`}
                 >
                   <FileCode2 className="size-3.5" />
-                  Markdown v2 (Recommended)
+                  Markdown v2
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormat('JSON')}
-                  className={`join-item btn btn-sm text-xs font-bold ${
+                  className={`px-3 py-1 text-xs rounded-md font-semibold transition-all ${
                     format === 'JSON'
-                      ? 'btn-secondary text-secondary-content shadow-xs'
-                      : 'btn-outline border-base-300'
+                      ? 'bg-secondary text-secondary-content shadow-xs'
+                      : 'text-base-content/70 hover:text-base-content hover:bg-base-300/40'
                   }`}
                 >
                   {target === 'FULL_PAPER' ? 'JSON Object' : 'JSON Array'}
@@ -238,10 +263,10 @@ export function AiPromptModal({ isOpen, onClose, defaultTarget = 'QUESTION_PACK'
           </div>
 
           {/* Suffix Preview Box */}
-          <div className="space-y-2.5 bg-base-200/60 p-4 rounded-2xl border border-base-300">
+          <div className="space-y-2.5 bg-base-200/60 p-4 rounded-2xl border border-border/60">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-xs uppercase text-base-content/70">
-                Authoritative Contract Suffix:
+              <span className="font-bold text-xs uppercase tracking-wider text-base-content/70">
+                Format Instructions Suffix:
               </span>
               <span className="badge badge-sm badge-neutral font-mono">{suffix.length} chars</span>
             </div>
@@ -250,33 +275,33 @@ export function AiPromptModal({ isOpen, onClose, defaultTarget = 'QUESTION_PACK'
               readOnly
               rows={8}
               value={suffix}
+              aria-label="Format instructions suffix"
               className="textarea textarea-bordered w-full font-mono text-[11px] leading-relaxed bg-base-100 resize-none selectable-content"
             />
           </div>
 
           {/* Direct Workflow Tip */}
-          <div className="p-3 rounded-2xl bg-primary/5 border border-primary/20 text-xs text-base-content/80 flex items-start gap-2.5">
+          <div className="p-3.5 rounded-2xl bg-primary/5 border border-primary/20 text-xs text-base-content/80 flex items-start gap-2.5">
             <Zap className="size-4 text-primary shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold text-primary block">How to use:</span>
-              Paste this suffix at the end of your prompt in ChatGPT, Claude, Gemini, or DeepSeek.
-              When the AI responds, paste its output directly into the <b>Builder</b> text input.
-              Takemock will automatically parse questions, options, and math formulas!
+            <div className="leading-relaxed">
+              <span className="font-bold text-primary block mb-0.5">Instructions</span>
+              Append this suffix to your prompt in ChatGPT, Claude, Gemini, or DeepSeek.
+              Paste the AI's response into the <b>Builder</b> editor, and Takemock will parse the questions, options, and formulas automatically.
             </div>
           </div>
         </div>
 
         {/* Modal Bottom Footer Actions */}
-        <div className="px-6 py-4 border-t border-base-200 bg-base-200/50 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-border/60 bg-base-200/50 flex items-center justify-between">
           <button
             type="button"
             onClick={() => handleCopy(systemPrompt, 'SYSTEM')}
-            title="Copy system instructions for Custom GPTs, Claude Projects, or Ollama Modelfile"
-            className="btn btn-sm btn-outline border-base-300 gap-1.5 font-semibold text-xs"
+            title="Copy system prompt for custom GPTs, Claude Projects, or Ollama"
+            className="btn btn-sm btn-outline border-border/60 gap-1.5 font-semibold text-xs active:scale-95"
           >
             {copiedType === 'SYSTEM' ? (
               <>
-                <Check className="size-3.5 text-success" /> Copied System Prompt!
+                <Check className="size-3.5 text-success" /> Copied System Prompt
               </>
             ) : (
               <>
@@ -286,19 +311,23 @@ export function AiPromptModal({ isOpen, onClose, defaultTarget = 'QUESTION_PACK'
           </button>
 
           <div className="flex items-center gap-2">
-            <button type="button" onClick={onClose} className="btn btn-sm btn-ghost font-semibold">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn btn-sm btn-ghost font-semibold active:scale-95"
+            >
               Close
             </button>
 
             <button
               type="button"
               onClick={() => handleCopy(suffix, 'SUFFIX')}
-              className="btn btn-sm btn-primary gap-1.5 font-bold shadow-xs text-xs"
+              className="btn btn-sm btn-primary gap-1.5 font-bold shadow-xs text-xs active:scale-95"
             >
               {copiedType === 'SUFFIX' ? (
                 <>
                   <Check className="size-4 text-success-content" />
-                  Copied Suffix to Clipboard!
+                  Copied Suffix
                 </>
               ) : (
                 <>

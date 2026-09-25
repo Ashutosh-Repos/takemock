@@ -7,13 +7,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
+  AlertCircle,
   BarChart3,
   CheckCircle2,
   ChevronRight,
   Clock,
   HelpCircle,
-  RotateCcw,
-  Target,
+  Home,
   XCircle,
 } from 'lucide-react';
 import { MathRenderer } from '@/components/shared/MathRenderer';
@@ -104,83 +104,83 @@ export function Result() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-7xl space-y-8 p-6 pb-36 md:p-10">
+    <div className="mx-auto min-h-screen max-w-7xl space-y-6 p-4 pb-36 md:p-6">
       {/* Header */}
-      <div className="border-base-300 flex flex-col justify-between gap-4 border-b pb-5 md:flex-row md:items-center">
+      <div className="border-border flex flex-col justify-between gap-3 border-b pb-4 md:flex-row md:items-center">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight md:text-2xl">Scorecard</h1>
-            <span className={`badge ${badgeColor} badge-sm font-bold`}>
+            <h1 className="text-lg font-bold tracking-tight md:text-xl text-foreground">Scorecard</h1>
+            <span className={`badge ${badgeColor} badge-xs font-semibold`}>
               {performanceTier}
             </span>
           </div>
-          <p className="text-base-content/50 mt-0.5 text-xs">
+          <p className="text-muted-foreground mt-0.5 text-xs">
             {snapshot.testTitle}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={() => navigate('/mistakes')} className="btn btn-ghost btn-sm gap-1.5">
-            <Target className="size-3.5" />
+          <button onClick={() => navigate('/mistakes')} className="btn btn-ghost btn-sm gap-1.5 text-xs rounded-md">
+            <AlertCircle className="size-3.5" />
             Mistakes
           </button>
-          <button onClick={() => navigate('/')} className="btn btn-primary btn-sm gap-1.5 font-bold shadow-sm">
-            <RotateCcw className="size-3.5" />
-            Library
+          <button onClick={() => navigate('/')} className="btn btn-primary btn-sm gap-1.5 text-xs font-medium rounded-md shadow-xs">
+            <Home className="size-3.5" />
+            Home
           </button>
         </div>
       </div>
 
       {/* Hero Stats Section */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total Score */}
-        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
-          <div className="text-xs font-semibold uppercase tracking-wider text-base-content/60">Total Score</div>
-          <div className="text-primary mt-1 text-3xl font-black">
+        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+          <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Total Score</div>
+          <div className="text-primary mt-1 text-2xl font-bold font-mono tabular-nums">
             {scoreResult.totalMarksAwarded}{' '}
-            <span className="text-sm font-normal text-base-content/60">/ {scoreResult.totalMaxMarks}</span>
+            <span className="text-xs font-normal text-muted-foreground">/ {scoreResult.totalMaxMarks}</span>
           </div>
-          <div className="text-xs text-base-content/70 mt-1 font-mono">{scoreResult.percentage}% Score</div>
+          <div className="text-[11px] text-muted-foreground mt-1 font-mono">{scoreResult.percentage}% Score</div>
         </div>
 
         {/* Accuracy */}
-        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
-          <div className="text-xs font-semibold uppercase tracking-wider text-base-content/60">Accuracy</div>
-          <div className="text-secondary mt-1 text-3xl font-black">{scoreResult.accuracy}%</div>
-          <div className="text-xs text-base-content/70 mt-1">
-            {scoreResult.totalCorrect} correct of {scoreResult.totalAttempted} attempted
+        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+          <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Accuracy</div>
+          <div className="text-foreground mt-1 text-2xl font-bold font-mono tabular-nums">{scoreResult.accuracy}%</div>
+          <div className="text-[11px] text-muted-foreground mt-1">
+            {scoreResult.totalCorrect} of {scoreResult.totalAttempted} correct
           </div>
         </div>
 
         {/* Breakdown Counts */}
-        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
-          <div className="text-xs font-semibold uppercase tracking-wider text-base-content/60">Breakdown</div>
-          <div className="flex items-center gap-2 mt-1 font-bold text-sm">
-            <span className="text-success">{scoreResult.totalCorrect} Correct</span> ·
-            <span className="text-error">{scoreResult.totalIncorrect} Wrong</span> ·
-            <span className="text-base-content/50">{scoreResult.totalUnattempted} Left</span>
+        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+          <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Breakdown</div>
+          <div className="flex items-center gap-1.5 mt-1 font-medium text-xs font-mono">
+            <span className="text-emerald-600 dark:text-emerald-400">{scoreResult.totalCorrect} Correct</span> ·
+            <span className="text-rose-600 dark:text-rose-400">{scoreResult.totalIncorrect} Wrong</span> ·
+            <span className="text-muted-foreground">{scoreResult.totalUnattempted} Left</span>
           </div>
-          <div className="text-xs text-base-content/60 mt-1">
-            {allQuestionsWithScores.length} total questions in test
+          <div className="text-[11px] text-muted-foreground mt-1 font-mono">
+            {allQuestionsWithScores.length} total questions
           </div>
         </div>
 
         {/* Time Spent */}
-        <div className="bg-card border-border/80 rounded-2xl border p-5 shadow-xs">
-          <div className="text-xs font-semibold uppercase tracking-wider text-base-content/60">Total Time</div>
-          <div className="text-accent mt-1 text-3xl font-black font-mono">
+        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+          <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Total Time</div>
+          <div className="text-foreground mt-1 text-2xl font-bold font-mono tabular-nums">
             {formatTimeSeconds(scoreResult.totalTimeSpentSeconds)}
           </div>
-          <div className="text-xs text-base-content/70 mt-1 flex items-center gap-1">
-            <Clock className="size-3" /> Monotonic tracked
+          <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
+            <Clock className="size-3" /> Time elapsed
           </div>
         </div>
       </div>
 
       {/* Section-Wise Breakdown Table */}
-      <div className="bg-card border-border/80 rounded-2xl overflow-hidden border shadow-xs">
-        <div className="border-border/60 border-b p-4 sm:p-5">
-          <h3 className="text-base font-bold flex items-center gap-2">
+      <div className="bg-card border-border rounded-lg overflow-hidden border shadow-2xs">
+        <div className="border-border border-b p-3 sm:p-3.5">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <BarChart3 className="text-primary size-4" />
             Section Performance
           </h3>
@@ -189,7 +189,7 @@ export function Result() {
         <div className="overflow-x-auto">
           <table className="table table-zebra w-full text-xs">
             <thead>
-              <tr className="text-base-content/60 text-[11px] uppercase tracking-wider">
+              <tr className="text-muted-foreground text-[11px] uppercase tracking-wider border-border bg-muted/40">
                 <th>Section</th>
                 <th>Questions</th>
                 <th>Attempted</th>
@@ -202,12 +202,12 @@ export function Result() {
             </thead>
             <tbody>
               {Object.values(scoreResult.sectionScores).map((sec) => (
-                <tr key={sec.sectionId}>
-                  <td className="font-bold">{sec.sectionTitle}</td>
-                  <td>{sec.totalQuestions}</td>
-                  <td>{sec.attemptedCount}</td>
-                  <td className="text-success font-semibold">{sec.correctCount}</td>
-                  <td className="text-error font-semibold">{sec.incorrectCount}</td>
+                <tr key={sec.sectionId} className="hover:bg-muted/30">
+                  <td className="font-semibold text-foreground">{sec.sectionTitle}</td>
+                  <td className="font-mono">{sec.totalQuestions}</td>
+                  <td className="font-mono">{sec.attemptedCount}</td>
+                  <td className="text-emerald-600 dark:text-emerald-400 font-semibold font-mono">{sec.correctCount}</td>
+                  <td className="text-rose-600 dark:text-rose-400 font-semibold font-mono">{sec.incorrectCount}</td>
                   <td>
                     <div className="flex items-center gap-2">
                       <progress
@@ -218,10 +218,10 @@ export function Result() {
                       <span className="font-mono text-xs">{sec.accuracy}%</span>
                     </div>
                   </td>
-                  <td className="font-bold font-mono">
+                  <td className="font-semibold font-mono">
                     {sec.marksAwarded} / {sec.maxMarks}
                   </td>
-                  <td className="font-mono text-xs text-base-content/70">
+                  <td className="font-mono text-xs text-muted-foreground">
                     {formatTimeSeconds(sec.timeSpentSeconds)}
                   </td>
                 </tr>
@@ -234,38 +234,38 @@ export function Result() {
       {/* ======================================================================
           Question-by-Question Verified Solution Review
          ====================================================================== */}
-      <div className="space-y-4">
-        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+      <div className="space-y-3">
+        <div className="flex flex-col justify-between gap-2.5 sm:flex-row sm:items-center">
           <div>
-            <h3 className="text-lg font-bold">Solutions & Explanations</h3>
-            <p className="text-xs text-base-content/50">
+            <h3 className="text-base font-semibold text-foreground">Solutions & Explanations</h3>
+            <p className="text-xs text-muted-foreground">
               Step-by-step review for each question.
             </p>
           </div>
 
           {/* Filter Tabs */}
-          <div className="join bg-base-200/60 p-0.5 rounded-xl border border-border/60">
+          <div className="join bg-muted/50 p-0.5 rounded-md border border-border">
             <button
               onClick={() => setFilterStatus('ALL')}
-              className={`btn btn-xs join-item font-semibold ${filterStatus === 'ALL' ? 'btn-primary' : 'btn-ghost'}`}
+              className={`btn btn-xs join-item font-medium rounded-md ${filterStatus === 'ALL' ? 'btn-primary' : 'btn-ghost'}`}
             >
               All ({allQuestionsWithScores.length})
             </button>
             <button
               onClick={() => setFilterStatus('CORRECT')}
-              className={`btn btn-xs join-item font-semibold ${filterStatus === 'CORRECT' ? 'btn-success text-success-content' : 'btn-ghost'}`}
+              className={`btn btn-xs join-item font-medium rounded-md ${filterStatus === 'CORRECT' ? 'btn-success text-success-content' : 'btn-ghost'}`}
             >
               Correct ({scoreResult.totalCorrect})
             </button>
             <button
               onClick={() => setFilterStatus('INCORRECT')}
-              className={`btn btn-xs join-item font-semibold ${filterStatus === 'INCORRECT' ? 'btn-error text-error-content' : 'btn-ghost'}`}
+              className={`btn btn-xs join-item font-medium rounded-md ${filterStatus === 'INCORRECT' ? 'btn-error text-error-content' : 'btn-ghost'}`}
             >
               Incorrect ({scoreResult.totalIncorrect})
             </button>
             <button
               onClick={() => setFilterStatus('UNATTEMPTED')}
-              className={`btn btn-xs join-item font-semibold ${filterStatus === 'UNATTEMPTED' ? 'btn-neutral' : 'btn-ghost'}`}
+              className={`btn btn-xs join-item font-medium rounded-md ${filterStatus === 'UNATTEMPTED' ? 'btn-neutral' : 'btn-ghost'}`}
             >
               Skipped ({scoreResult.totalUnattempted})
             </button>
@@ -273,32 +273,32 @@ export function Result() {
         </div>
 
         {/* Questions Cards */}
-        <div className="space-y-4">
+        <div className="space-y-2.5">
           {filteredQuestions.map((item, idx) => {
             const { question, score, sectionTitle } = item;
             const status = score?.status || 'UNATTEMPTED';
 
             let statusBadge = (
-              <span className="badge badge-neutral gap-1 text-xs font-semibold">
+              <span className="badge badge-neutral gap-1 text-[11px] font-medium">
                 <HelpCircle className="size-3" /> Unattempted
               </span>
             );
 
             if (status === 'CORRECT') {
               statusBadge = (
-                <span className="badge badge-success text-success-content gap-1 text-xs font-semibold">
+                <span className="badge badge-success text-success-content gap-1 text-[11px] font-medium">
                   <CheckCircle2 className="size-3" /> Correct (+{score?.marksAwarded})
                 </span>
               );
             } else if (status === 'INCORRECT') {
               statusBadge = (
-                <span className="badge badge-error text-error-content gap-1 text-xs font-semibold">
+                <span className="badge badge-error text-error-content gap-1 text-[11px] font-medium">
                   <XCircle className="size-3" /> Incorrect ({score?.marksAwarded})
                 </span>
               );
             } else if (status === 'PARTIAL') {
               statusBadge = (
-                <span className="badge badge-warning text-warning-content gap-1 text-xs font-semibold">
+                <span className="badge badge-warning text-warning-content gap-1 text-[11px] font-medium">
                   Partial (+{score?.marksAwarded})
                 </span>
               );
@@ -308,20 +308,29 @@ export function Result() {
               <div
                 key={question.id}
                 onClick={() => setModalIndex(idx)}
-                className="bg-card border-border/80 hover:border-primary/50 cursor-pointer rounded-2xl border p-5 shadow-xs space-y-4 transition-all group"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setModalIndex(idx);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Question ${idx + 1}, ${status.toLowerCase()}. Click to inspect answer and explanation.`}
+                className="bg-card border-border hover:border-primary/50 cursor-pointer rounded-lg border p-4 shadow-2xs space-y-2.5 transition-all duration-150 active:scale-[0.99] group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
               >
                 {/* Top Badge Banner */}
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-base-300/70 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="badge badge-sm font-bold font-mono">Q{idx + 1}</span>
-                    <span className="text-xs font-semibold text-base-content/70">{sectionTitle}</span>
-                    <span className="badge badge-ghost badge-xs font-mono">{question.type}</span>
+                <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-border/60 pb-2.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="badge badge-xs font-bold font-mono">Q{idx + 1}</span>
+                    <span className="text-xs font-semibold text-foreground/80">{sectionTitle}</span>
+                    <span className="badge badge-ghost badge-xs font-mono text-[10px]">{question.type}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     {statusBadge}
                     {score?.timeSpentSeconds ? (
-                      <span className="text-xs font-mono text-base-content/60">
+                      <span className="text-xs font-mono text-muted-foreground">
                         {formatTimeSeconds(score.timeSpentSeconds)}
                       </span>
                     ) : null}
@@ -329,24 +338,24 @@ export function Result() {
                 </div>
 
                 {/* Question Body with KaTeX */}
-                <div className="text-sm leading-relaxed line-clamp-3">
+                <div className="text-xs leading-relaxed line-clamp-2 md:line-clamp-3 selectable-content text-foreground/90">
                   <MathRenderer content={question.body} />
                 </div>
 
                 {/* Candidate Response Summary & Card Action */}
-                <div className="flex flex-wrap items-center justify-between border-t border-border/40 pt-3 text-xs gap-2">
-                  <div className="flex items-center gap-2 text-base-content/60">
+                <div className="flex flex-wrap items-center justify-between border-t border-border/50 pt-2 text-xs gap-2">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     {score?.candidateResponse !== null && score?.candidateResponse !== undefined ? (
                       <span className="font-mono text-xs">
                         Attempted:{' '}
-                        <span className="font-bold">
+                        <span className="font-semibold text-foreground">
                           {typeof score.candidateResponse === 'object'
                             ? JSON.stringify(score.candidateResponse)
                             : String(score.candidateResponse)}
                         </span>
                       </span>
                     ) : (
-                      <span className="italic text-base-content/40">Unattempted</span>
+                      <span className="italic text-muted-foreground text-xs">Unattempted</span>
                     )}
                   </div>
 
@@ -355,10 +364,10 @@ export function Result() {
                       e.stopPropagation();
                       setModalIndex(idx);
                     }}
-                    className="btn btn-ghost btn-xs text-primary gap-1 font-semibold group-hover:bg-primary/10"
+                    className="btn btn-ghost btn-xs text-primary gap-1 font-medium group-hover:bg-primary/10 active:scale-95"
                   >
                     View Answer & Explanation
-                    <ChevronRight className="size-3.5" />
+                    <ChevronRight className="size-3" />
                   </button>
                 </div>
               </div>

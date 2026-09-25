@@ -141,7 +141,7 @@ export function Practice() {
 
       const drillDef: TestDefinition = {
         id: `drill_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        title: `Practice: ${selectedSubject !== 'ALL' ? selectedSubject : 'Mixed'} (${selectedSubset.length} Qs)`,
+        title: `Drill: ${selectedSubject !== 'ALL' ? selectedSubject : 'Mixed'} (${selectedSubset.length} Qs)`,
         description: `Adaptive drill matching ${[
           selectedSubject !== 'ALL' ? selectedSubject : null,
           selectedTopic !== 'ALL' ? selectedTopic : null,
@@ -203,24 +203,24 @@ export function Practice() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-4 pb-36 md:p-8">
+    <div className="mx-auto max-w-6xl space-y-5 px-4 py-5 pb-24 md:px-6">
       {/* Header */}
-      <div className="border-base-300 flex flex-col justify-between gap-4 border-b pb-5 md:flex-row md:items-center">
+      <div className="border-border/60 flex flex-col justify-between gap-3 border-b pb-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-xl font-bold tracking-tight md:text-2xl">Practice</h1>
-          <p className="text-base-content/50 mt-0.5 text-xs">
-            {totalCount} question{totalCount !== 1 ? 's' : ''} in your bank — filter and start a drill.
+          <h1 className="text-xl font-bold tracking-tight md:text-2xl text-foreground">Drills</h1>
+          <p className="text-muted-foreground mt-0.5 text-xs font-mono tabular-nums">
+            {totalCount} question{totalCount !== 1 ? 's' : ''} available across topics
           </p>
         </div>
 
         {/* 1-Click Instant Drill Launch Card */}
-        <div className="bg-card border-border/80 flex flex-wrap items-center gap-3 rounded-2xl border p-2.5 shadow-xs">
-          <div className="flex items-center gap-1.5 text-xs font-semibold">
-            <span className="text-base-content/60">Count:</span>
+        <div className="bg-card border-border/70 flex flex-wrap items-center gap-2.5 rounded-lg border p-1.5 px-2.5 shadow-xs">
+          <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+            <span>Count:</span>
             <select
               value={drillCount}
               onChange={(e) => setDrillCount(Number(e.target.value))}
-              className="select select-bordered select-xs"
+              className="h-7 text-xs rounded border border-border/70 bg-background px-1.5 font-mono"
             >
               <option value={5}>5 Qs</option>
               <option value={10}>10 Qs</option>
@@ -229,7 +229,7 @@ export function Practice() {
             </select>
           </div>
 
-          <label className="flex items-center gap-1.5 text-xs font-medium cursor-pointer">
+          <label className="flex items-center gap-1.5 text-xs font-medium cursor-pointer text-foreground/80">
             <input
               type="checkbox"
               checked={drillTimed}
@@ -242,12 +242,12 @@ export function Practice() {
           <button
             onClick={handleLaunchDrill}
             disabled={totalCount === 0 || launchingDrill}
-            className="btn btn-primary btn-sm font-bold shadow-md gap-1.5"
+            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium shadow-xs gap-1.5 active:scale-95"
           >
             {launchingDrill ? (
               <span className="loading loading-spinner loading-xs" />
             ) : (
-              <Zap className="size-3.5 fill-current" />
+              <Zap className="size-3 fill-current" />
             )}
             Launch Drill ({Math.min(drillCount, totalCount)})
           </button>
@@ -255,30 +255,32 @@ export function Practice() {
       </div>
 
       {/* Adaptive Facets Filtering Bar */}
-      <div className="bg-card border-border/80 space-y-4 rounded-2xl border p-4 shadow-xs">
+      <div className="bg-card border-border/70 space-y-3 rounded-lg border p-3 shadow-xs">
         {/* Row 1: Search & Dropdowns */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative flex-1 min-w-[220px]">
-            <Search className="text-base-content/40 absolute top-2.5 left-3 size-4" />
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="text-muted-foreground/60 absolute top-2.5 left-2.5 size-3.5" />
             <input
               ref={searchInputRef}
               type="text"
               placeholder="Search question text or tags..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="input input-bordered input-sm pl-9 w-full text-xs"
+              className="h-8 pl-8 pr-3 w-full text-xs rounded-md border border-border/70 bg-background placeholder:text-muted-foreground/50 focus:outline-primary"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Difficulty */}
-            <div className="join">
+            {/* Difficulty Segmented Control */}
+            <div className="bg-muted/40 p-0.5 rounded-md border border-border/60 flex items-center">
               {(['ALL', 'easy', 'medium', 'hard'] as const).map((diff) => (
                 <button
                   key={diff}
                   onClick={() => setSelectedDifficulty(diff)}
-                  className={`btn btn-xs join-item capitalize ${
-                    selectedDifficulty === diff ? 'btn-primary' : 'btn-ghost border-border/60'
+                  className={`px-2 py-0.5 text-xs rounded transition-colors capitalize font-medium ${
+                    selectedDifficulty === diff
+                      ? 'bg-card text-foreground shadow-xs border border-border/60 font-semibold'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {diff}
@@ -290,7 +292,7 @@ export function Practice() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="select select-bordered select-xs"
+              className="h-7 text-xs rounded border border-border/70 bg-background px-2 text-foreground"
             >
               <option value="ALL">All Question Types</option>
               <option value="single_choice">Single Choice (MCQ)</option>
@@ -314,7 +316,7 @@ export function Practice() {
                   setSelectedType('ALL');
                   setSearch('');
                 }}
-                className="btn btn-ghost btn-xs text-base-content/60 hover:text-error gap-1"
+                className="btn btn-ghost btn-xs h-7 text-xs text-muted-foreground hover:text-red-500 gap-1"
               >
                 <RotateCcw className="size-3" />
                 Reset
@@ -326,7 +328,7 @@ export function Practice() {
         {/* Row 2: Subjects Chips */}
         {subjects.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-border/40">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-base-content/50 mr-1">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mr-1">
               Subjects:
             </span>
             <button
@@ -334,10 +336,10 @@ export function Practice() {
                 setSelectedSubject('ALL');
                 setSelectedTopic('ALL');
               }}
-              className={`badge badge-sm cursor-pointer transition-all ${
+              className={`text-xs px-2 py-0.5 rounded transition-colors cursor-pointer ${
                 selectedSubject === 'ALL'
-                  ? 'badge-primary text-primary-content font-bold'
-                  : 'badge-outline hover:bg-base-200'
+                  ? 'bg-primary text-primary-foreground font-medium'
+                  : 'bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
               }`}
             >
               All Subjects
@@ -349,10 +351,10 @@ export function Practice() {
                   setSelectedSubject(s);
                   setSelectedTopic('ALL');
                 }}
-                className={`badge badge-sm cursor-pointer transition-all ${
+                className={`text-xs px-2 py-0.5 rounded transition-colors cursor-pointer ${
                   selectedSubject === s
-                    ? 'badge-primary text-primary-content font-bold'
-                    : 'badge-outline hover:bg-base-200'
+                    ? 'bg-primary text-primary-foreground font-medium'
+                    : 'bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
                 }`}
               >
                 {s}
@@ -364,15 +366,15 @@ export function Practice() {
         {/* Row 3: Topics Chips (for active subject) */}
         {topics.length > 0 && selectedSubject !== 'ALL' && (
           <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-border/40">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-base-content/50 mr-1">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mr-1">
               Topics ({selectedSubject}):
             </span>
             <button
               onClick={() => setSelectedTopic('ALL')}
-              className={`badge badge-sm cursor-pointer transition-all ${
+              className={`text-xs px-2 py-0.5 rounded transition-colors cursor-pointer ${
                 selectedTopic === 'ALL'
-                  ? 'badge-secondary text-secondary-content font-bold'
-                  : 'badge-outline hover:bg-base-200'
+                  ? 'bg-secondary text-secondary-foreground font-medium'
+                  : 'bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
               }`}
             >
               All Topics
@@ -381,10 +383,10 @@ export function Practice() {
               <button
                 key={t}
                 onClick={() => setSelectedTopic(t)}
-                className={`badge badge-sm cursor-pointer transition-all ${
+                className={`text-xs px-2 py-0.5 rounded transition-colors cursor-pointer ${
                   selectedTopic === t
-                    ? 'badge-secondary text-secondary-content font-bold'
-                    : 'badge-outline hover:bg-base-200'
+                    ? 'bg-secondary text-secondary-foreground font-medium'
+                    : 'bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
                 }`}
               >
                 {t}
@@ -396,15 +398,17 @@ export function Practice() {
         {/* Row 4: Tags Chips */}
         {tags.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-border/40">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-base-content/50 mr-1">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mr-1">
               Tags:
             </span>
             {(showAllTags ? tags : tags.slice(0, 10)).map((t) => (
               <button
                 key={t}
                 onClick={() => setSelectedTag(selectedTag === t ? 'ALL' : t)}
-                className={`badge badge-xs cursor-pointer transition-all ${
-                  selectedTag === t ? 'badge-accent font-bold' : 'badge-ghost hover:bg-base-200'
+                className={`text-[11px] font-mono px-1.5 py-0.2 rounded transition-colors cursor-pointer ${
+                  selectedTag === t
+                    ? 'bg-primary/10 text-primary border border-primary/30 font-medium'
+                    : 'bg-muted/30 hover:bg-muted text-muted-foreground border border-border/50'
                 }`}
               >
                 #{t}
@@ -413,7 +417,7 @@ export function Practice() {
             {tags.length > 10 && (
               <button
                 onClick={() => setShowAllTags(!showAllTags)}
-                className="text-[11px] text-primary hover:underline ml-1"
+                className="text-[11px] text-primary hover:underline ml-1 font-mono"
               >
                 {showAllTags ? 'Show less' : `+${tags.length - 10} more`}
               </button>
@@ -428,71 +432,86 @@ export function Practice() {
           <span className="loading loading-spinner text-primary loading-md" />
         </div>
       ) : questions.length === 0 ? (
-        <div className="border-border/60 bg-card flex flex-col items-center justify-center rounded-2xl border p-12 text-center shadow-xs">
-          <Compass className="text-base-content/30 size-12" />
-          <h3 className="mt-3 text-base font-bold">No Questions Match Filters</h3>
-          <p className="text-base-content/60 mx-auto mt-1 max-w-sm text-xs">
-            Try resetting your subject, topic, or search filters, or ingest new questions in the Builder.
+        <div className="border-border/60 bg-card flex flex-col items-center justify-center rounded-lg border p-10 text-center shadow-xs">
+          <Compass className="text-muted-foreground/40 size-10" />
+          <h3 className="mt-3 text-sm font-semibold text-foreground">No Questions Match Filters</h3>
+          <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-xs">
+            Reset filter selections or import new questions in the Builder.
           </p>
           <button
             onClick={() => navigate('/builder')}
-            className="btn btn-primary btn-sm mt-4 gap-1.5 shadow-sm"
+            className="btn btn-primary btn-sm h-8 px-3 text-xs font-medium mt-4 gap-1.5 shadow-xs"
           >
             <Zap className="size-3.5" />
             Ingest Questions
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-base-content/60">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-mono tabular-nums">
             <span>
-              Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, totalCount)} of {totalCount} questions
+              Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, totalCount)} of {totalCount}
             </span>
-            <span className="font-mono">Page {page} of {totalPages}</span>
+            <span>Page {page} of {totalPages}</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {questions.map((q, idx) => {
               const questionGlobalNum = (page - 1) * pageSize + idx + 1;
               return (
                 <div
                   key={q.id}
                   onClick={() => setModalIndex(idx)}
-                  className="bg-card border-border/80 hover:border-primary/50 cursor-pointer rounded-2xl border p-5 shadow-xs transition-all space-y-3 group"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setModalIndex(idx);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Question ${questionGlobalNum} in ${q.subject}. Click to view solution.`}
+                  className="bg-card border-border/70 hover:border-border cursor-pointer rounded-lg border p-3.5 shadow-xs transition-colors space-y-2.5 group focus-visible:outline-2 focus-visible:outline-primary"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-2">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="badge badge-neutral text-xs font-bold">{q.subject}</span>
-                      {q.topic && <span className="badge badge-outline text-xs">{q.topic}</span>}
+                      <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border border-border/60 bg-muted/40 text-foreground">
+                        {q.subject}
+                      </span>
+                      {q.topic && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-border/50 text-muted-foreground">
+                          {q.topic}
+                        </span>
+                      )}
                       <span
-                        className={`badge badge-xs capitalize font-semibold ${
+                        className={`text-[10px] font-mono capitalize px-1.5 py-0.5 rounded border font-medium ${
                           q.difficulty === 'easy'
-                            ? 'badge-success text-success-content'
+                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                             : q.difficulty === 'medium'
-                            ? 'badge-warning text-warning-content'
-                            : 'badge-error text-error-content'
+                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                            : 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
                         }`}
                       >
                         {q.difficulty}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs font-mono text-base-content/60">
+                    <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground tabular-nums">
                       <span>+{q.marks || 1} mark{q.marks !== 1 ? 's' : ''}</span>
-                      <span className="font-bold">Q{questionGlobalNum}</span>
+                      <span className="font-semibold text-foreground">Q{questionGlobalNum}</span>
                     </div>
                   </div>
 
                   {/* Question Prompt Snippet */}
-                  <div className="text-sm leading-relaxed line-clamp-3">
+                  <div className="text-sm leading-relaxed line-clamp-3 selectable-content text-foreground/90">
                     <MathRenderer content={q.body} />
                   </div>
 
                   {/* Tags */}
                   {q.tags && q.tags.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-1 pt-1">
+                    <div className="flex flex-wrap items-center gap-1 pt-0.5">
                       {q.tags.map((t) => (
-                        <span key={t} className="badge badge-ghost badge-xs text-base-content/60">
+                        <span key={t} className="text-[10px] font-mono text-muted-foreground/75 px-1 rounded bg-muted/40">
                           #{t}
                         </span>
                       ))}
@@ -500,8 +519,8 @@ export function Practice() {
                   )}
 
                   {/* Card Action Hint */}
-                  <div className="flex items-center justify-between border-t border-border/40 pt-3 text-xs">
-                    <span className="text-base-content/40 text-[11px] group-hover:text-base-content/70 transition-colors">
+                  <div className="flex items-center justify-between border-t border-border/40 pt-2 text-xs">
+                    <span className="text-muted-foreground/50 text-[11px] group-hover:text-muted-foreground transition-colors">
                       Click to review question & solution
                     </span>
                     <button
@@ -509,10 +528,10 @@ export function Practice() {
                         e.stopPropagation();
                         setModalIndex(idx);
                       }}
-                      className="btn btn-ghost btn-xs text-primary gap-1 font-semibold group-hover:bg-primary/10"
+                      className="text-primary hover:underline text-xs font-medium flex items-center gap-1"
                     >
-                      View Answer & Explanation
-                      <ChevronRight className="size-3.5" />
+                      View Solution
+                      <ChevronRight className="size-3" />
                     </button>
                   </div>
                 </div>
@@ -532,25 +551,25 @@ export function Practice() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-4">
+            <div className="flex items-center justify-center gap-2 pt-3">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="btn btn-outline btn-sm"
+                className="btn btn-outline border-border/70 hover:bg-muted text-foreground btn-sm h-7 px-2.5 text-xs font-medium active:scale-95"
               >
-                <ChevronLeft className="size-4" />
+                <ChevronLeft className="size-3.5" />
                 Previous
               </button>
-              <span className="text-xs font-semibold px-3">
+              <span className="text-xs font-mono tabular-nums px-2 text-muted-foreground">
                 {page} / {totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="btn btn-outline btn-sm"
+                className="btn btn-outline border-border/70 hover:bg-muted text-foreground btn-sm h-7 px-2.5 text-xs font-medium active:scale-95"
               >
                 Next
-                <ChevronRight className="size-4" />
+                <ChevronRight className="size-3.5" />
               </button>
             </div>
           )}

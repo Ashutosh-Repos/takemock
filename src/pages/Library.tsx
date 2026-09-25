@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
+  AlertCircle,
   Award,
   BarChart3,
   BookOpen,
@@ -13,7 +14,6 @@ import {
   Layers,
   Play,
   Plus,
-  Target,
   Trash2,
   Zap,
 } from 'lucide-react';
@@ -190,27 +190,27 @@ export function Library() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-4 pb-36 md:p-8">
+    <div className="mx-auto max-w-6xl space-y-5 px-4 py-5 pb-24 md:px-6">
       {/* Top Banner / Navigation */}
-      <div className="border-base-300 flex flex-col justify-between gap-4 border-b pb-5 md:flex-row md:items-center">
+      <div className="border-border/60 flex flex-col justify-between gap-3 border-b pb-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-xl font-bold tracking-tight md:text-2xl">Your Library</h1>
-          <p className="text-base-content/50 mt-0.5 text-xs">
-            {papers.length} paper{papers.length !== 1 ? 's' : ''} saved
+          <h1 className="text-xl font-bold tracking-tight md:text-2xl text-foreground">Home</h1>
+          <p className="text-muted-foreground mt-0.5 text-xs font-mono tabular-nums">
+            {papers.length} paper{papers.length !== 1 ? 's' : ''} available
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate('/analysis')}
-            className="btn btn-ghost btn-sm gap-1.5"
+            className="btn btn-ghost btn-sm h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5"
           >
             <BarChart3 className="size-3.5" />
             Analysis
           </button>
           <button
             onClick={() => navigate('/builder')}
-            className="btn btn-primary btn-sm gap-1.5 shadow-sm"
+            className="btn btn-primary btn-sm h-8 px-3 text-xs font-medium gap-1.5 shadow-xs"
           >
             <Plus className="size-3.5" />
             New Paper
@@ -220,21 +220,21 @@ export function Library() {
 
       {/* SECTION 2: Mistake Vault Summary & Quick Exam Button */}
       {mistakes.unresolvedQuestions.length > 0 && (
-        <div className="bg-card border-error/40 overflow-hidden rounded-2xl border p-5 shadow-xs">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="bg-card border-red-500/20 overflow-hidden rounded-lg border p-4 shadow-xs">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
-              <div className="bg-error/15 text-error rounded-xl p-2.5 shrink-0">
-                <Target className="size-5" />
+              <div className="bg-red-500/10 text-red-600 dark:text-red-400 rounded-md p-2 shrink-0">
+                <AlertCircle className="size-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm">Mistakes</h3>
-                  <span className="badge badge-error badge-xs font-bold text-error-content">
+                  <h3 className="font-semibold text-xs tracking-tight">Mistake Vault</h3>
+                  <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.2 rounded border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 font-medium">
                     {mistakes.unresolvedQuestions.length}
                   </span>
                 </div>
-                <p className="text-base-content/50 mt-0.5 text-xs">
-                  Questions you got wrong — practise them again.
+                <p className="text-muted-foreground mt-0.5 text-xs">
+                  Questions marked incorrect during mock tests.
                 </p>
               </div>
             </div>
@@ -242,39 +242,39 @@ export function Library() {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => navigate('/mistakes')}
-                className="btn btn-ghost btn-sm gap-1 text-xs"
+                className="btn btn-ghost btn-sm h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
               >
-                View All
-                <ChevronRight className="size-3.5" />
+                View Vault
+                <ChevronRight className="size-3" />
               </button>
               <button
                 onClick={() => handleLaunchMistakeDrill(10)}
-                className="btn btn-error btn-sm text-error-content font-bold gap-1.5 shadow-sm"
+                className="btn btn-error btn-sm h-7 px-3 text-white text-xs font-medium gap-1.5 shadow-xs"
               >
-                <Play className="size-3.5" />
-                Practise ({Math.min(10, mistakes.unresolvedQuestions.length)})
+                <Play className="size-3 fill-current" />
+                Practice ({Math.min(10, mistakes.unresolvedQuestions.length)})
               </button>
             </div>
           </div>
 
           {/* Inline Preview of Mistakes */}
-          <div className="mt-4 grid grid-cols-1 gap-2 pt-3 border-t border-border/40 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 grid grid-cols-1 gap-2 pt-3 border-t border-border/40 sm:grid-cols-2 lg:grid-cols-3">
             {mistakes.unresolvedQuestions.slice(0, 3).map((q, idx) => (
               <div
                 key={q.id}
                 onClick={() => navigate('/mistakes')}
-                className="bg-base-200/50 hover:bg-base-200/80 rounded-xl p-3 text-xs cursor-pointer border border-border/60 transition-all flex flex-col justify-between"
+                className="bg-muted/30 hover:bg-muted/60 rounded-md p-2.5 text-xs cursor-pointer border border-border/50 transition-colors flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between text-[11px] mb-1">
-                    <span className="font-bold text-error">Error #{idx + 1}</span>
-                    <span className="badge badge-ghost badge-xs">{q.subject}</span>
+                    <span className="font-mono text-[10px] text-red-600 dark:text-red-400 font-semibold">Error #{idx + 1}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground px-1 rounded bg-muted/60">{q.subject}</span>
                   </div>
-                  <p className="line-clamp-2 text-base-content/80 text-[11px] leading-relaxed">
+                  <p className="line-clamp-2 text-foreground/80 text-[11px] leading-relaxed">
                     {q.body.replace(/[*#_`$]/g, '')}
                   </p>
                 </div>
-                <span className="text-primary hover:underline text-[10px] font-semibold mt-2 block">
+                <span className="text-primary hover:underline text-[10px] font-medium mt-1.5 block">
                   Inspect in Vault →
                 </span>
               </div>
@@ -284,15 +284,17 @@ export function Library() {
       )}
 
       {/* SECTION 1: All Papers List */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold tracking-tight">Papers</h2>
-            <p className="text-base-content/50 text-xs">
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Papers</h2>
+            <p className="text-muted-foreground text-xs">
               Mock exams and practice sets.
             </p>
           </div>
-          <span className="badge badge-ghost text-xs">{papers.length} paper{papers.length !== 1 ? 's' : ''}</span>
+          <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded border border-border/60 bg-muted/40 text-muted-foreground">
+            {papers.length} paper{papers.length !== 1 ? 's' : ''}
+          </span>
         </div>
 
         {loading ? (
@@ -300,22 +302,22 @@ export function Library() {
             <span className="loading loading-spinner text-primary loading-md" />
           </div>
         ) : papers.length === 0 ? (
-          <div className="border-border/60 bg-card flex flex-col items-center justify-center rounded-2xl border p-12 text-center shadow-xs">
-            <BookOpen className="text-base-content/30 size-12" />
-            <h3 className="mt-3 text-base font-bold">No Papers Yet</h3>
-            <p className="text-base-content/60 mx-auto mt-1 max-w-sm text-xs">
-              Import a full exam paper from ChatGPT/Claude, or build your own test in seconds.
+          <div className="border-border/60 bg-card flex flex-col items-center justify-center rounded-lg border p-10 text-center shadow-xs">
+            <BookOpen className="text-muted-foreground/40 size-10" />
+            <h3 className="mt-3 text-sm font-semibold text-foreground">No Papers Available</h3>
+            <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-xs">
+              Import an exam paper or construct a custom test.
             </p>
             <button
               onClick={() => navigate('/builder')}
-              className="btn btn-primary btn-sm mt-4 gap-1.5 shadow-sm"
+              className="btn btn-primary btn-sm h-8 px-3 text-xs font-medium mt-4 gap-1.5 shadow-xs"
             >
               <Plus className="size-3.5" />
-              Build or Ingest Papers
+              Build Paper
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {papers.map((paper) => {
               const stats = paperStats[paper.id];
               const totalQ = paper.sections.reduce(
@@ -327,130 +329,116 @@ export function Library() {
               return (
                 <div
                   key={paper.id}
-                  className="bg-card border-border/80 flex flex-col justify-between rounded-2xl border p-5 shadow-xs transition-all hover:border-primary/50 space-y-4"
+                  className="bg-card border-border/70 hover:border-border flex flex-col justify-between rounded-lg border p-4 shadow-xs transition-colors space-y-3"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="badge badge-primary text-[10px] font-bold">
+                      <span className="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-primary/20 bg-primary/10 text-primary font-medium">
                         {paper.mode}
                       </span>
                       {stats?.attemptsCount ? (
-                        <span className="badge badge-success badge-sm font-bold gap-1 text-success-content">
-                          <CheckCircle2 className="size-3" />
-                          {stats.attemptsCount} Attempt(s)
+                        <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                          <CheckCircle2 className="size-2.5" />
+                          {stats.attemptsCount} Attempt{stats.attemptsCount !== 1 ? 's' : ''}
                         </span>
                       ) : (
-                        <span className="badge badge-ghost text-[10px] text-base-content/60">
+                        <span className="text-[10px] font-mono text-muted-foreground/70">
                           Unattempted
                         </span>
                       )}
                     </div>
 
-                    <h3 className="font-bold text-base leading-snug line-clamp-2">{paper.title}</h3>
+                    <h3 className="font-semibold text-sm leading-snug line-clamp-2 text-foreground tracking-tight">{paper.title}</h3>
                     {paper.description && (
-                      <p className="text-base-content/60 text-xs line-clamp-2 leading-relaxed">
+                      <p className="text-muted-foreground text-xs line-clamp-2 leading-relaxed">
                         {paper.description}
                       </p>
                     )}
 
-                    <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-semibold text-base-content/70">
+                    <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-mono tabular-nums text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <Clock className="size-3.5 text-warning" />
-                        {durationMin > 0 ? `${durationMin} mins` : 'Untimed'}
+                        <Clock className="size-3 text-muted-foreground/70" />
+                        {durationMin > 0 ? `${durationMin}m` : 'Untimed'}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Layers className="size-3.5 text-info" />
-                        {paper.sections.length} Section(s)
+                        <Layers className="size-3 text-muted-foreground/70" />
+                        {paper.sections.length} sec
                       </span>
                       <span className="flex items-center gap-1">
-                        <Award className="size-3.5 text-success" />
+                        <Award className="size-3 text-muted-foreground/70" />
                         {totalQ} Qs
                       </span>
                     </div>
 
                     {/* Historical Score Highlight if available */}
                     {stats?.latestScore !== undefined && (
-                      <div className="bg-base-200/50 rounded-xl p-2.5 mt-2 flex items-center justify-between text-xs">
+                      <div className="bg-muted/30 border border-border/60 rounded-md p-2 mt-2 flex items-center justify-between text-xs">
                         <div>
-                          <span className="text-base-content/50 text-[10px] block uppercase font-bold">Latest Score</span>
-                          <span className="font-bold text-sm">{stats.latestScore}%</span>
+                          <span className="text-muted-foreground text-[10px] block uppercase font-mono">Latest Score</span>
+                          <span className="font-mono tabular-nums font-semibold text-xs text-foreground">{stats.latestScore}%</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {stats.bestScore !== undefined && (
-                            <div className="text-right">
-                              <span className="text-base-content/50 text-[10px] block uppercase font-bold">Best Score</span>
-                              <span className="font-bold text-sm text-success">{stats.bestScore}%</span>
-                            </div>
-                          )}
-                          {stats.latestAttemptId && (
-                            <button
-                              onClick={() => navigate(`/result/${stats.latestAttemptId}`)}
-                              className="btn btn-ghost btn-xs text-primary gap-1 ml-1"
-                              title="View Scorecard"
-                            >
-                              Scorecard
-                              <ExternalLink className="size-3" />
-                            </button>
-                          )}
-                        </div>
+                        {stats.bestScore !== undefined && (
+                          <div className="text-right">
+                            <span className="text-muted-foreground text-[10px] block uppercase font-mono">Best Score</span>
+                            <span className="font-mono tabular-nums font-semibold text-xs text-emerald-600 dark:text-emerald-400">{stats.bestScore}%</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
 
                   {/* Actions Bar */}
-                  <div className="border-border/50 pt-3 border-t flex flex-col gap-2">
+                  <div className="border-border/50 pt-2.5 border-t flex flex-col gap-2">
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => handleLaunchPaperExam(paper.id)}
-                        className="btn btn-primary btn-sm font-bold shadow-xs gap-1"
+                        className="btn btn-primary btn-sm h-8 px-3 text-xs font-medium shadow-xs gap-1.5 active:scale-95"
                       >
-                        <Play className="size-3.5 fill-current" />
+                        <Play className="size-3 fill-current" />
                         Start Exam
                       </button>
 
                       <button
                         onClick={() => handleLaunchPaperPractice(paper)}
-                        className="btn btn-outline btn-sm font-bold gap-1"
+                        className="btn btn-outline border-border/70 hover:bg-muted text-foreground btn-sm h-8 px-3 text-xs font-medium gap-1.5 active:scale-95"
                       >
-                        <Zap className="size-3.5" />
+                        <Zap className="size-3" />
                         Practice
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between pt-1 text-xs">
+                    <div className="flex items-center justify-between pt-0.5 text-xs">
                       {stats?.latestAttemptId ? (
                         <button
                           onClick={() => navigate(`/result/${stats.latestAttemptId}`)}
-                          className="btn btn-ghost btn-xs text-primary gap-1"
+                          className="text-xs text-primary hover:underline font-medium flex items-center gap-1"
+                          aria-label={`View scorecard for ${paper.title}`}
                         >
                           Scorecard
-                          <ExternalLink className="size-3" />
+                          <ExternalLink className="size-2.5" />
                         </button>
                       ) : (
-                        <button
-                          disabled
-                          className="btn btn-ghost btn-xs text-base-content/30 gap-1 cursor-not-allowed opacity-50"
-                          title="Complete an attempt first"
-                        >
-                          Scorecard
-                          <ExternalLink className="size-3" />
-                        </button>
+                        <span className="text-muted-foreground/60 text-[11px] font-mono">
+                          Ready
+                        </span>
                       )}
 
                       <div className="flex items-center gap-1">
                         <button
                           onClick={(e) => handleExportPaper(e, paper)}
-                          className="btn btn-ghost btn-xs btn-square text-base-content/60 hover:text-base-content"
+                          className="btn btn-ghost btn-xs h-6 w-6 p-0 text-muted-foreground hover:text-foreground active:scale-90"
                           title="Export as Markdown"
+                          aria-label="Export paper as Markdown"
                         >
-                          <Download className="size-3.5" />
+                          <Download className="size-3" />
                         </button>
                         <button
                           onClick={(e) => handleDeletePaper(e, paper.id)}
-                          className="btn btn-ghost btn-xs btn-square text-base-content/40 hover:text-error"
-                          title="Delete Paper"
+                          className="btn btn-ghost btn-xs h-6 w-6 p-0 text-muted-foreground hover:text-red-600 active:scale-90"
+                          title="Delete paper"
+                          aria-label="Delete paper"
                         >
-                          <Trash2 className="size-3.5" />
+                          <Trash2 className="size-3" />
                         </button>
                       </div>
                     </div>
@@ -464,74 +452,74 @@ export function Library() {
 
       {/* SECTION: Recent Completed Attempts & Scorecards */}
       {analytics && analytics.recentScoreTrends.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-3 pt-2">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold tracking-tight">Recent Attempts</h2>
-              <p className="text-base-content/50 text-xs">Test scorecards and completion history.</p>
+              <h2 className="text-base font-semibold tracking-tight text-foreground">Recent Attempts</h2>
+              <p className="text-muted-foreground text-xs">Scorecards and completion history.</p>
             </div>
             <button
               onClick={() => navigate('/analysis')}
-              className="text-primary hover:underline text-xs font-semibold"
+              className="text-primary hover:underline text-xs font-medium"
             >
-              View all in analysis →
+              View in analysis →
             </button>
           </div>
 
-          <div className="bg-card border-border/80 overflow-x-auto rounded-2xl border shadow-xs">
-            <table className="table table-zebra w-full text-xs">
+          <div className="bg-card border-border/70 overflow-x-auto rounded-lg border shadow-xs">
+            <table className="table w-full text-xs">
               <thead>
-                <tr className="border-border/60 bg-base-200/50">
-                  <th>Exam / Paper</th>
-                  <th>Date</th>
-                  <th>Score</th>
-                  <th>Accuracy</th>
-                  <th>Duration</th>
-                  <th className="text-right">Action</th>
+                <tr className="border-border/60 bg-muted/40 text-muted-foreground">
+                  <th className="font-medium py-2">Exam / Paper</th>
+                  <th className="font-medium py-2">Date</th>
+                  <th className="font-medium py-2">Score</th>
+                  <th className="font-medium py-2">Accuracy</th>
+                  <th className="font-medium py-2">Duration</th>
+                  <th className="font-medium py-2 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border/40">
                 {analytics.recentScoreTrends.slice(0, 5).map((att) => (
-                  <tr key={att.attemptId} className="hover:bg-base-200/30">
-                    <td className="font-semibold">{att.testTitle}</td>
-                    <td className="text-base-content/60">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="size-3" />
+                  <tr key={att.attemptId} className="hover:bg-muted/20">
+                    <td className="font-medium text-foreground py-2.5">{att.testTitle}</td>
+                    <td className="text-muted-foreground py-2.5">
+                      <span className="flex items-center gap-1 font-mono text-[11px]">
+                        <Calendar className="size-3 text-muted-foreground/70" />
                         {new Date(att.date).toLocaleDateString()}
                       </span>
                     </td>
-                    <td>
-                      <span className="font-bold text-sm">{att.scorePercentage}%</span>
-                      <span className="text-base-content/50 ml-1 text-[11px]">
+                    <td className="py-2.5 font-mono tabular-nums">
+                      <span className="font-semibold text-foreground">{att.scorePercentage}%</span>
+                      <span className="text-muted-foreground ml-1 text-[11px]">
                         ({att.totalMarks}/{att.maxMarks})
                       </span>
                     </td>
-                    <td>
+                    <td className="py-2.5">
                       <span
-                        className={`badge badge-xs font-semibold ${
+                        className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded border font-medium ${
                           att.accuracy >= 75
-                            ? 'badge-success text-success-content'
+                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                             : att.accuracy >= 50
-                            ? 'badge-warning text-warning-content'
-                            : 'badge-error text-error-content'
+                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                            : 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
                         }`}
                       >
                         {att.accuracy}%
                       </span>
                     </td>
-                    <td className="text-base-content/60">
-                      <span className="flex items-center gap-1 font-mono">
-                        <Clock className="size-3" />
+                    <td className="text-muted-foreground py-2.5">
+                      <span className="flex items-center gap-1 font-mono text-[11px] tabular-nums">
+                        <Clock className="size-3 text-muted-foreground/70" />
                         {formatTimeSeconds(att.timeSpentSeconds)}
                       </span>
                     </td>
-                    <td className="text-right">
+                    <td className="text-right py-2.5">
                       <button
                         onClick={() => navigate(`/result/${att.attemptId}`)}
-                        className="btn btn-ghost btn-xs text-primary gap-1"
+                        className="text-xs text-primary hover:underline font-medium inline-flex items-center gap-1"
                       >
                         Scorecard
-                        <ExternalLink className="size-3" />
+                        <ExternalLink className="size-2.5" />
                       </button>
                     </td>
                   </tr>
@@ -542,21 +530,21 @@ export function Library() {
         </div>
       )}
 
-      {/* SECTION 3: Dynamic Subject Performance Snapshot (Zero Hardcoding) */}
+      {/* SECTION 3: Dynamic Subject Performance Snapshot */}
       {analytics && analytics.subjectBreakdown.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-3 pt-2">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold tracking-tight">Subject Accuracy</h2>
-              <p className="text-base-content/50 text-xs">
-                Performance across subjects from your practice history.
+              <h2 className="text-base font-semibold tracking-tight text-foreground">Subject Accuracy</h2>
+              <p className="text-muted-foreground text-xs">
+                Performance across subjects from practice history.
               </p>
             </div>
             <button
               onClick={() => navigate('/analysis')}
-              className="text-primary hover:underline text-xs font-semibold"
+              className="text-primary hover:underline text-xs font-medium"
             >
-              View all analysis →
+              View all in analysis →
             </button>
           </div>
 
@@ -565,42 +553,43 @@ export function Library() {
               <div
                 key={subj.subject}
                 onClick={() => navigate(`/practice?subject=${encodeURIComponent(subj.subject)}`)}
-                className="bg-card border-border/80 hover:border-primary/50 flex cursor-pointer flex-col justify-between rounded-xl border p-4 shadow-2xs transition-all"
+                className="bg-card border-border/70 hover:border-border flex cursor-pointer flex-col justify-between rounded-lg border p-3.5 shadow-xs transition-colors"
               >
                 <div>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-bold text-sm truncate">{subj.subject}</span>
+                    <span className="font-semibold text-xs text-foreground truncate">{subj.subject}</span>
                     <span
-                      className={`badge badge-sm font-bold ${
+                      className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded border font-medium ${
                         subj.accuracy >= 75
-                          ? 'badge-success text-success-content'
+                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                           : subj.accuracy >= 50
-                          ? 'badge-warning text-warning-content'
-                          : 'badge-error text-error-content'
+                          ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                          : 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
                       }`}
                     >
                       {subj.accuracy}%
                     </span>
                   </div>
-                  <p className="text-base-content/50 text-[11px]">
-                    {subj.correct} of {subj.total} questions answered correctly
+                  <p className="text-muted-foreground text-[11px] font-mono tabular-nums">
+                    {subj.correct} of {subj.total} correct
                   </p>
                 </div>
 
-                <div className="mt-3">
-                  <progress
-                    className={`progress h-1.5 w-full ${
-                      subj.accuracy >= 75
-                        ? 'progress-success'
-                        : subj.accuracy >= 50
-                        ? 'progress-warning'
-                        : 'progress-error'
-                    }`}
-                    value={subj.accuracy}
-                    max="100"
-                  />
-                  <div className="flex items-center justify-between text-[10px] text-base-content/50 mt-1">
-                    <span>{subj.topics.length} topic(s)</span>
+                <div className="mt-2.5">
+                  <div className="h-1.5 w-full rounded-full bg-muted/60 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${
+                        subj.accuracy >= 75
+                          ? 'bg-emerald-500'
+                          : subj.accuracy >= 50
+                          ? 'bg-amber-500'
+                          : 'bg-red-500'
+                      }`}
+                      style={{ width: `${subj.accuracy}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1 font-mono">
+                    <span>{subj.topics.length} topic{subj.topics.length !== 1 ? 's' : ''}</span>
                     <span className="text-primary font-medium">Practice →</span>
                   </div>
                 </div>

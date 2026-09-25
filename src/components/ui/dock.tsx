@@ -13,6 +13,7 @@ import {
   Children,
   cloneElement,
   createContext,
+  isValidElement,
   useContext,
   useEffect,
   useMemo,
@@ -21,9 +22,9 @@ import {
 } from 'react';
 import { cn } from '@/lib/utils';
 
-const DEFAULT_MAGNIFICATION = 80;
-const DEFAULT_DISTANCE = 150;
-const DEFAULT_PANEL_HEIGHT = 64;
+const DEFAULT_MAGNIFICATION = 50;
+const DEFAULT_DISTANCE = 80;
+const DEFAULT_PANEL_HEIGHT = 46;
 
 type DockPlacement = 'right' | 'left' | 'bottom' | 'top' | 'auto';
 
@@ -43,6 +44,8 @@ type DockItemProps = {
   className?: string;
   children: React.ReactNode;
   onClick?: () => void;
+  'aria-label'?: string;
+  'aria-current'?: boolean | 'page' | 'step' | 'location' | 'date' | 'time';
 };
 type DockLabelProps = {
   className?: string;
@@ -152,23 +155,23 @@ function Dock({
       case 'right':
         return {
           container: 'top-1/2 right-2 -translate-y-1/2 flex-col items-end',
-          toolbar: 'flex-col items-end gap-3 px-3 py-3',
+          toolbar: 'flex-col items-center gap-1.5 p-1.5',
         };
       case 'left':
         return {
           container: 'top-1/2 left-2 -translate-y-1/2 flex-col items-start',
-          toolbar: 'flex-col items-start gap-3 px-3 py-3',
+          toolbar: 'flex-col items-center gap-1.5 p-1.5',
         };
       case 'top':
         return {
           container: 'top-2 left-1/2 -translate-x-1/2 flex-row items-start',
-          toolbar: 'flex-row items-start gap-3 py-2 px-3',
+          toolbar: 'flex-row items-center gap-1.5 px-2 py-1.5',
         };
       case 'bottom':
       default:
         return {
           container: 'bottom-2 left-1/2 -translate-x-1/2 flex-row items-end',
-          toolbar: 'flex-row items-end gap-3 py-2 px-3',
+          toolbar: 'flex-row items-center gap-1.5 px-2 py-1.5',
         };
     }
   }, [effectivePlacement]);
@@ -193,7 +196,7 @@ function Dock({
           mousePos.set(Infinity);
         }}
         className={cn(
-          'bg-card/85 text-card-foreground border-border/70 pointer-events-auto flex overflow-visible rounded-2xl border shadow-2xl backdrop-blur-xl transition-colors',
+          'bg-card/85 text-card-foreground border-border/80 pointer-events-auto flex items-center overflow-visible rounded-xl border shadow-lg backdrop-blur-md transition-colors',
           layoutConfig.toolbar,
           className,
         )}
@@ -222,7 +225,7 @@ function Dock({
   );
 }
 
-function DockItem({ children, className, onClick }: DockItemProps) {
+function DockItem({ children, className, onClick, ...restProps }: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   const { distance, magnification, mousePos, spring, isVertical, placement } = useDock();
@@ -260,7 +263,7 @@ function DockItem({ children, className, onClick }: DockItemProps) {
   const sizeTransform = useTransform(
     mouseDistance,
     [-distance, 0, distance],
-    [44, magnification, 44],
+    [36, magnification, 36],
     { clamp: true }
   );
 
@@ -284,6 +287,12 @@ function DockItem({ children, className, onClick }: DockItemProps) {
     <motion.div
       ref={ref}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
       style={{
         width: size,
         height: size,
@@ -301,23 +310,26 @@ function DockItem({ children, className, onClick }: DockItemProps) {
       }}
       onBlur={() => isHovered.set(0)}
       className={cn(
-        'relative inline-flex shrink-0 items-center justify-center',
+        'relative inline-flex shrink-0 items-center justify-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none',
         originClass,
         className,
       )}
       tabIndex={0}
       role="button"
+      aria-label={restProps['aria-label']}
+      aria-current={restProps['aria-current']}
       aria-haspopup="true"
     >
-      {Children.map(children, (child) =>
-        cloneElement(child as React.ReactElement<Record<string, unknown>>, {
+      {Children.map(children, (child) => {
+        if (!isValidElement(child)) return child;
+        return cloneElement(child as React.ReactElement<Record<string, unknown>>, {
           size,
           width: size,
           isHovered,
           isVertical,
           placement,
-        }),
-      )}
+        });
+      })}
     </motion.div>
   );
 }
