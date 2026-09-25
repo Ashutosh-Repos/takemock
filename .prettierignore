@@ -1,0 +1,27 @@
+# Node & Frontend Build outputs
+node_modules/
+dist/
+build/
+.next/
+.out/
+
+# Tauri specific outputs and backend target
+src-tauri/target/
+src-tauri/gen/
+
+# Lockfiles (avoids git conflicts)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+src-tauri/Cargo.lock
+
+# System and IDE files
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
