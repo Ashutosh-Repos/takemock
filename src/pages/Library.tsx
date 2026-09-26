@@ -220,16 +220,16 @@ export function Library() {
 
       {/* SECTION 2: Mistake Vault Summary & Quick Exam Button */}
       {mistakes.unresolvedQuestions.length > 0 && (
-        <div className="bg-card border-red-500/20 overflow-hidden rounded-lg border p-4 shadow-xs">
+        <div className="liquid-glass-card border-red-500/30 overflow-hidden rounded-xl p-4 shadow-xs">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
-              <div className="bg-red-500/10 text-red-600 dark:text-red-400 rounded-md p-2 shrink-0">
+              <div className="bg-red-500/15 text-red-600 dark:text-red-400 rounded-lg p-2 shrink-0 border border-red-500/20 shadow-xs">
                 <AlertCircle className="size-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-xs tracking-tight">Mistake Vault</h3>
-                  <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.2 rounded border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 font-medium">
+                  <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 font-semibold shadow-xs">
                     {mistakes.unresolvedQuestions.length}
                   </span>
                 </div>
@@ -242,14 +242,14 @@ export function Library() {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => navigate('/mistakes')}
-                className="btn btn-ghost btn-sm h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+                className="liquid-glass-pill btn btn-ghost btn-sm h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1 rounded-lg"
               >
                 View Vault
                 <ChevronRight className="size-3" />
               </button>
               <button
                 onClick={() => handleLaunchMistakeDrill(10)}
-                className="btn btn-error btn-sm h-7 px-3 text-white text-xs font-medium gap-1.5 shadow-xs"
+                className="btn btn-error btn-sm h-7 px-3 text-white text-xs font-medium gap-1.5 shadow-xs rounded-lg active:scale-95"
               >
                 <Play className="size-3 fill-current" />
                 Practice ({Math.min(10, mistakes.unresolvedQuestions.length)})
@@ -263,7 +263,7 @@ export function Library() {
               <div
                 key={q.id}
                 onClick={() => navigate('/mistakes')}
-                className="bg-muted/30 hover:bg-muted/60 rounded-md p-2.5 text-xs cursor-pointer border border-border/50 transition-colors flex flex-col justify-between"
+                className="liquid-glass-pill rounded-lg p-2.5 text-xs cursor-pointer transition-all flex flex-col justify-between hover:border-red-500/30"
               >
                 <div>
                   <div className="flex items-center justify-between text-[11px] mb-1">
@@ -329,15 +329,15 @@ export function Library() {
               return (
                 <div
                   key={paper.id}
-                  className="bg-card border-border/70 hover:border-border flex flex-col justify-between rounded-lg border p-4 shadow-xs transition-colors space-y-3"
+                  className="liquid-glass-card hover:scale-[1.01] flex flex-col justify-between rounded-xl p-4 space-y-3 transition-all cursor-pointer"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-primary/20 bg-primary/10 text-primary font-medium">
+                      <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-semibold shadow-xs">
                         {paper.mode}
                       </span>
                       {stats?.attemptsCount ? (
-                        <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                        <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 shadow-xs">
                           <CheckCircle2 className="size-2.5" />
                           {stats.attemptsCount} Attempt{stats.attemptsCount !== 1 ? 's' : ''}
                         </span>
@@ -372,7 +372,7 @@ export function Library() {
 
                     {/* Historical Score Highlight if available */}
                     {stats?.latestScore !== undefined && (
-                      <div className="bg-muted/30 border border-border/60 rounded-md p-2 mt-2 flex items-center justify-between text-xs">
+                      <div className="liquid-glass-pill rounded-lg p-2 mt-2 flex items-center justify-between text-xs">
                         <div>
                           <span className="text-muted-foreground text-[10px] block uppercase font-mono">Latest Score</span>
                           <span className="font-mono tabular-nums font-semibold text-xs text-foreground">{stats.latestScore}%</span>
@@ -466,7 +466,7 @@ export function Library() {
             </button>
           </div>
 
-          <div className="bg-card border-border/70 overflow-x-auto rounded-lg border shadow-xs">
+          <div className="liquid-glass-card overflow-x-auto rounded-xl p-0.5 shadow-xs">
             <table className="table w-full text-xs">
               <thead>
                 <tr className="border-border/60 bg-muted/40 text-muted-foreground">
@@ -496,7 +496,7 @@ export function Library() {
                     </td>
                     <td className="py-2.5">
                       <span
-                        className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded border font-medium ${
+                        className={`text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full border font-semibold ${
                           att.accuracy >= 75
                             ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                             : att.accuracy >= 50
@@ -553,7 +553,7 @@ export function Library() {
               <div
                 key={subj.subject}
                 onClick={() => navigate(`/practice?subject=${encodeURIComponent(subj.subject)}`)}
-                className="bg-card border-border/70 hover:border-border flex cursor-pointer flex-col justify-between rounded-lg border p-3.5 shadow-xs transition-colors"
+                className="liquid-glass-card hover:scale-[1.01] flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all"
               >
                 <div>
                   <div className="flex items-center justify-between text-xs mb-1">

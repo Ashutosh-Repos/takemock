@@ -214,13 +214,13 @@ export function Practice() {
         </div>
 
         {/* 1-Click Instant Drill Launch Card */}
-        <div className="bg-card border-border/70 flex flex-wrap items-center gap-2.5 rounded-lg border p-1.5 px-2.5 shadow-xs">
+        <div className="liquid-glass-card flex flex-wrap items-center gap-2.5 rounded-xl p-2 px-3 shadow-xs">
           <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
             <span>Count:</span>
             <select
               value={drillCount}
               onChange={(e) => setDrillCount(Number(e.target.value))}
-              className="h-7 text-xs rounded border border-border/70 bg-background px-1.5 font-mono"
+              className="h-7 text-xs rounded-lg liquid-glass-pill px-2 font-mono text-foreground"
             >
               <option value={5}>5 Qs</option>
               <option value={10}>10 Qs</option>
@@ -242,7 +242,7 @@ export function Practice() {
           <button
             onClick={handleLaunchDrill}
             disabled={totalCount === 0 || launchingDrill}
-            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium shadow-xs gap-1.5 active:scale-95"
+            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium shadow-xs gap-1.5 rounded-lg active:scale-95"
           >
             {launchingDrill ? (
               <span className="loading loading-spinner loading-xs" />
@@ -255,7 +255,7 @@ export function Practice() {
       </div>
 
       {/* Adaptive Facets Filtering Bar */}
-      <div className="bg-card border-border/70 space-y-3 rounded-lg border p-3 shadow-xs">
+      <div className="liquid-glass-card space-y-3 rounded-xl p-3.5 shadow-xs">
         {/* Row 1: Search & Dropdowns */}
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div className="relative flex-1 min-w-[200px]">
@@ -266,20 +266,20 @@ export function Practice() {
               placeholder="Search question text or tags..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 pr-3 w-full text-xs rounded-md border border-border/70 bg-background placeholder:text-muted-foreground/50 focus:outline-primary"
+              className="h-8 pl-8 pr-3 w-full text-xs rounded-lg liquid-glass-input placeholder:text-muted-foreground/50 focus:outline-primary"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {/* Difficulty Segmented Control */}
-            <div className="bg-muted/40 p-0.5 rounded-md border border-border/60 flex items-center">
+            <div className="liquid-glass-pill p-0.5 rounded-lg flex items-center">
               {(['ALL', 'easy', 'medium', 'hard'] as const).map((diff) => (
                 <button
                   key={diff}
                   onClick={() => setSelectedDifficulty(diff)}
-                  className={`px-2 py-0.5 text-xs rounded transition-colors capitalize font-medium ${
+                  className={`px-2 py-0.5 text-xs rounded-md transition-all capitalize font-medium ${
                     selectedDifficulty === diff
-                      ? 'bg-card text-foreground shadow-xs border border-border/60 font-semibold'
+                      ? 'bg-primary text-primary-foreground shadow-xs font-semibold'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -471,7 +471,7 @@ export function Practice() {
                   role="button"
                   tabIndex={0}
                   aria-label={`Question ${questionGlobalNum} in ${q.subject}. Click to view solution.`}
-                  className="bg-card border-border/70 hover:border-border cursor-pointer rounded-lg border p-3.5 shadow-xs transition-colors space-y-2.5 group focus-visible:outline-2 focus-visible:outline-primary"
+                  className="liquid-glass-card hover:scale-[1.008] cursor-pointer rounded-xl p-3.5 space-y-2.5 group focus-visible:outline-2 focus-visible:outline-primary transition-all"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-2">
                     <div className="flex flex-wrap items-center gap-1.5">

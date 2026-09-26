@@ -110,10 +110,10 @@ export function Analysis() {
 
       {/* KPI Overview Cards */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+        <div className="liquid-glass-card rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Overall Accuracy</span>
-            <div className="bg-muted text-foreground/70 rounded-md p-1.5">
+            <div className="liquid-glass-pill text-foreground/80 rounded-lg p-1.5">
               <TrendingUp className="size-3.5" />
             </div>
           </div>
@@ -125,10 +125,10 @@ export function Analysis() {
           </p>
         </div>
 
-        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+        <div className="liquid-glass-card rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Average Score</span>
-            <div className="bg-muted text-foreground/70 rounded-md p-1.5">
+            <div className="liquid-glass-pill text-foreground/80 rounded-lg p-1.5">
               <Award className="size-3.5" />
             </div>
           </div>
@@ -138,10 +138,10 @@ export function Analysis() {
           <p className="text-muted-foreground mt-1 text-[11px]">Across {data.completedAttempts} test{data.completedAttempts !== 1 ? 's' : ''}</p>
         </div>
 
-        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+        <div className="liquid-glass-card rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Speed Per Question</span>
-            <div className="bg-muted text-foreground/70 rounded-md p-1.5">
+            <div className="liquid-glass-pill text-foreground/80 rounded-lg p-1.5">
               <Clock className="size-3.5" />
             </div>
           </div>
@@ -151,10 +151,10 @@ export function Analysis() {
           <p className="text-muted-foreground mt-1 text-[11px]">Average response pace</p>
         </div>
 
-        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+        <div className="liquid-glass-card rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Total Time</span>
-            <div className="bg-muted text-foreground/70 rounded-md p-1.5">
+            <div className="liquid-glass-pill text-foreground/80 rounded-lg p-1.5">
               <Flame className="size-3.5" />
             </div>
           </div>
@@ -314,7 +314,7 @@ export function Analysis() {
       {/* Difficulty & Question Type Breakdown Grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Difficulty Breakdown */}
-        <div className="bg-card border-border rounded-lg border p-4 shadow-2xs">
+        <div className="liquid-glass-card rounded-xl p-4 shadow-xs">
           <h3 className="font-semibold text-sm text-foreground">Mastery by Difficulty</h3>
           <p className="text-muted-foreground text-xs mt-0.5">Performance across difficulty tiers</p>
 
@@ -349,7 +349,7 @@ export function Analysis() {
         </div>
 
         {/* Question Type Breakdown */}
-        <div className="bg-card border-border rounded-lg border p-4 shadow-2xs">
+        <div className="liquid-glass-card rounded-xl p-4 shadow-xs">
           <h3 className="font-semibold text-sm text-foreground">Question Format Accuracy</h3>
           <p className="text-muted-foreground text-xs mt-0.5">Single choice, multiple selection, and numerical</p>
 

@@ -571,7 +571,7 @@ export function Runner() {
          ====================================================================== */}
       <header
         data-tauri-drag-region
-        className="bg-card border-border sticky top-0 z-40 flex items-center justify-between border-b px-4 py-2 shadow-2xs md:px-6"
+        className="liquid-glass-header sticky top-0 z-40 flex items-center justify-between px-4 py-2 shadow-2xs md:px-6"
       >
         <div data-tauri-drag-region className="flex items-center gap-2.5">
           <div className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-xs font-bold hidden sm:block pointer-events-none">
@@ -664,7 +664,7 @@ export function Runner() {
       {/* ======================================================================
           Section Navigation Bar
          ====================================================================== */}
-      <nav aria-label="Exam Sections" className="bg-card border-border flex items-center gap-1.5 border-b px-4 py-1.5 overflow-x-auto md:px-6">
+      <nav aria-label="Exam Sections" className="liquid-glass-header flex items-center gap-1.5 border-b px-4 py-1.5 overflow-x-auto md:px-6">
         <span className="text-[11px] font-semibold text-muted-foreground uppercase mr-1 shrink-0">Sections:</span>
         <div className="flex items-center gap-1.5">
           {attempt.snapshot.sections.map((sec) => {
@@ -677,8 +677,8 @@ export function Runner() {
                   if (firstQ) navigateToQuestion(sec.id, firstQ.id);
                 }}
                 aria-current={isActive ? 'true' : undefined}
-                className={`btn btn-xs font-medium transition-all shrink-0 rounded-md active:scale-95 ${
-                  isActive ? 'btn-primary shadow-2xs' : 'btn-ghost text-muted-foreground hover:text-foreground hover:bg-muted'
+                className={`btn btn-xs font-medium transition-all shrink-0 rounded-lg active:scale-95 ${
+                  isActive ? 'btn-primary shadow-xs' : 'liquid-glass-pill text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {sec.title}
@@ -696,7 +696,7 @@ export function Runner() {
         {/* Left/Center: Question Stimulus & Response Form */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
           {currentQuestion ? (
-            <div className="bg-card border-border rounded-lg border p-4 md:p-6 shadow-2xs space-y-5">
+            <div className="liquid-glass-card rounded-2xl p-4 md:p-6 shadow-xs space-y-5">
               {/* Question Header */}
               <div className="border-border/60 flex flex-wrap items-center justify-between gap-2 border-b pb-3">
                 <div className="flex items-center gap-2">
@@ -822,7 +822,7 @@ export function Runner() {
         {/* ====================================================================
             Right Column: Official CBT Question Palette (Desktop Split View)
            ==================================================================== */}
-        <aside aria-label="Question Palette" className="bg-card border-border w-full border-t lg:w-72 lg:border-t-0 lg:border-l p-3.5 hidden lg:flex flex-col justify-between overflow-y-auto">
+        <aside aria-label="Question Palette" className="liquid-glass-header w-full border-t lg:w-72 lg:border-t-0 lg:border-l p-3.5 hidden lg:flex flex-col justify-between overflow-y-auto">
           <div className="space-y-4">
             {/* Palette Status Legend (Section 37 Non-color accessible) */}
             <div className="space-y-2">
@@ -1012,9 +1012,9 @@ export function Runner() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="submit-modal-title"
-          className="modal modal-open modal-bottom sm:modal-middle bg-black/40 backdrop-blur-xs z-50"
+          className="modal modal-open modal-bottom sm:modal-middle bg-black/40 backdrop-blur-sm z-50"
         >
-          <div className="modal-box border-border max-w-md border p-5 rounded-xl shadow-xl bg-card">
+          <div className="modal-box liquid-glass max-w-md p-5 rounded-2xl shadow-2xl">
             <div className="flex items-center gap-2.5 text-warning mb-2">
               <AlertTriangle className="size-5 shrink-0" />
               <h3 id="submit-modal-title" className="text-base font-semibold text-foreground tracking-tight">Submit Exam</h3>

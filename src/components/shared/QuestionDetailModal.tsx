@@ -106,14 +106,14 @@ export function QuestionDetailModal({
       aria-modal="true"
       aria-labelledby="question-modal-title"
       aria-describedby="question-modal-statement"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-card text-card-foreground border-border/70 flex flex-col w-full max-w-2xl max-h-[88vh] rounded-lg border shadow-xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="liquid-glass text-card-foreground flex flex-col w-full max-w-2xl max-h-[88vh] rounded-2xl overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Top Header */}
-        <div className="border-border/60 bg-muted/30 flex items-center justify-between px-4 py-2.5 border-b">
+        <div className="border-border/40 bg-muted/20 flex items-center justify-between px-4 py-2.5 border-b backdrop-blur-xs">
           <div className="flex flex-wrap items-center gap-1.5">
             <span
               id="question-modal-title"

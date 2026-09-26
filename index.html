@@ -18,6 +18,15 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Apple Optical Liquid Glass Refraction Filter Definition -->
+    <svg class="sr-only" aria-hidden="true" style="position: absolute; width: 0; height: 0; pointer-events: none;">
+      <defs>
+        <filter id="apple-liquid-glass-lens" x="-10%" y="-10%" width="120%" height="120%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </defs>
+    </svg>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

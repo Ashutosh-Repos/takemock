@@ -101,8 +101,8 @@ export function MistakeVault() {
             }
           }}
           aria-pressed={activeCategory === 'UNRESOLVED'}
-          className={`bg-card flex cursor-pointer flex-col justify-between rounded-lg border p-3.5 shadow-2xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
-            activeCategory === 'UNRESOLVED' ? 'ring-2 ring-primary border-primary bg-primary/5' : 'border-border hover:bg-muted/40'
+          className={`liquid-glass-card flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
+            activeCategory === 'UNRESOLVED' ? 'ring-2 ring-primary border-primary bg-primary/10' : 'hover:border-primary/40'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -126,13 +126,13 @@ export function MistakeVault() {
             }
           }}
           aria-pressed={activeCategory === 'TIME_SINKS'}
-          className={`bg-card flex cursor-pointer flex-col justify-between rounded-lg border p-3.5 shadow-2xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
-            activeCategory === 'TIME_SINKS' ? 'ring-2 ring-primary border-primary bg-primary/5' : 'border-border hover:bg-muted/40'
+          className={`liquid-glass-card flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
+            activeCategory === 'TIME_SINKS' ? 'ring-2 ring-primary border-primary bg-primary/10' : 'hover:border-primary/40'
           }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-xs font-medium">Time Sinks</span>
-            <span className="text-[10px] text-amber-500 font-mono">&gt;2.5m</span>
+            <span className="text-[10px] text-amber-500 font-mono font-semibold">&gt;2.5m</span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 tracking-tight">{data.timeSinkQuestions.length}</span>
@@ -151,8 +151,8 @@ export function MistakeVault() {
             }
           }}
           aria-pressed={activeCategory === 'BOOKMARKED'}
-          className={`bg-card flex cursor-pointer flex-col justify-between rounded-lg border p-3.5 shadow-2xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
-            activeCategory === 'BOOKMARKED' ? 'ring-2 ring-primary border-primary bg-primary/5' : 'border-border hover:bg-muted/40'
+          className={`liquid-glass-card flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
+            activeCategory === 'BOOKMARKED' ? 'ring-2 ring-primary border-primary bg-primary/10' : 'hover:border-primary/40'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -172,7 +172,7 @@ export function MistakeVault() {
           <span className="loading loading-spinner text-primary loading-sm" />
         </div>
       ) : currentQuestions.length === 0 ? (
-        <div className="border-border bg-card flex flex-col items-center justify-center rounded-lg border p-10 text-center shadow-2xs">
+        <div className="liquid-glass-card flex flex-col items-center justify-center rounded-xl p-10 text-center shadow-xs">
           <CheckCircle2 className="text-emerald-500 size-10" />
           <h3 className="mt-3 text-sm font-semibold text-foreground">No Questions in This Category</h3>
           <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-xs">
@@ -182,7 +182,7 @@ export function MistakeVault() {
               ? 'No questions exceeded your 2.5-minute time threshold with incorrect answers.'
               : 'You have no questions bookmarked for review.'}
           </p>
-          <button onClick={() => navigate('/')} className="btn btn-primary btn-sm mt-4 gap-1.5 shadow-xs rounded-md">
+          <button onClick={() => navigate('/')} className="btn btn-primary btn-sm mt-4 gap-1.5 shadow-xs rounded-lg active:scale-95">
             <Play className="size-3" />
             Explore Papers
           </button>
@@ -193,7 +193,7 @@ export function MistakeVault() {
             <span>Showing {currentQuestions.length} question(s)</span>
             <button
               onClick={() => handleLaunchMistakeDrill(currentQuestions.length)}
-              className="btn btn-outline btn-xs gap-1 rounded-md"
+              className="liquid-glass-pill btn btn-sm h-7 text-xs gap-1 rounded-lg hover:border-primary/40"
             >
               <Zap className="size-3" />
               Practice All {currentQuestions.length}
@@ -214,7 +214,7 @@ export function MistakeVault() {
                 role="button"
                 tabIndex={0}
                 aria-label={`Error #${idx + 1} in ${q.subject}. Click to view problem and solution.`}
-                className="bg-card border-border hover:border-primary/50 cursor-pointer rounded-lg border p-4 shadow-2xs transition-all duration-150 active:scale-[0.99] space-y-2.5 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                className="liquid-glass-card hover:scale-[1.008] cursor-pointer rounded-xl p-4 shadow-xs transition-all duration-150 active:scale-[0.99] space-y-2.5 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
               >
                 <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-border/60 pb-2.5">
                   <div className="flex flex-wrap items-center gap-1.5">

@@ -22,9 +22,10 @@ import {
 } from 'react';
 import { cn } from '@/lib/utils';
 
-const DEFAULT_MAGNIFICATION = 50;
-const DEFAULT_DISTANCE = 80;
-const DEFAULT_PANEL_HEIGHT = 46;
+const DEFAULT_MAGNIFICATION = 70;
+const DEFAULT_DISTANCE = 140;
+const DEFAULT_BASE_SIZE = 44;
+const DEFAULT_PANEL_HEIGHT = 56;
 
 type DockPlacement = 'right' | 'left' | 'bottom' | 'top' | 'auto';
 
@@ -40,17 +41,21 @@ type DockProps = {
   position?: 'absolute' | 'fixed';
   placement?: DockPlacement;
 };
+
 type DockItemProps = {
   className?: string;
   children: React.ReactNode;
   onClick?: () => void;
+  isActive?: boolean;
   'aria-label'?: string;
   'aria-current'?: boolean | 'page' | 'step' | 'location' | 'date' | 'time';
 };
+
 type DockLabelProps = {
   className?: string;
   children: React.ReactNode;
 };
+
 type DockIconProps = {
   className?: string;
   children: React.ReactNode;
@@ -65,6 +70,7 @@ type DocContextType = {
   isVertical: boolean;
   placement: 'right' | 'left' | 'bottom' | 'top';
 };
+
 type DockProviderProps = {
   children: React.ReactNode;
   value: DocContextType;
@@ -88,7 +94,7 @@ function Dock({
   children,
   className,
   containerClassName,
-  spring = { mass: 0.1, stiffness: 150, damping: 12 },
+  spring = { mass: 0.1, stiffness: 175, damping: 14 },
   magnification = DEFAULT_MAGNIFICATION,
   distance = DEFAULT_DISTANCE,
   panelHeight = DEFAULT_PANEL_HEIGHT,
@@ -100,8 +106,6 @@ function Dock({
   const isHovered = useMotionValue(0);
   const toolbarRef = useRef<HTMLDivElement>(null);
 
-  // Determine smart placement:
-  // Defaults to bottom centered dock (classic macOS dock experience)
   const effectivePlacement: 'right' | 'left' | 'bottom' | 'top' = useMemo(() => {
     if (placement && placement !== 'auto') return placement;
     if (direction === 'vertical') return 'left';
@@ -110,8 +114,7 @@ function Dock({
 
   const isVertical = effectivePlacement === 'right' || effectivePlacement === 'left';
 
-  // Global window pointer listener ensures that even if pointer rapidly leaves
-  // during a view-transition animation or frame drops, the hover & pop state cleanly resets.
+  // Global window pointer listener to ensure hover and pop state cleanly resets
   useEffect(() => {
     const handleGlobalPointerMove = (e: PointerEvent) => {
       if (mousePos.get() === Infinity && isHovered.get() === 0) return;
@@ -120,7 +123,7 @@ function Dock({
       if (!el) return;
 
       const rect = el.getBoundingClientRect();
-      const buffer = magnification + 24;
+      const buffer = magnification + 32;
 
       const isInside =
         e.clientX >= rect.left - (effectivePlacement === 'right' ? buffer : 24) &&
@@ -154,24 +157,24 @@ function Dock({
     switch (effectivePlacement) {
       case 'right':
         return {
-          container: 'top-1/2 right-2 -translate-y-1/2 flex-col items-end',
-          toolbar: 'flex-col items-center gap-1.5 p-1.5',
+          container: 'top-1/2 right-3 -translate-y-1/2 flex-col items-end',
+          toolbar: 'flex-col items-center gap-2 p-2',
         };
       case 'left':
         return {
-          container: 'top-1/2 left-2 -translate-y-1/2 flex-col items-start',
-          toolbar: 'flex-col items-center gap-1.5 p-1.5',
+          container: 'top-1/2 left-3 -translate-y-1/2 flex-col items-start',
+          toolbar: 'flex-col items-center gap-2 p-2',
         };
       case 'top':
         return {
-          container: 'top-2 left-1/2 -translate-x-1/2 flex-row items-start',
-          toolbar: 'flex-row items-center gap-1.5 px-2 py-1.5',
+          container: 'top-3 left-1/2 -translate-x-1/2 flex-row items-start',
+          toolbar: 'flex-row items-start gap-2.5 px-3.5 py-2',
         };
       case 'bottom':
       default:
         return {
-          container: 'bottom-2 left-1/2 -translate-x-1/2 flex-row items-end',
-          toolbar: 'flex-row items-center gap-1.5 px-2 py-1.5',
+          container: 'bottom-3 left-1/2 -translate-x-1/2 flex-row items-end',
+          toolbar: 'flex-row items-end gap-2.5 px-3 pb-2 pt-2.5',
         };
     }
   }, [effectivePlacement]);
@@ -180,7 +183,7 @@ function Dock({
     <motion.div
       className={cn(
         position,
-        'z-50 flex h-fit w-fit overflow-visible',
+        'z-50 flex h-fit w-fit overflow-visible select-none',
         layoutConfig.container,
         containerClassName,
       )}
@@ -196,13 +199,13 @@ function Dock({
           mousePos.set(Infinity);
         }}
         className={cn(
-          'bg-card/85 text-card-foreground border-border/80 pointer-events-auto flex items-center overflow-visible rounded-xl border shadow-lg backdrop-blur-md transition-colors',
+          'macos-liquid-dock pointer-events-auto flex overflow-visible rounded-[24px] text-foreground transition-colors',
           layoutConfig.toolbar,
           className,
         )}
         style={{
           width: isVertical ? panelHeight : 'auto',
-          height: isVertical ? 'auto' : panelHeight,
+          minHeight: isVertical ? 'auto' : panelHeight,
         }}
         role="toolbar"
         aria-label="Application dock"
@@ -225,11 +228,17 @@ function Dock({
   );
 }
 
-function DockItem({ children, className, onClick, ...restProps }: DockItemProps) {
+function DockItem({
+  children,
+  className,
+  onClick,
+  isActive = false,
+  ...restProps
+}: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const [isBouncing, setIsBouncing] = useState(false);
 
   const { distance, magnification, mousePos, spring, isVertical, placement } = useDock();
-
   const isHovered = useMotionValue(0);
 
   // Sync item hover and focus states whenever mouse leaves the dock entirely
@@ -263,7 +272,7 @@ function DockItem({ children, className, onClick, ...restProps }: DockItemProps)
   const sizeTransform = useTransform(
     mouseDistance,
     [-distance, 0, distance],
-    [36, magnification, 36],
+    [DEFAULT_BASE_SIZE, magnification, DEFAULT_BASE_SIZE],
     { clamp: true }
   );
 
@@ -283,16 +292,26 @@ function DockItem({ children, className, onClick, ...restProps }: DockItemProps)
     }
   }, [placement]);
 
+  const handleClick = () => {
+    setIsBouncing(true);
+    setTimeout(() => setIsBouncing(false), 500);
+    onClick?.();
+  };
+
+  const isCurrent = isActive || restProps['aria-current'] === 'page';
+
   return (
     <motion.div
       ref={ref}
-      onClick={onClick}
+      onClick={handleClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          onClick?.();
+          handleClick();
         }
       }}
+      animate={isBouncing ? { y: [0, -12, 0, -5, 0] } : { y: 0 }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
       style={{
         width: size,
         height: size,
@@ -310,14 +329,14 @@ function DockItem({ children, className, onClick, ...restProps }: DockItemProps)
       }}
       onBlur={() => isHovered.set(0)}
       className={cn(
-        'relative inline-flex shrink-0 items-center justify-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none',
+        'group relative inline-flex shrink-0 cursor-pointer items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
         originClass,
         className,
       )}
       tabIndex={0}
       role="button"
       aria-label={restProps['aria-label']}
-      aria-current={restProps['aria-current']}
+      aria-current={isCurrent ? 'page' : undefined}
       aria-haspopup="true"
     >
       {Children.map(children, (child) => {
@@ -328,8 +347,18 @@ function DockItem({ children, className, onClick, ...restProps }: DockItemProps)
           isHovered,
           isVertical,
           placement,
+          isActive: isCurrent,
         });
       })}
+
+      {/* Apple Running / Active Indicator Dot */}
+      {isCurrent && (
+        <motion.span
+          layoutId="dock-active-dot"
+          className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 size-1 rounded-full bg-foreground/80 dark:bg-foreground/90 shadow-[0_0_4px_rgba(255,255,255,0.7)] pointer-events-none"
+          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+        />
+      )}
     </motion.div>
   );
 }
@@ -353,31 +382,31 @@ function DockLabel({ children, className, ...rest }: DockLabelProps) {
     switch (placement) {
       case 'right':
         return {
-          initial: { opacity: 0, x: 0 },
-          animate: { opacity: 1, x: -8 },
-          exit: { opacity: 0, x: 0 },
+          initial: { opacity: 0, x: 4, scale: 0.95 },
+          animate: { opacity: 1, x: -8, scale: 1 },
+          exit: { opacity: 0, x: 2, scale: 0.95 },
           positionClass: 'top-1/2 right-full mr-3 -translate-y-1/2',
         };
       case 'left':
         return {
-          initial: { opacity: 0, x: 0 },
-          animate: { opacity: 1, x: 8 },
-          exit: { opacity: 0, x: 0 },
+          initial: { opacity: 0, x: -4, scale: 0.95 },
+          animate: { opacity: 1, x: 8, scale: 1 },
+          exit: { opacity: 0, x: -2, scale: 0.95 },
           positionClass: 'top-1/2 left-full ml-3 -translate-y-1/2',
         };
       case 'top':
         return {
-          initial: { opacity: 0, y: 0 },
-          animate: { opacity: 1, y: 8 },
-          exit: { opacity: 0, y: 0 },
+          initial: { opacity: 0, y: -4, scale: 0.95 },
+          animate: { opacity: 1, y: 8, scale: 1 },
+          exit: { opacity: 0, y: -2, scale: 0.95 },
           positionClass: 'top-full left-1/2 mt-3 -translate-x-1/2',
         };
       case 'bottom':
       default:
         return {
-          initial: { opacity: 0, y: 0 },
-          animate: { opacity: 1, y: -8 },
-          exit: { opacity: 0, y: 0 },
+          initial: { opacity: 0, y: 4, scale: 0.95 },
+          animate: { opacity: 1, y: -8, scale: 1 },
+          exit: { opacity: 0, y: 2, scale: 0.95 },
           positionClass: 'bottom-full left-1/2 mb-3 -translate-x-1/2',
         };
     }
@@ -390,9 +419,10 @@ function DockLabel({ children, className, ...rest }: DockLabelProps) {
           initial={tooltipConfig.initial}
           animate={tooltipConfig.animate}
           exit={tooltipConfig.exit}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: 0.12, ease: 'easeOut' }}
           className={cn(
-            'border-border/80 bg-popover text-popover-foreground pointer-events-none absolute w-fit rounded-lg border px-2.5 py-1 text-xs font-medium whitespace-pre shadow-lg backdrop-blur-md',
+            'pointer-events-none absolute z-50 w-fit select-none rounded-md px-2.5 py-1 text-[11px] font-medium tracking-tight whitespace-pre shadow-xl',
+            'bg-neutral-900/85 text-white backdrop-blur-xl border border-white/15 dark:bg-black/85 dark:text-neutral-100 dark:border-white/20',
             tooltipConfig.positionClass,
             className,
           )}
@@ -409,7 +439,7 @@ function DockIcon({ children, className, ...rest }: DockIconProps) {
   const restProps = rest as Record<string, unknown>;
   const size = (restProps['size'] || restProps['width']) as MotionValue<number>;
 
-  const sizeTransform = useTransform(size, (val) => val / 2);
+  const sizeTransform = useTransform(size, (val) => (val ? val * 0.58 : 24));
 
   return (
     <motion.div
@@ -417,11 +447,24 @@ function DockIcon({ children, className, ...rest }: DockIconProps) {
         width: sizeTransform,
         height: sizeTransform,
       }}
-      className={cn('flex items-center justify-center', className)}
+      className={cn('flex items-center justify-center shrink-0 pointer-events-none', className)}
     >
       {children}
     </motion.div>
   );
 }
 
-export { Dock, DockIcon, DockItem, DockLabel };
+function DockSeparator({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        'mx-0.5 h-6 w-[1px] self-center rounded-full bg-white/25 dark:bg-white/12 shadow-[0_0_1px_rgba(0,0,0,0.15)] shrink-0',
+        className
+      )}
+      role="separator"
+      aria-orientation="vertical"
+    />
+  );
+}
+
+export { Dock, DockIcon, DockItem, DockLabel, DockSeparator };
