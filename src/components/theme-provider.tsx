@@ -40,6 +40,7 @@ function applyThemeClassesToDOM(resolved: 'dark' | 'light') {
   root.classList.remove('light', 'dark');
   root.classList.add(resolved);
   root.setAttribute('data-theme', resolved === 'dark' ? 'dark' : 'light');
+  root.style.colorScheme = resolved;
 }
 
 export function ThemeProvider({
@@ -57,7 +58,9 @@ export function ThemeProvider({
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(storageKey) as Theme | null;
-      if (stored) return stored;
+      if (stored && (stored === 'dark' || stored === 'light' || stored === 'system')) {
+        return stored;
+      }
     }
     return defaultTheme;
   });
@@ -73,9 +76,13 @@ export function ThemeProvider({
     theme,
     resolvedTheme,
     setTheme: (newTheme: Theme) => {
-      localStorage.setItem(storageKey, newTheme);
+      if (newTheme === 'system') {
+        localStorage.removeItem(storageKey);
+      } else {
+        localStorage.setItem(storageKey, newTheme);
+      }
       const newResolved = newTheme === 'system' ? getSystemThemeSnapshot() : newTheme;
-      // Synchronously apply class to documentElement so View Transitions snapshot immediately
+      // Synchronously apply class to documentElement
       applyThemeClassesToDOM(newResolved);
       setThemeState(newTheme);
     },

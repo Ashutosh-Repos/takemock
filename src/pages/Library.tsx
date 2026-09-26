@@ -347,29 +347,29 @@ export function Library() {
                   const durationMin = Math.round(paper.timing.totalDurationSeconds / 60);
 
                   return (
-                    <tr key={paper.id} className="hover:bg-muted/30">
-                      <td>
+                    <tr key={paper.id} className="hover:bg-muted/40 transition-colors">
+                      <td className="py-2.5">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-xs text-foreground">
+                          <span className="font-semibold text-sm text-foreground">
                             {paper.title}
                           </span>
                           {paper.description && (
-                            <span className="text-[11px] text-muted-foreground line-clamp-1">
+                            <span className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
                               {paper.description}
                             </span>
                           )}
                         </div>
                       </td>
-                      <td>
-                        <span className="badge font-mono text-[10px]">{paper.mode}</span>
+                      <td className="py-2.5">
+                        <span className="badge font-mono text-xs">{paper.mode}</span>
                       </td>
-                      <td className="font-mono text-[11px] text-muted-foreground">
+                      <td className="font-mono text-xs text-muted-foreground py-2.5">
                         {paper.sections.length} sec • {totalQ} Qs
                       </td>
-                      <td className="font-mono text-[11px] text-muted-foreground">
+                      <td className="font-mono text-xs text-muted-foreground py-2.5">
                         {durationMin > 0 ? `${durationMin}m` : 'Untimed'}
                       </td>
-                      <td className="font-mono text-[11px]">
+                      <td className="font-mono text-xs py-2.5">
                         {stats?.bestScore !== undefined ? (
                           <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                             {stats.bestScore}%
@@ -378,7 +378,7 @@ export function Library() {
                           <span className="text-muted-foreground/60">—</span>
                         )}
                       </td>
-                      <td className="font-mono text-[11px]">
+                      <td className="font-mono text-xs py-2.5">
                         {stats?.attemptsCount ? (
                           <span className="text-foreground">
                             {stats.attemptsCount} attempt{stats.attemptsCount !== 1 ? 's' : ''}
@@ -387,37 +387,37 @@ export function Library() {
                           <span className="text-muted-foreground/60">Unattempted</span>
                         )}
                       </td>
-                      <td className="text-right">
+                      <td className="text-right py-2.5">
                         <div className="inline-flex items-center gap-1.5">
                           <button
                             onClick={() => handleLaunchPaperExam(paper.id)}
-                            className="btn btn-primary btn-xs gap-1"
+                            className="btn btn-primary btn-sm h-7 px-2.5 text-xs gap-1.5 font-medium"
                             title="Start Timed CBT Exam"
                           >
-                            <Play className="size-2.5 fill-current" />
+                            <Play className="size-3 fill-current" />
                             <span>Exam</span>
                           </button>
                           <button
                             onClick={() => handleLaunchPaperPractice(paper)}
-                            className="btn btn-xs gap-1"
+                            className="btn btn-sm h-7 px-2.5 text-xs gap-1.5 font-medium"
                             title="Start Practice Mode"
                           >
-                            <Zap className="size-2.5" />
+                            <Zap className="size-3" />
                             <span>Practice</span>
                           </button>
                           <button
                             onClick={(e) => handleExportPaper(e, paper)}
-                            className="btn btn-ghost btn-xs px-1.5"
+                            className="btn btn-ghost btn-sm h-7 w-7 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
                             title="Export as Markdown"
                           >
-                            <Download className="size-3 text-muted-foreground" />
+                            <Download className="size-3.5" />
                           </button>
                           <button
                             onClick={(e) => handleDeletePaper(e, paper.id)}
-                            className="btn btn-ghost btn-xs px-1.5 hover:text-red-500"
+                            className="btn btn-ghost btn-sm h-7 w-7 p-0 flex items-center justify-center text-muted-foreground hover:text-red-500"
                             title="Delete Paper"
                           >
-                            <Trash2 className="size-3 text-muted-foreground" />
+                            <Trash2 className="size-3.5" />
                           </button>
                         </div>
                       </td>

@@ -5,12 +5,16 @@ import {
   BarChart3,
   BookOpen,
   DraftingCompass,
+  Monitor,
+  Moon,
   Plus,
   Sliders,
+  Sun,
   Zap,
 } from 'lucide-react';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { MacPreferencesModal } from '@/components/shared/MacPreferencesModal';
+import { useTheme } from '@/components/theme-provider';
 
 interface NavSegment {
   id: string;
@@ -68,6 +72,7 @@ const navSegments: NavSegment[] = [
 export function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const [prefsOpen, setPrefsOpen] = useState(() => {
     try {
       return new URLSearchParams(window.location.search).get('prefs') === '1';
@@ -117,7 +122,7 @@ export function MainLayout() {
   };
 
   return (
-    <div className="relative flex h-screen w-screen flex-col overflow-hidden text-foreground bg-[#141518] bg-[radial-gradient(ellipse_80%_60%_at_15%_10%,rgba(56,189,248,0.12)_0%,transparent_60%),radial-gradient(ellipse_70%_50%_at_85%_25%,rgba(99,102,241,0.1)_0%,transparent_55%),radial-gradient(ellipse_90%_70%_at_50%_90%,rgba(14,165,233,0.07)_0%,transparent_60%)]">
+    <div className="relative flex h-screen w-screen flex-col overflow-hidden text-foreground bg-transparent">
       {/* Native macOS Window Unified Toolbar */}
       <header
         data-tauri-drag-region
@@ -151,6 +156,21 @@ export function MainLayout() {
 
         {/* Trailing edge: Quick Action Button & Component Inspector */}
         <div className="flex items-center gap-1.5" data-tauri-drag-region>
+          {/* Quick Appearance Toggle */}
+          <button
+            onClick={() => setTheme(theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system')}
+            className="btn btn-sm h-7 w-7 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
+            title={`macOS Appearance: ${theme === 'system' ? `Auto/System (${resolvedTheme})` : theme} (Click to switch)`}
+          >
+            {theme === 'system' ? (
+              <Monitor className="size-3.5" />
+            ) : resolvedTheme === 'dark' ? (
+              <Moon className="size-3.5" />
+            ) : (
+              <Sun className="size-3.5" />
+            )}
+          </button>
+
           <button
             onClick={() => setPrefsOpen(true)}
             className="btn btn-sm h-7 w-7 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground"

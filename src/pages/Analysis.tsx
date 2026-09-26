@@ -185,7 +185,7 @@ export function Analysis() {
             return (
               <div
                 key={subj.subject}
-                className="liquid-glass-card overflow-hidden rounded-xl transition-all"
+                className="card overflow-hidden rounded-xl transition-all"
               >
                 <div
                   role="button"
