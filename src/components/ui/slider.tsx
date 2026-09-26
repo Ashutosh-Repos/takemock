@@ -12,7 +12,7 @@ export interface SliderProps {
   onValueCommitted?: (value: number) => void;
   disabled?: boolean;
   size?: 'regular' | 'sm';
-  variant?: 'accent' | 'success' | 'capsule';
+  variant?: 'accent' | 'success';
   label?: React.ReactNode;
   minLabel?: React.ReactNode;
   maxLabel?: React.ReactNode;
@@ -99,7 +99,6 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         className={cn(
           'macos-slider-root',
           size === 'sm' && 'macos-slider-sm',
-          variant === 'capsule' && 'macos-slider-capsule',
           variant === 'success' && 'macos-slider-success',
           disabled && 'is-disabled',
           className

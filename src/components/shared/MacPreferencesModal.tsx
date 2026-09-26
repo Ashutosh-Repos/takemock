@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { X, Sliders, ToggleLeft, Layers, Volume2, Sun, Moon, Monitor, Bell, Shield, Sparkles } from 'lucide-react';
+import { X, Sliders, ToggleLeft, Layers, Volume2, Monitor, Bell, Shield, Sparkles, Sun } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useTheme, type Theme } from '@/components/theme-provider';
+import { useTheme } from '@/components/theme-provider';
 
 export interface MacPreferencesModalProps {
   open: boolean;
@@ -12,7 +12,7 @@ export interface MacPreferencesModalProps {
 }
 
 export function MacPreferencesModal({ open, onOpenChange }: MacPreferencesModalProps) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   // Slider states
   const [volume, setVolume] = React.useState(65);
@@ -78,24 +78,18 @@ export function MacPreferencesModal({ open, onOpenChange }: MacPreferencesModalP
           </button>
         </div>
 
-        {/* macOS System Appearance Control */}
-        <div className="px-5 py-3 border-b border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+        {/* macOS System Appearance Status Indicator */}
+        <div className="px-5 py-3 border-b border-border/60 bg-muted/20 flex items-center justify-between gap-2.5">
           <div>
             <div className="text-xs font-semibold text-foreground">macOS System Appearance</div>
             <div className="text-[11px] text-muted-foreground">
-              Syncs with macOS system light/dark mode in real time
+              Automatically synchronized with your macOS desktop appearance setting
             </div>
           </div>
-          <SegmentedControl
-            value={theme}
-            onValueChange={(val) => setTheme(val as Theme)}
-            size="sm"
-            options={[
-              { value: 'system', label: 'System', icon: Monitor },
-              { value: 'light', label: 'Light', icon: Sun },
-              { value: 'dark', label: 'Dark', icon: Moon },
-            ]}
-          />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-xs font-medium text-foreground border border-border">
+            <Monitor className="size-3.5 text-primary" />
+            <span className="capitalize">{resolvedTheme} Mode (System)</span>
+          </div>
         </div>
 
         {/* Modal Body with Base UI Tabs */}

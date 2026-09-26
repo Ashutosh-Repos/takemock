@@ -5,16 +5,12 @@ import {
   BarChart3,
   BookOpen,
   DraftingCompass,
-  Monitor,
-  Moon,
   Plus,
   Sliders,
-  Sun,
   Zap,
 } from 'lucide-react';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { MacPreferencesModal } from '@/components/shared/MacPreferencesModal';
-import { useTheme } from '@/components/theme-provider';
 
 interface NavSegment {
   id: string;
@@ -72,7 +68,6 @@ const navSegments: NavSegment[] = [
 export function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme, resolvedTheme, setTheme } = useTheme();
   const [prefsOpen, setPrefsOpen] = useState(() => {
     try {
       return new URLSearchParams(window.location.search).get('prefs') === '1';
@@ -122,12 +117,12 @@ export function MainLayout() {
   };
 
   return (
-    <div className="macos-canvas relative flex h-screen w-screen flex-col overflow-hidden text-foreground">
+    <div className="relative flex h-screen w-screen flex-col overflow-hidden text-foreground bg-transparent">
       {/* Native macOS Window Unified Toolbar */}
       <header
         data-tauri-drag-region
         onMouseDown={handleToolbarMouseDown}
-        className="h-12 w-full shrink-0 select-none liquid-glass-header flex items-center justify-between px-4 z-40 cursor-default"
+        className="fixed top-0 left-0 right-0 h-13 w-full shrink-0 select-none liquid-glass-header flex items-center justify-between px-4 z-40 cursor-default"
       >
         {/* Leading edge: Traffic lights inset spacing (80px) + App Identifier */}
         <div
@@ -156,21 +151,6 @@ export function MainLayout() {
 
         {/* Trailing edge: Quick Action Button & Component Inspector */}
         <div className="flex items-center gap-1.5" data-tauri-drag-region>
-          {/* Quick Appearance Toggle */}
-          <button
-            onClick={() => setTheme(theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system')}
-            className="macos-toolbar-btn"
-            title={`macOS Appearance: ${theme === 'system' ? `Auto/System (${resolvedTheme})` : theme} (Click to switch)`}
-          >
-            {theme === 'system' ? (
-              <Monitor className="size-4" />
-            ) : resolvedTheme === 'dark' ? (
-              <Moon className="size-4" />
-            ) : (
-              <Sun className="size-4" />
-            )}
-          </button>
-
           <button
             onClick={() => setPrefsOpen(true)}
             className="macos-toolbar-btn"
@@ -181,7 +161,7 @@ export function MainLayout() {
 
           <button
             onClick={() => navigate('/builder')}
-            className="btn btn-primary btn-sm h-7 px-3 gap-1.5 font-medium"
+            className="btn btn-primary btn-sm h-7 px-3 gap-1.5 font-medium shadow-xs"
             title="Create New Paper"
           >
             <Plus className="size-3.5" />
@@ -190,8 +170,8 @@ export function MainLayout() {
         </div>
       </header>
 
-      {/* Main Desktop Window Content Area */}
-      <main className="w-full flex-1 overflow-x-hidden overflow-y-auto relative z-10">
+      {/* Main Desktop Window Content Area (with pt-13 for Liquid Glass toolbar) */}
+      <main className="h-full w-full overflow-x-hidden overflow-y-auto pt-13 relative z-10">
         <Outlet />
       </main>
 

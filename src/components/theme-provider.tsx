@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react';
+import { createContext, useContext, useEffect, useSyncExternalStore } from 'react';
 
 export type Theme = 'dark' | 'light' | 'system';
 
@@ -45,8 +45,6 @@ function applyThemeClassesToDOM(resolved: 'dark' | 'light') {
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'system',
-  storageKey = 'vite-ui-theme',
   ...props
 }: ThemeProviderProps) {
   const systemTheme = useSyncExternalStore<'dark' | 'light'>(
@@ -55,36 +53,22 @@ export function ThemeProvider({
     () => 'dark',
   );
 
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(storageKey) as Theme | null;
-      if (stored && (stored === 'dark' || stored === 'light' || stored === 'system')) {
-        return stored;
-      }
-    }
-    return defaultTheme;
-  });
-
-  const resolvedTheme: 'dark' | 'light' =
-    theme === 'system' ? systemTheme : theme === 'dark' ? 'dark' : 'light';
+  // Always sync with macOS system appearance
+  const resolvedTheme = systemTheme;
 
   useEffect(() => {
+    // Clear any legacy manual override so the app always follows macOS
+    try {
+      localStorage.removeItem('vite-ui-theme');
+    } catch {}
     applyThemeClassesToDOM(resolvedTheme);
   }, [resolvedTheme]);
 
   const value = {
-    theme,
+    theme: 'system' as Theme,
     resolvedTheme,
-    setTheme: (newTheme: Theme) => {
-      if (newTheme === 'system') {
-        localStorage.removeItem(storageKey);
-      } else {
-        localStorage.setItem(storageKey, newTheme);
-      }
-      const newResolved = newTheme === 'system' ? getSystemThemeSnapshot() : newTheme;
-      // Synchronously apply class to documentElement
-      applyThemeClassesToDOM(newResolved);
-      setThemeState(newTheme);
+    setTheme: () => {
+      // No-op: strictly follows macOS system appearance
     },
   };
 
