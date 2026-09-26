@@ -205,8 +205,8 @@ export function Practice() {
     }
   };
 
-  // Dynamic drill max based on available questions
-  const maxDrillQuestions = Math.max(5, Math.min(totalCount, 50));
+  // Dynamic drill max based on available questions (must be > min=5)
+  const maxDrillQuestions = Math.max(10, Math.min(totalCount || 50, 50));
   const timePerQuestion = 2; // minutes per question
   const totalDrillMinutes = drillCount * timePerQuestion;
 
