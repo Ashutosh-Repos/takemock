@@ -12,6 +12,20 @@ pub fn run() {
             .build(),
         )?;
       }
+
+      #[cfg(target_os = "macos")]
+      {
+        use tauri::Manager;
+        if let Some(window) = app.get_webview_window("main") {
+          let _ = window_vibrancy::apply_vibrancy(
+            &window,
+            window_vibrancy::NSVisualEffectMaterial::UnderWindowBackground,
+            Some(window_vibrancy::NSVisualEffectState::FollowsWindowActiveState),
+            Some(12.0),
+          );
+        }
+      }
+
       Ok(())
     })
     .run(tauri::generate_context!())

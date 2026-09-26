@@ -83,7 +83,7 @@ export function MistakeVault() {
             className="btn btn-primary btn-sm font-medium shadow-xs gap-1.5 rounded-md active:scale-95"
           >
             <Play className="size-3.5 fill-current" />
-            Practise ({Math.min(10, data.unresolvedQuestions.length)})
+            Practice Drill ({Math.min(10, data.unresolvedQuestions.length)})
           </button>
         </div>
       </div>

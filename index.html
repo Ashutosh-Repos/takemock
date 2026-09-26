@@ -8,11 +8,21 @@
     <script>
       try {
         const stored = localStorage.getItem('vite-ui-theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const isDark = stored === 'dark' || (!stored && prefersDark) || (stored === 'system' && prefersDark);
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const isDark = stored === 'dark' || (!stored && mediaQuery.matches) || (stored === 'system' && mediaQuery.matches);
         const theme = isDark ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.classList.add(isDark ? 'dark' : 'light');
+        document.documentElement.classList.add(theme);
+
+        mediaQuery.addEventListener('change', (e) => {
+          const currentStored = localStorage.getItem('vite-ui-theme');
+          if (!currentStored || currentStored === 'system') {
+            const nextTheme = e.matches ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', nextTheme);
+            document.documentElement.classList.remove('light', 'dark');
+            document.documentElement.classList.add(nextTheme);
+          }
+        });
       } catch (e) {}
     </script>
   </head>

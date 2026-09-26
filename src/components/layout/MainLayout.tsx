@@ -44,14 +44,7 @@ export function MainLayout() {
   const location = useLocation();
 
   return (
-    <div className="bg-background text-foreground relative flex h-screen w-screen flex-col overflow-hidden safe-area-top safe-area-bottom">
-      {/* Ambient Apple Luminous Depth Glows for Liquid Glass Refraction */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-50 dark:opacity-30">
-        <div className="absolute -top-[15%] -left-[10%] h-[520px] w-[520px] rounded-full bg-blue-500/20 blur-[130px] dark:bg-blue-600/15" />
-        <div className="absolute top-[35%] -right-[10%] h-[600px] w-[600px] rounded-full bg-indigo-500/20 blur-[140px] dark:bg-indigo-600/15" />
-        <div className="absolute -bottom-[20%] left-[20%] h-[500px] w-[500px] rounded-full bg-teal-500/15 blur-[130px] dark:bg-teal-600/12" />
-      </div>
-
+    <div className="bg-transparent text-foreground relative flex h-screen w-screen flex-col overflow-hidden safe-area-top safe-area-bottom">
       {/* Native Desktop Window Drag Region */}
       <header
         data-tauri-drag-region
@@ -90,7 +83,7 @@ export function MainLayout() {
         direction="horizontal"
         placement="bottom"
         containerClassName="bottom-3 left-1/2 -translate-x-1/2"
-        className="macos-liquid-dock"
+        className="macos-dock-glass"
       >
         {dockItems.map((item, idx) => {
           const isActive = location.pathname ? item.matcher(location.pathname) : false;
@@ -99,10 +92,10 @@ export function MainLayout() {
               key={idx}
               onClick={() => navigate(item.href)}
               className={cn(
-                'rounded-full border cursor-pointer transition-all duration-50 flex items-center justify-center backdrop-blur-md',
+                'rounded-full border cursor-pointer transition-colors duration-150 flex items-center justify-center',
                 isActive
-                  ? 'bg-primary/85 text-primary-content border-primary/40 shadow-md ring-2 ring-primary/20'
-                  : 'bg-card/70 hover:bg-muted/80 text-card-foreground border-border/50 shadow-xs'
+                  ? 'bg-primary text-primary-content border-primary shadow-md'
+                  : 'bg-white/20 dark:bg-white/10 hover:bg-white/35 dark:hover:bg-white/20 text-foreground border-white/30 dark:border-white/10 shadow-xs'
               )}
             >
               <DockLabel>{item.title}</DockLabel>
@@ -112,7 +105,7 @@ export function MainLayout() {
         })}
         <DockItem
           key="theme-icon"
-          className="liquid-glass-pill hover:bg-muted/80 text-card-foreground border-border/50 rounded-full border shadow-xs cursor-pointer transition-all duration-150 flex items-center justify-center backdrop-blur-md"
+          className="bg-white/20 dark:bg-white/10 hover:bg-white/35 dark:hover:bg-white/20 text-foreground border-white/30 dark:border-white/10 rounded-full border shadow-xs cursor-pointer transition-colors duration-150 flex items-center justify-center"
         >
           <DockLabel>{resolvedTheme === 'dark' ? 'Light Theme' : 'Dark Theme'}</DockLabel>
           <DockIcon>

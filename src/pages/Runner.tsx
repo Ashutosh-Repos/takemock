@@ -565,7 +565,7 @@ export function Runner() {
   });
 
   return (
-    <div className="bg-background text-foreground flex min-h-screen flex-col font-sans select-none">
+    <div className="bg-transparent text-foreground flex min-h-screen flex-col font-sans select-none">
       {/* ======================================================================
           CBT Header Bar (Native Window Drag Region)
          ====================================================================== */}

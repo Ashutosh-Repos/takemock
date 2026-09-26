@@ -333,11 +333,11 @@ export function Library() {
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-semibold shadow-xs">
+                      <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full font-semibold shadow-xs apple-pill-blue">
                         {paper.mode}
                       </span>
                       {stats?.attemptsCount ? (
-                        <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 shadow-xs">
+                        <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 shadow-xs apple-pill-green">
                           <CheckCircle2 className="size-2.5" />
                           {stats.attemptsCount} Attempt{stats.attemptsCount !== 1 ? 's' : ''}
                         </span>
@@ -372,7 +372,7 @@ export function Library() {
 
                     {/* Historical Score Highlight if available */}
                     {stats?.latestScore !== undefined && (
-                      <div className="liquid-glass-pill rounded-lg p-2 mt-2 flex items-center justify-between text-xs">
+                      <div className="apple-tint-blue rounded-lg p-2.5 mt-2 flex items-center justify-between text-xs">
                         <div>
                           <span className="text-muted-foreground text-[10px] block uppercase font-mono">Latest Score</span>
                           <span className="font-mono tabular-nums font-semibold text-xs text-foreground">{stats.latestScore}%</span>
@@ -496,12 +496,12 @@ export function Library() {
                     </td>
                     <td className="py-2.5">
                       <span
-                        className={`text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full border font-semibold ${
+                        className={`text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full font-semibold shadow-2xs ${
                           att.accuracy >= 75
-                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            ? 'apple-pill-green'
                             : att.accuracy >= 50
-                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                            : 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
+                            ? 'apple-pill-amber'
+                            : 'apple-pill-rose'
                         }`}
                       >
                         {att.accuracy}%
@@ -553,18 +553,18 @@ export function Library() {
               <div
                 key={subj.subject}
                 onClick={() => navigate(`/practice?subject=${encodeURIComponent(subj.subject)}`)}
-                className="liquid-glass-card hover:scale-[1.01] flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all"
+                className="apple-glass-card hover:scale-[1.01] flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all"
               >
                 <div>
                   <div className="flex items-center justify-between text-xs mb-1">
                     <span className="font-semibold text-xs text-foreground truncate">{subj.subject}</span>
                     <span
-                      className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded border font-medium ${
+                      className={`text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full font-semibold shadow-2xs ${
                         subj.accuracy >= 75
-                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          ? 'apple-pill-green'
                           : subj.accuracy >= 50
-                          ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                          : 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
+                          ? 'apple-pill-amber'
+                          : 'apple-pill-rose'
                       }`}
                     >
                       {subj.accuracy}%
@@ -576,19 +576,19 @@ export function Library() {
                 </div>
 
                 <div className="mt-2.5">
-                  <div className="h-1.5 w-full rounded-full bg-muted/60 overflow-hidden">
+                  <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${
+                      className={`h-full rounded-full transition-all duration-300 ${
                         subj.accuracy >= 75
-                          ? 'bg-emerald-500'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
                           : subj.accuracy >= 50
-                          ? 'bg-amber-500'
-                          : 'bg-red-500'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-400'
+                          : 'bg-gradient-to-r from-rose-500 to-red-400'
                       }`}
                       style={{ width: `${subj.accuracy}%` }}
                     />
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1 font-mono">
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1.5 font-mono">
                     <span>{subj.topics.length} topic{subj.topics.length !== 1 ? 's' : ''}</span>
                     <span className="text-primary font-medium">Practice →</span>
                   </div>
