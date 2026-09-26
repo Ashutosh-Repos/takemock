@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
   AlertCircle,
   Award,
-  BarChart3,
   BookOpen,
   Calendar,
   CheckCircle2,
@@ -12,8 +11,11 @@ import {
   Download,
   ExternalLink,
   Layers,
+  LayoutGrid,
+  List,
   Play,
   Plus,
+  Search,
   Trash2,
   Zap,
 } from 'lucide-react';
@@ -42,6 +44,11 @@ export function Library() {
     >
   >({});
 
+  // Filters & View Mode
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterMode, setFilterMode] = useState<'ALL' | 'EXAM' | 'PRACTICE'>('ALL');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
   // Mistake Analytics
   const [mistakes, setMistakes] = useState<{
     unresolvedQuestions: QuestionModel[];
@@ -55,7 +62,7 @@ export function Library() {
     resolvedCount: 0,
   });
 
-  // Zero-Hardcoded Performance Analytics Snapshot
+  // Analytics Snapshot
   const [analytics, setAnalytics] = useState<
     Awaited<ReturnType<typeof assessmentRepository.getComprehensiveAnalytics>> | null
   >(null);
@@ -73,7 +80,6 @@ export function Library() {
       setMistakes(mistakeData);
       setAnalytics(compAnalytics);
 
-      // Load analytics for each test
       const statsMap: Record<string, any> = {};
       for (const t of allTests) {
         statsMap[t.id] = await assessmentRepository.getPaperAnalytics(t.id);
@@ -89,6 +95,23 @@ export function Library() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Filtered Papers
+  const filteredPapers = useMemo(() => {
+    return papers.filter((p) => {
+      const matchesSearch =
+        searchQuery.trim() === '' ||
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesMode =
+        filterMode === 'ALL' ||
+        (filterMode === 'EXAM' && p.mode === 'EXAM') ||
+        (filterMode === 'PRACTICE' && p.mode === 'PRACTICE');
+
+      return matchesSearch && matchesMode;
+    });
+  }, [papers, searchQuery, filterMode]);
 
   // Launch Paper as CBT Timed Exam
   const handleLaunchPaperExam = async (testId: string) => {
@@ -190,135 +213,246 @@ export function Library() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 px-4 py-5 pb-24 md:px-6">
-      {/* Top Banner / Navigation */}
-      <div className="border-border/60 flex flex-col justify-between gap-3 border-b pb-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight md:text-2xl text-foreground">Home</h1>
-          <p className="text-muted-foreground mt-0.5 text-xs font-mono tabular-nums">
-            {papers.length} paper{papers.length !== 1 ? 's' : ''} available
-          </p>
+    <div className="mx-auto max-w-7xl space-y-5 px-6 py-6 pb-12">
+      {/* Desktop Sub-Toolbar / Action Bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b pb-4 border-border">
+        <div className="flex items-center gap-3">
+          {/* Segmented Filter */}
+          <div className="macos-segmented" role="tablist">
+            <button
+              role="tab"
+              aria-selected={filterMode === 'ALL'}
+              onClick={() => setFilterMode('ALL')}
+              className={`macos-segment-item ${filterMode === 'ALL' ? 'active' : ''}`}
+            >
+              All Papers
+            </button>
+            <button
+              role="tab"
+              aria-selected={filterMode === 'EXAM'}
+              onClick={() => setFilterMode('EXAM')}
+              className={`macos-segment-item ${filterMode === 'EXAM' ? 'active' : ''}`}
+            >
+              Timed Mocks
+            </button>
+            <button
+              role="tab"
+              aria-selected={filterMode === 'PRACTICE'}
+              onClick={() => setFilterMode('PRACTICE')}
+              className={`macos-segment-item ${filterMode === 'PRACTICE' ? 'active' : ''}`}
+            >
+              Practice Sets
+            </button>
+          </div>
+
+          <span className="text-xs text-muted-foreground font-mono">
+            {filteredPapers.length} of {papers.length}
+          </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate('/analysis')}
-            className="btn btn-ghost btn-sm h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5"
-          >
-            <BarChart3 className="size-3.5" />
-            Analysis
-          </button>
-          <button
-            onClick={() => navigate('/builder')}
-            className="btn btn-primary btn-sm h-8 px-3 text-xs font-medium gap-1.5 shadow-xs"
-          >
-            <Plus className="size-3.5" />
-            New Paper
-          </button>
+        {/* Search & View Switcher */}
+        <div className="flex items-center gap-2.5">
+          <div className="macos-search-field">
+            <Search className="size-3.5 absolute left-2 text-muted-foreground pointer-events-none" />
+            <input
+              type="search"
+              placeholder="Search papers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-48 sm:w-60"
+            />
+          </div>
+
+          <div className="macos-segmented" role="group" aria-label="View Mode">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`macos-segment-item px-2 ${viewMode === 'list' ? 'active' : ''}`}
+              title="List View"
+            >
+              <List className="size-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`macos-segment-item px-2 ${viewMode === 'grid' ? 'active' : ''}`}
+              title="Grid View"
+            >
+              <LayoutGrid className="size-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* SECTION 2: Mistake Vault Summary & Quick Exam Button */}
+      {/* Mistake Vault Native Inset Callout */}
       {mistakes.unresolvedQuestions.length > 0 && (
-        <div className="liquid-glass-rose overflow-hidden rounded-xl p-4 shadow-xs">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="bg-rose-500/15 text-rose-600 dark:text-rose-400 rounded-lg p-2 shrink-0 border border-rose-500/20 shadow-xs">
-                <AlertCircle className="size-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-xs tracking-tight">Mistake Vault</h3>
-                  <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold shadow-xs">
-                    {mistakes.unresolvedQuestions.length}
-                  </span>
-                </div>
-                <p className="text-muted-foreground mt-0.5 text-xs">
-                  Questions marked incorrect during mock tests.
-                </p>
-              </div>
+        <div className="card p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-border">
+          <div className="flex items-center gap-3">
+            <div className="size-7 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+              <AlertCircle className="size-4" />
             </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => navigate('/mistakes')}
-                className="liquid-glass-pill btn btn-ghost btn-sm h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1 rounded-lg"
-              >
-                View Vault
-                <ChevronRight className="size-3" />
-              </button>
-              <button
-                onClick={() => handleLaunchMistakeDrill(10)}
-                className="btn btn-error btn-sm h-7 px-3 text-white text-xs font-medium gap-1.5 shadow-xs rounded-lg active:scale-95"
-              >
-                <Play className="size-3 fill-current" />
-                Practice ({Math.min(10, mistakes.unresolvedQuestions.length)})
-              </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-xs text-foreground">Mistake Vault</span>
+                <span className="badge text-[10px] text-rose-600 dark:text-rose-400 font-mono">
+                  {mistakes.unresolvedQuestions.length} unresolved
+                </span>
+              </div>
+              <p className="text-muted-foreground text-xs mt-0.5">
+                Questions requiring review from recent mock assessments.
+              </p>
             </div>
           </div>
 
-          {/* Inline Preview of Mistakes */}
-          <div className="mt-3 grid grid-cols-1 gap-2 pt-3 border-t border-border/40 sm:grid-cols-2 lg:grid-cols-3">
-            {mistakes.unresolvedQuestions.slice(0, 3).map((q, idx) => (
-              <div
-                key={q.id}
-                onClick={() => navigate('/mistakes')}
-                className="liquid-glass-pill rounded-lg p-2.5 text-xs cursor-pointer transition-all flex flex-col justify-between hover:border-rose-400/50"
-              >
-                <div>
-                  <div className="flex items-center justify-between text-[11px] mb-1">
-                    <span className="font-mono text-[10px] text-rose-600 dark:text-rose-400 font-semibold">Error #{idx + 1}</span>
-                    <span className="text-[10px] font-mono text-muted-foreground px-1 rounded bg-muted/60">{q.subject}</span>
-                  </div>
-                  <p className="line-clamp-2 text-foreground/80 text-[11px] leading-relaxed">
-                    {q.body.replace(/[*#_`$]/g, '')}
-                  </p>
-                </div>
-                <span className="text-primary hover:underline text-[10px] font-medium mt-1.5 block">
-                  Inspect in Vault →
-                </span>
-              </div>
-            ))}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => navigate('/mistakes')}
+              className="btn btn-ghost btn-sm text-xs gap-1"
+            >
+              <span>View Vault</span>
+              <ChevronRight className="size-3" />
+            </button>
+            <button
+              onClick={() => handleLaunchMistakeDrill(10)}
+              className="btn btn-error btn-sm text-xs gap-1.5"
+            >
+              <Play className="size-3 fill-current" />
+              <span>Practice Errors ({Math.min(10, mistakes.unresolvedQuestions.length)})</span>
+            </button>
           </div>
         </div>
       )}
 
-      {/* SECTION 1: All Papers List */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-semibold tracking-tight text-foreground">Papers</h2>
-            <p className="text-muted-foreground text-xs">
-              Mock exams and practice sets.
-            </p>
-          </div>
-          <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded border border-border/60 bg-muted/40 text-muted-foreground">
-            {papers.length} paper{papers.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-
+      {/* Primary Papers Section */}
+      <section className="space-y-3">
         {loading ? (
-          <div className="flex min-h-[30vh] items-center justify-center">
-            <span className="loading loading-spinner text-primary loading-md" />
+          <div className="flex min-h-[25vh] items-center justify-center">
+            <span className="loading-spinner" />
           </div>
-        ) : papers.length === 0 ? (
-          <div className="border-border/60 bg-card flex flex-col items-center justify-center rounded-lg border p-10 text-center shadow-xs">
-            <BookOpen className="text-muted-foreground/40 size-10" />
-            <h3 className="mt-3 text-sm font-semibold text-foreground">No Papers Available</h3>
-            <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-xs">
-              Import an exam paper or construct a custom test.
+        ) : filteredPapers.length === 0 ? (
+          <div className="card flex flex-col items-center justify-center p-12 text-center">
+            <BookOpen className="size-8 text-muted-foreground/50 mb-2" />
+            <h3 className="text-sm font-semibold text-foreground">No Papers Found</h3>
+            <p className="text-muted-foreground text-xs max-w-sm mt-1">
+              {searchQuery
+                ? 'No assessments match your search criteria.'
+                : 'Get started by creating or importing a mock exam paper.'}
             </p>
             <button
               onClick={() => navigate('/builder')}
-              className="btn btn-primary btn-sm h-8 px-3 text-xs font-medium mt-4 gap-1.5 shadow-xs"
+              className="btn btn-primary btn-sm mt-4 gap-1.5"
             >
               <Plus className="size-3.5" />
-              Build Paper
+              <span>Create Paper</span>
             </button>
           </div>
+        ) : viewMode === 'list' ? (
+          /* Native macOS Desktop Table View */
+          <div className="card overflow-hidden">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th className="w-1/3">Paper Title</th>
+                  <th>Mode</th>
+                  <th>Structure</th>
+                  <th>Duration</th>
+                  <th>Best Score</th>
+                  <th>Attempts</th>
+                  <th className="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPapers.map((paper) => {
+                  const stats = paperStats[paper.id];
+                  const totalQ = paper.sections.reduce(
+                    (sum, s) => sum + (s.selection.staticQuestionIds?.length || 0),
+                    0
+                  );
+                  const durationMin = Math.round(paper.timing.totalDurationSeconds / 60);
+
+                  return (
+                    <tr key={paper.id} className="hover:bg-muted/30">
+                      <td>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-xs text-foreground">
+                            {paper.title}
+                          </span>
+                          {paper.description && (
+                            <span className="text-[11px] text-muted-foreground line-clamp-1">
+                              {paper.description}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="badge font-mono text-[10px]">{paper.mode}</span>
+                      </td>
+                      <td className="font-mono text-[11px] text-muted-foreground">
+                        {paper.sections.length} sec • {totalQ} Qs
+                      </td>
+                      <td className="font-mono text-[11px] text-muted-foreground">
+                        {durationMin > 0 ? `${durationMin}m` : 'Untimed'}
+                      </td>
+                      <td className="font-mono text-[11px]">
+                        {stats?.bestScore !== undefined ? (
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            {stats.bestScore}%
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground/60">—</span>
+                        )}
+                      </td>
+                      <td className="font-mono text-[11px]">
+                        {stats?.attemptsCount ? (
+                          <span className="text-foreground">
+                            {stats.attemptsCount} attempt{stats.attemptsCount !== 1 ? 's' : ''}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground/60">Unattempted</span>
+                        )}
+                      </td>
+                      <td className="text-right">
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleLaunchPaperExam(paper.id)}
+                            className="btn btn-primary btn-xs gap-1"
+                            title="Start Timed CBT Exam"
+                          >
+                            <Play className="size-2.5 fill-current" />
+                            <span>Exam</span>
+                          </button>
+                          <button
+                            onClick={() => handleLaunchPaperPractice(paper)}
+                            className="btn btn-xs gap-1"
+                            title="Start Practice Mode"
+                          >
+                            <Zap className="size-2.5" />
+                            <span>Practice</span>
+                          </button>
+                          <button
+                            onClick={(e) => handleExportPaper(e, paper)}
+                            className="btn btn-ghost btn-xs px-1.5"
+                            title="Export as Markdown"
+                          >
+                            <Download className="size-3 text-muted-foreground" />
+                          </button>
+                          <button
+                            onClick={(e) => handleDeletePaper(e, paper.id)}
+                            className="btn btn-ghost btn-xs px-1.5 hover:text-red-500"
+                            title="Delete Paper"
+                          >
+                            <Trash2 className="size-3 text-muted-foreground" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {papers.map((paper) => {
+          /* Native macOS Document Grid View */
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredPapers.map((paper) => {
               const stats = paperStats[paper.id];
               const totalQ = paper.sections.reduce(
                 (sum, s) => sum + (s.selection.staticQuestionIds?.length || 0),
@@ -329,33 +463,34 @@ export function Library() {
               return (
                 <div
                   key={paper.id}
-                  className="liquid-glass-blue hover:scale-[1.01] flex flex-col justify-between rounded-xl p-4 space-y-3 transition-all cursor-pointer"
+                  className="card p-4 flex flex-col justify-between space-y-3"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full font-semibold shadow-xs apple-pill-blue">
-                        {paper.mode}
-                      </span>
+                      <span className="badge text-[10px] font-mono">{paper.mode}</span>
                       {stats?.attemptsCount ? (
-                        <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 shadow-xs apple-pill-green">
-                          <CheckCircle2 className="size-2.5" />
+                        <span className="text-[11px] font-mono text-muted-foreground flex items-center gap-1">
+                          <CheckCircle2 className="size-3 text-emerald-500" />
                           {stats.attemptsCount} Attempt{stats.attemptsCount !== 1 ? 's' : ''}
                         </span>
                       ) : (
-                        <span className="text-[10px] font-mono text-muted-foreground/70">
+                        <span className="text-[10px] font-mono text-muted-foreground/60">
                           Unattempted
                         </span>
                       )}
                     </div>
 
-                    <h3 className="font-semibold text-sm leading-snug line-clamp-2 text-foreground tracking-tight">{paper.title}</h3>
+                    <h3 className="font-semibold text-xs leading-snug line-clamp-2 text-foreground">
+                      {paper.title}
+                    </h3>
+
                     {paper.description && (
-                      <p className="text-muted-foreground text-xs line-clamp-2 leading-relaxed">
+                      <p className="text-muted-foreground text-xs line-clamp-2">
                         {paper.description}
                       </p>
                     )}
 
-                    <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-mono tabular-nums text-muted-foreground">
+                    <div className="flex items-center gap-3 pt-1 text-[11px] font-mono text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock className="size-3 text-muted-foreground/70" />
                         {durationMin > 0 ? `${durationMin}m` : 'Untimed'}
@@ -370,77 +505,49 @@ export function Library() {
                       </span>
                     </div>
 
-                    {/* Historical Score Highlight if available */}
-                    {stats?.latestScore !== undefined && (
-                      <div className="apple-tint-blue rounded-lg p-2.5 mt-2 flex items-center justify-between text-xs">
-                        <div>
-                          <span className="text-muted-foreground text-[10px] block uppercase font-mono">Latest Score</span>
-                          <span className="font-mono tabular-nums font-semibold text-xs text-foreground">{stats.latestScore}%</span>
-                        </div>
-                        {stats.bestScore !== undefined && (
-                          <div className="text-right">
-                            <span className="text-muted-foreground text-[10px] block uppercase font-mono">Best Score</span>
-                            <span className="font-mono tabular-nums font-semibold text-xs text-emerald-600 dark:text-emerald-400">{stats.bestScore}%</span>
-                          </div>
-                        )}
+                    {stats?.bestScore !== undefined && (
+                      <div className="flex items-center justify-between text-xs pt-1 border-t border-border/40">
+                        <span className="text-[11px] text-muted-foreground">Best Score</span>
+                        <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                          {stats.bestScore}%
+                        </span>
                       </div>
                     )}
                   </div>
 
-                  {/* Actions Bar */}
-                  <div className="border-border/50 pt-2.5 border-t flex flex-col gap-2">
-                    <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                    <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handleLaunchPaperExam(paper.id)}
-                        className="btn btn-primary btn-sm h-8 px-3 text-xs font-medium shadow-xs gap-1.5 active:scale-95"
+                        className="btn btn-primary btn-xs gap-1"
                       >
-                        <Play className="size-3 fill-current" />
-                        Start Exam
+                        <Play className="size-2.5 fill-current" />
+                        <span>Exam</span>
                       </button>
-
                       <button
                         onClick={() => handleLaunchPaperPractice(paper)}
-                        className="btn btn-outline border-border/70 hover:bg-muted text-foreground btn-sm h-8 px-3 text-xs font-medium gap-1.5 active:scale-95"
+                        className="btn btn-xs gap-1"
                       >
-                        <Zap className="size-3" />
-                        Practice
+                        <Zap className="size-2.5" />
+                        <span>Practice</span>
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between pt-0.5 text-xs">
-                      {stats?.latestAttemptId ? (
-                        <button
-                          onClick={() => navigate(`/result/${stats.latestAttemptId}`)}
-                          className="text-xs text-primary hover:underline font-medium flex items-center gap-1"
-                          aria-label={`View scorecard for ${paper.title}`}
-                        >
-                          Scorecard
-                          <ExternalLink className="size-2.5" />
-                        </button>
-                      ) : (
-                        <span className="text-muted-foreground/60 text-[11px] font-mono">
-                          Ready
-                        </span>
-                      )}
-
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={(e) => handleExportPaper(e, paper)}
-                          className="btn btn-ghost btn-xs h-6 w-6 p-0 text-muted-foreground hover:text-foreground active:scale-90"
-                          title="Export as Markdown"
-                          aria-label="Export paper as Markdown"
-                        >
-                          <Download className="size-3" />
-                        </button>
-                        <button
-                          onClick={(e) => handleDeletePaper(e, paper.id)}
-                          className="btn btn-ghost btn-xs h-6 w-6 p-0 text-muted-foreground hover:text-red-600 active:scale-90"
-                          title="Delete paper"
-                          aria-label="Delete paper"
-                        >
-                          <Trash2 className="size-3" />
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => handleExportPaper(e, paper)}
+                        className="btn btn-ghost btn-xs px-1.5"
+                        title="Export Markdown"
+                      >
+                        <Download className="size-3 text-muted-foreground" />
+                      </button>
+                      <button
+                        onClick={(e) => handleDeletePaper(e, paper.id)}
+                        className="btn btn-ghost btn-xs px-1.5 hover:text-red-500"
+                        title="Delete"
+                      >
+                        <Trash2 className="size-3 text-muted-foreground" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -448,77 +555,69 @@ export function Library() {
             })}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* SECTION: Recent Completed Attempts & Scorecards */}
+      {/* Recent Attempts History Table */}
       {analytics && analytics.recentScoreTrends.length > 0 && (
-        <div className="space-y-3 pt-2">
+        <section className="space-y-3 pt-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-semibold tracking-tight text-foreground">Recent Attempts</h2>
-              <p className="text-muted-foreground text-xs">Scorecards and completion history.</p>
+              <h2 className="text-sm font-semibold text-foreground">Recent Attempts</h2>
+              <p className="text-xs text-muted-foreground">Recent exam scorecards and history.</p>
             </div>
             <button
               onClick={() => navigate('/analysis')}
-              className="text-primary hover:underline text-xs font-medium"
+              className="text-xs text-primary hover:underline font-medium"
             >
-              View in analysis →
+              View all in Analysis →
             </button>
           </div>
 
-          <div className="liquid-glass-card overflow-x-auto rounded-xl p-0.5 shadow-xs">
-            <table className="table w-full text-xs">
+          <div className="card overflow-hidden">
+            <table className="table">
               <thead>
-                <tr className="border-border/60 bg-muted/40 text-muted-foreground">
-                  <th className="font-medium py-2">Exam / Paper</th>
-                  <th className="font-medium py-2">Date</th>
-                  <th className="font-medium py-2">Score</th>
-                  <th className="font-medium py-2">Accuracy</th>
-                  <th className="font-medium py-2">Duration</th>
-                  <th className="font-medium py-2 text-right">Action</th>
+                <tr>
+                  <th>Assessment</th>
+                  <th>Date</th>
+                  <th>Score</th>
+                  <th>Accuracy</th>
+                  <th>Duration</th>
+                  <th className="text-right">Scorecard</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/40">
+              <tbody>
                 {analytics.recentScoreTrends.slice(0, 5).map((att) => (
-                  <tr key={att.attemptId} className="hover:bg-muted/20">
-                    <td className="font-medium text-foreground py-2.5">{att.testTitle}</td>
-                    <td className="text-muted-foreground py-2.5">
-                      <span className="flex items-center gap-1 font-mono text-[11px]">
+                  <tr key={att.attemptId} className="hover:bg-muted/30">
+                    <td className="font-medium text-xs text-foreground">{att.testTitle}</td>
+                    <td className="text-muted-foreground font-mono text-[11px]">
+                      <span className="flex items-center gap-1">
                         <Calendar className="size-3 text-muted-foreground/70" />
                         {new Date(att.date).toLocaleDateString()}
                       </span>
                     </td>
-                    <td className="py-2.5 font-mono tabular-nums">
+                    <td className="font-mono text-[11px] tabular-nums">
                       <span className="font-semibold text-foreground">{att.scorePercentage}%</span>
-                      <span className="text-muted-foreground ml-1 text-[11px]">
+                      <span className="text-muted-foreground ml-1">
                         ({att.totalMarks}/{att.maxMarks})
                       </span>
                     </td>
-                    <td className="py-2.5">
-                      <span
-                        className={`text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full font-semibold shadow-2xs ${
-                          att.accuracy >= 75
-                            ? 'apple-pill-green'
-                            : att.accuracy >= 50
-                            ? 'apple-pill-amber'
-                            : 'apple-pill-rose'
-                        }`}
-                      >
+                    <td>
+                      <span className="badge font-mono text-[10px]">
                         {att.accuracy}%
                       </span>
                     </td>
-                    <td className="text-muted-foreground py-2.5">
-                      <span className="flex items-center gap-1 font-mono text-[11px] tabular-nums">
+                    <td className="text-muted-foreground font-mono text-[11px]">
+                      <span className="flex items-center gap-1">
                         <Clock className="size-3 text-muted-foreground/70" />
                         {formatTimeSeconds(att.timeSpentSeconds)}
                       </span>
                     </td>
-                    <td className="text-right py-2.5">
+                    <td className="text-right">
                       <button
                         onClick={() => navigate(`/result/${att.attemptId}`)}
                         className="text-xs text-primary hover:underline font-medium inline-flex items-center gap-1"
                       >
-                        Scorecard
+                        <span>Scorecard</span>
                         <ExternalLink className="size-2.5" />
                       </button>
                     </td>
@@ -527,76 +626,60 @@ export function Library() {
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* SECTION 3: Dynamic Subject Performance Snapshot */}
+      {/* Subject Performance Breakdown */}
       {analytics && analytics.subjectBreakdown.length > 0 && (
-        <div className="space-y-3 pt-2">
+        <section className="space-y-3 pt-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-semibold tracking-tight text-foreground">Subject Accuracy</h2>
-              <p className="text-muted-foreground text-xs">
-                Performance across subjects from practice history.
-              </p>
+              <h2 className="text-sm font-semibold text-foreground">Subject Accuracy</h2>
+              <p className="text-xs text-muted-foreground">Historical mastery by topic and domain.</p>
             </div>
             <button
               onClick={() => navigate('/analysis')}
-              className="text-primary hover:underline text-xs font-medium"
+              className="text-xs text-primary hover:underline font-medium"
             >
-              View all in analysis →
+              Detailed Breakdown →
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {analytics.subjectBreakdown.slice(0, 6).map((subj) => (
               <div
                 key={subj.subject}
                 onClick={() => navigate(`/practice?subject=${encodeURIComponent(subj.subject)}`)}
-                className="apple-glass-card hover:scale-[1.01] flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all"
+                className="card p-3 flex flex-col justify-between cursor-pointer hover:border-foreground/20 transition-colors"
               >
                 <div>
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-semibold text-xs text-foreground truncate">{subj.subject}</span>
-                    <span
-                      className={`text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full font-semibold shadow-2xs ${
-                        subj.accuracy >= 75
-                          ? 'apple-pill-green'
-                          : subj.accuracy >= 50
-                          ? 'apple-pill-amber'
-                          : 'apple-pill-rose'
-                      }`}
-                    >
+                    <span className="font-semibold text-foreground truncate">{subj.subject}</span>
+                    <span className="font-mono text-xs font-semibold text-foreground">
                       {subj.accuracy}%
                     </span>
                   </div>
-                  <p className="text-muted-foreground text-[11px] font-mono tabular-nums">
+                  <p className="text-muted-foreground text-[11px] font-mono">
                     {subj.correct} of {subj.total} correct
                   </p>
                 </div>
 
                 <div className="mt-2.5">
-                  <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
+                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all duration-300 ${
-                        subj.accuracy >= 75
-                          ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
-                          : subj.accuracy >= 50
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-400'
-                          : 'bg-gradient-to-r from-rose-500 to-red-400'
-                      }`}
+                      className="h-full rounded-full bg-primary transition-all duration-300"
                       style={{ width: `${subj.accuracy}%` }}
                     />
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1.5 font-mono">
                     <span>{subj.topics.length} topic{subj.topics.length !== 1 ? 's' : ''}</span>
-                    <span className="text-primary font-medium">Practice →</span>
+                    <span className="text-primary font-medium">Practice Drills →</span>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

@@ -1,1119 +1,577 @@
 @import 'tailwindcss';
-@plugin 'daisyui' {
-  themes:
-    light --default,
-    dark --prefersdark;
-}
 @import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
-@import '@fontsource-variable/schibsted-grotesk';
-@import '@fontsource-variable/outfit';
-@import '@fontsource-variable/fira-code';
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *, .dark, .dark *));
 
 @theme inline {
-  --font-heading: var(--font-heading-family);
-  --font-sans: var(--font-sans-family);
-  --font-mono: var(--font-mono-family);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif;
+  --font-heading: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro', system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.3);
-  --radius-2xl: calc(var(--radius) * 1.6);
-  --radius-3xl: calc(var(--radius) * 2.0);
-  --radius-4xl: calc(var(--radius) * 2.4);
-}
-
-/* ==========================================================================
-   MINIMAL LIGHT THEME
-   Pure, clean, quiet educational canvas.
-   High-contrast typography, hairline borders, single calm accent.
-   ========================================================================== */
-:root,
-[data-theme='light'] {
-  color-scheme: light;
-
-  /* Typography */
-  --font-sans-family:
-    'Schibsted Grotesk Variable', 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont,
-    'SF Pro Text', ui-sans-serif, system-ui, sans-serif;
-  --font-heading-family:
-    'Schibsted Grotesk Variable', 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont,
-    'SF Pro Display', ui-sans-serif, system-ui, sans-serif;
-  --font-mono-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-
-  /* Neutral Surface Ramps with Apple Liquid Glass Translucency */
-  --background: transparent;                    /* 100% transparent canvas syncing with macOS NSVisualEffectView */
-  --foreground: oklch(21% 0.012 260);            /* #18181b - deep slate ink (14.2:1 contrast) */
-  --card: oklch(100% 0 0 / 0.55);                /* translucent liquid glass card */
-  --card-foreground: oklch(21% 0.012 260);
-  --popover: oklch(100% 0 0 / 0.75);
-  --popover-foreground: oklch(21% 0.012 260);
-  --muted: oklch(96.2% 0.004 260 / 0.35);        /* translucent component fill */
-  --muted-foreground: oklch(44% 0.014 260);     /* readable secondary text */
-  --border: oklch(90% 0.005 260 / 0.35);         /* clean 1px hairline translucent border */
-  --input: oklch(90% 0.005 260 / 0.35);
-
-  /* Primary Accent: Apple System Blue (Synchronized with macOS AccentColor) */
-  --primary: AccentColor, #007AFF;
-  --primary-foreground: oklch(100% 0 0);        /* #ffffff (5.2:1 contrast) */
-  --secondary: oklch(95% 0.005 260 / 0.45);     /* neutral secondary button */
-  --secondary-foreground: oklch(25% 0.015 260); /* #1e293b */
-  --accent: oklch(96% 0.015 255 / 0.40);        /* soft interactive tint */
-  --accent-foreground: oklch(46% 0.19 255);     /* #1d4ed8 */
-  --destructive: #FF3B30;                       /* Apple System Red */
-  --destructive-foreground: oklch(100% 0 0);
-  --ring: AccentColor, #007AFF;
-  --radius: 0.5rem;                             /* 8px - compact, native */
-
-  /* Apple System Palette (Apple Human Interface Guidelines) */
-  --apple-blue: #007AFF;
-  --apple-purple: #AF52DE;
-  --apple-indigo: #5856D6;
-  --apple-pink: #FF2D55;
-  --apple-red: #FF3B30;
-  --apple-orange: #FF9500;
-  --apple-yellow: #FFCC00;
-  --apple-green: #34C759;
-  --apple-mint: #00C7BE;
-  --apple-teal: #30B0C7;
-  --apple-cyan: #32ADE6;
-
-  /* Sidebar & Navigation */
-  --sidebar: oklch(98.5% 0.003 260 / 0.45);
-  --sidebar-foreground: oklch(21% 0.012 260);
-  --sidebar-primary: oklch(52% 0.20 255);
-  --sidebar-primary-foreground: oklch(100% 0 0);
-  --sidebar-accent: oklch(95% 0.005 260 / 0.40);
-  --sidebar-accent-foreground: oklch(21% 0.012 260);
-  --sidebar-border: oklch(90% 0.005 260 / 0.35);
-  --sidebar-ring: oklch(52% 0.20 255);
-
-  /* Chart & Metrics */
-  --chart-1: oklch(52% 0.20 255);
-  --chart-2: oklch(60% 0.16 148);
-  --chart-3: oklch(74% 0.16 75);
-  --chart-4: oklch(58% 0.21 25);
-  --chart-5: oklch(60% 0.14 300);
-
-  /* DaisyUI Semantic Linkage: transparent base prevents opaque canvas stacking */
-  --color-base-100: transparent;
-  --color-base-200: var(--card);
-  --color-base-300: var(--muted);
-  --color-base-content: var(--foreground);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
-  --color-primary-content: var(--primary-foreground);
+  --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
-  --color-secondary-content: var(--secondary-foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
-  --color-accent-content: var(--accent-foreground);
-  --color-neutral: oklch(25% 0.015 260);
-  --color-neutral-content: oklch(100% 0 0);
-  --color-info: oklch(58% 0.17 245);
-  --color-info-content: oklch(100% 0 0);
-  --color-success: oklch(60% 0.16 148);
-  --color-success-content: oklch(100% 0 0);
-  --color-warning: oklch(74% 0.16 75);
-  --color-warning-content: oklch(100% 0 0);
-  --color-error: oklch(58% 0.21 25);
-  --color-error-content: oklch(100% 0 0);
-  --radius-box: 0.5rem;
-  --radius-field: 0.375rem;
-  --radius-selector: 0.375rem;
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
 }
 
 /* ==========================================================================
-   MINIMAL DARK THEME
-   Deep, calm, focused neutral dark (Zero purple or garish novelty tones).
-   True slate/graphite surfaces with high-readability text.
+   NATIVE MACOS SEMANTIC SYSTEM TOKENS
+   Derives appearance directly from macOS system semantics.
    ========================================================================== */
+:root {
+  color-scheme: light dark;
+
+  /* Transparent background allows Tauri NSVisualEffectView vibrancy to show through */
+  --background: transparent;
+  --foreground: light-dark(#1d1d1f, #f5f5f7);
+
+  /* macOS System Surface Materials */
+  --card: light-dark(rgba(255, 255, 255, 0.75), rgba(40, 40, 44, 0.75));
+  --card-foreground: light-dark(#1d1d1f, #f5f5f7);
+  --popover: light-dark(rgba(255, 255, 255, 0.88), rgba(46, 46, 50, 0.88));
+  --popover-foreground: light-dark(#1d1d1f, #f5f5f7);
+
+  /* macOS Native Accent & Semantic Colors */
+  --primary: AccentColor;
+  --primary-foreground: #ffffff;
+  --secondary: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
+  --secondary-foreground: light-dark(#1d1d1f, #f5f5f7);
+  --muted: light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.06));
+  --muted-foreground: light-dark(#86868b, #98989d);
+  --accent: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
+  --accent-foreground: light-dark(#1d1d1f, #f5f5f7);
+  --destructive: #ff3b30;
+  --destructive-foreground: #ffffff;
+  --border: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.12));
+  --input: light-dark(rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.15));
+  --ring: AccentColor;
+  --radius: 6px;
+}
+
+/* Explicit .dark class parity when data-theme="dark" */
 .dark,
 [data-theme='dark'] {
   color-scheme: dark;
-
-  /* Typography */
-  --font-sans-family:
-    'Schibsted Grotesk Variable', 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont,
-    'SF Pro Text', ui-sans-serif, system-ui, sans-serif;
-  --font-heading-family:
-    'Schibsted Grotesk Variable', 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont,
-    'SF Pro Display', ui-sans-serif, system-ui, sans-serif;
-  --font-mono-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-
-  /* Neutral Surface Ramps with Apple Liquid Glass Translucency */
-  --background: transparent;                    /* 100% transparent canvas syncing with macOS NSVisualEffectView */
-  --foreground: oklch(95.5% 0.003 260);         /* #f3f3f5 - crisp light text (14.5:1 contrast) */
-  --card: oklch(18% 0.008 260 / 0.45);          /* translucent liquid obsidian card */
-  --card-foreground: oklch(95.5% 0.003 260);
-  --popover: oklch(18% 0.008 260 / 0.70);
-  --popover-foreground: oklch(95.5% 0.003 260);
-  --muted: oklch(22% 0.007 260 / 0.35);         /* translucent component fill */
-  --muted-foreground: oklch(70% 0.01 260);      /* readable muted secondary (6.2:1 contrast) */
-  --border: oklch(30% 0.007 260 / 0.30);        /* hairline dark translucent border */
-  --input: oklch(30% 0.007 260 / 0.30);
-
-  /* Primary Accent: Apple System Blue (Synchronized with macOS AccentColor) */
-  --primary: AccentColor, #0A84FF;
-  --primary-foreground: oklch(100% 0 0);        /* white text for maximum readability */
-  --secondary: oklch(22% 0.007 260 / 0.40);     /* translucent secondary button */
-  --secondary-foreground: oklch(92% 0.004 260); /* #e4e4e7 */
-  --accent: oklch(23% 0.03 255 / 0.35);         /* subtle dark blue tint */
-  --accent-foreground: oklch(76% 0.14 255);     /* #60a5fa */
-  --destructive: #FF453A;                       /* Apple System Red (Dark) */
-  --destructive-foreground: oklch(100% 0 0);
-  --ring: AccentColor, #0A84FF;
-  --radius: 0.5rem;
-
-  /* Apple System Palette (Apple Human Interface Guidelines) */
-  --apple-blue: #0A84FF;
-  --apple-purple: #BF5AF2;
-  --apple-indigo: #5E5CE6;
-  --apple-pink: #FF375F;
-  --apple-red: #FF453A;
-  --apple-orange: #FF9F0A;
-  --apple-yellow: #FFD60A;
-  --apple-green: #30D158;
-  --apple-mint: #63E6E2;
-  --apple-teal: #40C8E0;
-  --apple-cyan: #64D2FF;
-
-  /* Sidebar & Navigation */
-  --sidebar: oklch(16% 0.005 260 / 0.40);
-  --sidebar-foreground: oklch(95.5% 0.003 260);
-  --sidebar-primary: oklch(60% 0.19 255);
-  --sidebar-primary-foreground: oklch(100% 0 0);
-  --sidebar-accent: oklch(22% 0.007 260 / 0.35);
-  --sidebar-accent-foreground: oklch(95.5% 0.003 260);
-  --sidebar-border: oklch(30% 0.007 260 / 0.25);
-  --sidebar-ring: oklch(60% 0.19 255);
-
-  /* Chart & Metrics */
-  --chart-1: oklch(60% 0.19 255);
-  --chart-2: oklch(68% 0.16 148);
-  --chart-3: oklch(78% 0.15 75);
-  --chart-4: oklch(64% 0.20 25);
-  --chart-5: oklch(68% 0.14 300);
-
-  /* DaisyUI Semantic Linkage: transparent base prevents opaque canvas stacking */
-  --color-base-100: transparent;
-  --color-base-200: var(--card);
-  --color-base-300: var(--muted);
-  --color-base-content: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-content: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-content: var(--secondary-foreground);
-  --color-accent: var(--accent);
-  --color-accent-content: var(--accent-foreground);
-  --color-neutral: oklch(30% 0.01 260);
-  --color-neutral-content: oklch(95.5% 0.003 260);
-  --color-info: oklch(68% 0.15 245);
-  --color-info-content: oklch(100% 0 0);
-  --color-success: oklch(68% 0.16 148);
-  --color-success-content: oklch(100% 0 0);
-  --color-warning: oklch(78% 0.15 75);
-  --color-warning-content: oklch(100% 0 0);
-  --color-error: oklch(64% 0.20 25);
-  --color-error-content: oklch(100% 0 0);
-  --radius-box: 0.5rem;
-  --radius-field: 0.375rem;
-  --radius-selector: 0.375rem;
+  --foreground: #f5f5f7;
+  --card: rgba(40, 40, 44, 0.75);
+  --card-foreground: #f5f5f7;
+  --popover: rgba(46, 46, 50, 0.88);
+  --popover-foreground: #f5f5f7;
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #f5f5f7;
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: #98989d;
+  --accent: rgba(255, 255, 255, 0.08);
+  --accent-foreground: #f5f5f7;
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.15);
 }
 
-/* ==========================================================================
-   UNLAYERED ROOT TRANSPARENCY
-   Declaring outside @layer guarantees that CSS Cascade Layers cannot override
-   transparency on html, body, and root containers.
-   ========================================================================== */
-html,
-body,
-#root,
-[data-theme],
-[data-theme='light'],
-[data-theme='dark'] {
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply text-base-content selection:bg-primary/20 selection:text-primary font-sans antialiased;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-  }
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: var(--font-heading);
-  }
-  code,
-  kbd,
-  samp,
-  pre {
-    font-family: var(--font-mono);
-  }
-}
-
-/* Scoped to AnimatedThemeToggler — the toggler sets the data-attribute and the variable only during a theme toggle. */
-::view-transition,
-::view-transition-group(root),
-html[data-magicui-theme-vt='active']::view-transition,
-html[data-magicui-theme-vt='active']::view-transition-group(root),
-html[data-magicui-theme-vt='active']::view-transition-old(root),
-html[data-magicui-theme-vt='active']::view-transition-new(root) {
-  animation-duration: var(--magicui-theme-toggle-vt-duration);
-  pointer-events: none !important;
-  background: transparent !important;
-}
-html[data-magicui-theme-vt='active']::view-transition-old(root),
-html[data-magicui-theme-vt='active']::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-/* ==========================================================================
-   NATIVE DESKTOP & MOBILE ERGONOMICS (Apple Design & Tauri v2)
-   ========================================================================== */
+/* Base Body Styles */
 html,
 body {
-  overscroll-behavior: none;
-  -webkit-touch-callout: none;
-}
-
-/* Prevent accidental text selection on UI chrome while preserving selection on content */
-button,
-nav,
-.badge,
-.tab,
-.join,
-.dock,
-header,
-footer,
-.modal-box > div:first-child {
-  -webkit-user-select: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   user-select: none;
+  overflow: hidden;
 }
 
-/* Ensure questions, solutions, formulas, and code remain crisp and selectable */
-.selectable-content,
-.katex,
-.katex-display,
+/* Allow text selection in readable content */
+p,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
 pre,
-code {
-  -webkit-user-select: text;
+code,
+td,
+th,
+input,
+textarea {
   user-select: text;
 }
 
-/* Window drag region for native desktop window dragging */
+/* Native macOS Window Drag Region */
 [data-tauri-drag-region] {
   -webkit-app-region: drag;
+  user-select: none;
 }
 
-/* Safe area padding for mobile notches and gesture bars */
-.safe-area-top {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-.safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* Native macOS-style sleek overlay scrollbars */
-::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(140, 140, 140, 0.28);
-  border-radius: 9999px;
-  border: 1.5px solid transparent;
-  background-clip: content-box;
-  transition: background-color 0.15s ease;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(140, 140, 140, 0.5);
-  background-clip: content-box;
-}
-
-/* Instant tactile feedback on press — Apple Design Rule 1 (Response on pointer-down) */
-button:active:not(:disabled),
-.btn:active:not(:disabled),
-[role='button']:active:not([aria-disabled='true']),
-.interactive-press:active {
-  transform: scale(0.975);
-  transition: transform 70ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-/* Apple optical display typography tracking */
-h1,
-.display-title {
-  letter-spacing: -0.025em;
-}
-h2 {
-  letter-spacing: -0.02em;
-}
-h3 {
-  letter-spacing: -0.015em;
-}
-
-/* Accessible visible focus states (WCAG 2.2 AA) */
-:focus-visible {
-  outline: 2px solid var(--primary, #0ea5e9) !important;
-  outline-offset: 2px !important;
+button,
+input,
+select,
+textarea,
+[role='button'],
+[role='tab'],
+.macos-segmented,
+a {
+  -webkit-app-region: no-drag;
 }
 
 /* ==========================================================================
-   AUTHENTIC MACOS LIQUID GLASS SYSTEM (macOS Sequoia & AppKit Visual Effects)
-   Natively synchronizes with macOS desktop theme via Tauri NSVisualEffectView
-   (underWindowBackground) and WebKit hardware-accelerated backdrop blur.
-   Zero artificial painted caustics or fake glare gradients.
-   Covers every component: cards, tabs, switches, selects, inputs, modals,
-   popovers, tables, checkboxes, pills, and headers.
+   MACOS DESKTOP CONTROLS
+   Standard push buttons, segmented controls, text fields, tables, scrollbars
    ========================================================================== */
 
-/* 1. Base Liquid Glass Material */
+/* Standard Push Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: 5px;
+  border: 1px solid light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.15));
+  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.1));
+  color: var(--foreground);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  cursor: default;
+  user-select: none;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+  outline: none;
+}
+
+.btn:hover:not(:disabled) {
+  background-color: light-dark(#f6f6f7, rgba(255, 255, 255, 0.16));
+}
+
+.btn:active:not(:disabled) {
+  background-color: light-dark(#ececed, rgba(255, 255, 255, 0.22));
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.btn:focus-visible {
+  outline: 2px solid AccentColor;
+  outline-offset: 1px;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Primary Push Button */
+.btn-primary {
+  background-color: AccentColor;
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+  background-color: AccentColor;
+}
+
+.btn-primary:active:not(:disabled) {
+  filter: brightness(0.92);
+  background-color: AccentColor;
+}
+
+/* Ghost / Borderless Button */
+.btn-ghost {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
+}
+
+.btn-ghost:active:not(:disabled) {
+  background-color: light-dark(rgba(0, 0, 0, 0.09), rgba(255, 255, 255, 0.14));
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  border-color: var(--border);
+}
+
+/* Outline Button */
+.btn-outline {
+  background-color: light-dark(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.06));
+  border-color: var(--border);
+}
+
+/* Error / Destructive Button */
+.btn-error {
+  background-color: #ff3b30;
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.btn-error:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+/* Size Variants */
+.btn-sm {
+  height: 22px;
+  font-size: 11px;
+  padding: 0 8px;
+  border-radius: 4px;
+}
+
+.btn-xs {
+  height: 18px;
+  font-size: 10px;
+  padding: 0 5px;
+  border-radius: 3px;
+}
+
+.btn-lg {
+  height: 32px;
+  font-size: 13px;
+  padding: 0 14px;
+  border-radius: 6px;
+}
+
+/* Text & Search Fields */
+input[type='text'],
+input[type='search'],
+input[type='number'],
+textarea,
+.input {
+  font-family: inherit;
+  font-size: 12px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 5px;
+  border: 1px solid light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.15));
+  background-color: light-dark(#ffffff, rgba(0, 0, 0, 0.25));
+  color: inherit;
+  outline: none;
+  transition: border-color 0.1s ease, box-shadow 0.1s ease;
+}
+
+input[type='text']:focus,
+input[type='search']:focus,
+input[type='number']:focus,
+textarea:focus,
+.input:focus {
+  border-color: AccentColor;
+  box-shadow: 0 0 0 2px light-dark(rgba(0, 122, 255, 0.35), rgba(0, 122, 255, 0.45));
+}
+
+/* Native Search Input Styling */
+.macos-search-field {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.macos-search-field input {
+  height: 24px;
+  border-radius: 6px;
+  padding-left: 26px;
+  padding-right: 8px;
+  font-size: 12px;
+  background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
+  border: 1px solid light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.1));
+}
+
+/* Native Segmented Control */
+.macos-segmented {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 7px;
+  background-color: light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.08));
+  border: 1px solid light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.08));
+  user-select: none;
+}
+
+.macos-segment-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-radius: 5px;
+  color: light-dark(#6e6e73, #98989d);
+  cursor: default;
+  transition: color 0.12s ease, background-color 0.12s ease;
+}
+
+.macos-segment-item:hover:not(.active) {
+  color: var(--foreground);
+}
+
+.macos-segment-item.active {
+  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.22));
+  color: light-dark(#1d1d1f, #ffffff);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* macOS Tables */
+table,
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: transparent;
+}
+
+table th,
+.table th {
+  font-size: 11px;
+  font-weight: 500;
+  text-align: left;
+  color: var(--muted-foreground);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: light-dark(rgba(0, 0, 0, 0.02), rgba(255, 255, 255, 0.02));
+  user-select: none;
+}
+
+table td,
+.table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.04));
+  vertical-align: middle;
+}
+
+table tbody tr:hover,
+.table tbody tr:hover {
+  background-color: light-dark(rgba(0, 0, 0, 0.03), rgba(255, 255, 255, 0.04));
+}
+
+table tbody tr.selected,
+.table tbody tr.selected {
+  background-color: AccentColor;
+  color: #ffffff;
+}
+
+/* Native Checkboxes */
+input[type='checkbox'],
+.checkbox {
+  appearance: auto;
+  accent-color: AccentColor;
+  cursor: default;
+}
+
+/* Native Selects */
+select,
+.select {
+  height: 26px;
+  padding: 0 20px 0 8px;
+  font-size: 12px;
+  font-family: inherit;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.08));
+  color: var(--foreground);
+  cursor: default;
+  outline: none;
+}
+
+select:focus,
+.select:focus {
+  border-color: AccentColor;
+  box-shadow: 0 0 0 2px light-dark(rgba(0, 122, 255, 0.35), rgba(0, 122, 255, 0.45));
+}
+
+/* macOS Status Pills & Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  font-size: 10.5px;
+  font-weight: 500;
+  border-radius: 4px;
+  background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+/* Join group utility */
+.join {
+  display: inline-flex;
+  align-items: center;
+}
+.join > .join-item:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
+.join > .join-item:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Compatibility mappings for existing classes */
+.liquid-glass-card,
 .liquid-glass,
-.apple-glass {
-  position: relative;
-  background-color: rgba(255, 255, 255, 0.65);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.75),
-    0 8px 24px -4px rgba(0, 0, 0, 0.04);
+.macos-card,
+.card {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--card-foreground);
 }
 
-.dark .liquid-glass,
-.dark .apple-glass,
-[data-theme='dark'] .liquid-glass,
-[data-theme='dark'] .apple-glass {
-  background-color: rgba(30, 30, 36, 0.65);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
-    0 10px 28px -4px rgba(0, 0, 0, 0.45);
+.liquid-glass-pill,
+.macos-pill {
+  background-color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  color: var(--foreground);
 }
 
-/* 2. Clear Liquid Glass for Floating Chrome and Overlays */
-.liquid-glass-clear {
-  position: relative;
-  background-color: rgba(255, 255, 255, 0.45);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.65),
-    0 4px 16px -2px rgba(0, 0, 0, 0.04);
+.liquid-glass-header,
+.macos-toolbar {
+  background-color: light-dark(rgba(246, 246, 246, 0.85), rgba(36, 36, 38, 0.85));
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
 }
 
-.dark .liquid-glass-clear,
-[data-theme='dark'] .liquid-glass-clear {
-  background-color: rgba(26, 26, 32, 0.45);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
-    0 6px 20px -2px rgba(0, 0, 0, 0.4);
-}
-
-/* 3. Header Liquid Glass Chrome */
-.liquid-glass-header {
-  position: relative;
-  background-color: rgba(255, 255, 255, 0.70);
-  -webkit-backdrop-filter: blur(28px) saturate(170%);
-  backdrop-filter: blur(28px) saturate(170%);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-  box-shadow: inset 0 -0.5px 0 0 rgba(255, 255, 255, 0.4);
-}
-
-.dark .liquid-glass-header,
-[data-theme='dark'] .liquid-glass-header {
-  background-color: rgba(22, 22, 28, 0.70);
-  -webkit-backdrop-filter: blur(28px) saturate(170%);
-  backdrop-filter: blur(28px) saturate(170%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 -0.5px 0 0 rgba(255, 255, 255, 0.05);
-}
-
-/* 4. CARDS: All cards across the application */
-.card,
-.liquid-glass-card {
-  position: relative;
-  background-color: rgba(255, 255, 255, 0.55);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.75),
-    0 6px 20px -4px rgba(0, 0, 0, 0.04);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-}
-
-.dark .card,
-.dark .liquid-glass-card,
-[data-theme='dark'] .card,
-[data-theme='dark'] .liquid-glass-card {
-  background-color: rgba(30, 30, 36, 0.48);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
-    0 8px 24px -4px rgba(0, 0, 0, 0.45);
-}
-
-/* 4b. AUTHENTIC APPLE MACOS DOCK GLASS (HIG Translucent Material) */
-.macos-dock-glass {
-  background-color: rgba(255, 255, 255, 0.35) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(190%) !important;
-  backdrop-filter: blur(32px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.40) !important;
-  box-shadow:
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.70),
-    0 16px 36px -8px rgba(0, 0, 0, 0.12) !important;
-}
-
-.dark .macos-dock-glass,
-[data-theme='dark'] .macos-dock-glass {
-  background-color: rgba(26, 26, 32, 0.35) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(190%) !important;
-  backdrop-filter: blur(32px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow:
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.18),
-    0 20px 40px -10px rgba(0, 0, 0, 0.55) !important;
-}
-
-.liquid-glass-card:hover,
-.card:hover {
-  border-color: rgba(0, 102, 204, 0.35);
-}
-
-.dark .liquid-glass-card:hover,
-.dark .card:hover,
-[data-theme='dark'] .liquid-glass-card:hover,
-[data-theme='dark'] .card:hover {
-  border-color: rgba(56, 189, 248, 0.3);
-}
-
-/* Tinted Liquid Glass Cards & Materials (Apple HIG Specs) */
 .liquid-glass-blue,
-.apple-tint-blue {
-  background-color: rgba(239, 246, 255, 0.40);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(0, 122, 255, 0.22);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
-    0 8px 24px -4px rgba(0, 122, 255, 0.08);
-}
-.dark .liquid-glass-blue,
-.dark .apple-tint-blue,
-[data-theme='dark'] .liquid-glass-blue,
-[data-theme='dark'] .apple-tint-blue {
-  background-color: rgba(12, 24, 44, 0.38);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(10, 132, 255, 0.25);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-    0 10px 28px -4px rgba(0, 0, 0, 0.50);
-}
-
-.liquid-glass-amber,
-.apple-tint-amber {
-  background-color: rgba(255, 251, 235, 0.40);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(255, 149, 0, 0.22);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
-    0 8px 24px -4px rgba(255, 149, 0, 0.08);
-}
-.dark .liquid-glass-amber,
-.dark .apple-tint-amber,
-[data-theme='dark'] .liquid-glass-amber,
-[data-theme='dark'] .apple-tint-amber {
-  background-color: rgba(38, 24, 10, 0.38);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(255, 159, 10, 0.25);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-    0 10px 28px -4px rgba(0, 0, 0, 0.50);
-}
-
-.liquid-glass-emerald,
-.apple-tint-green {
-  background-color: rgba(240, 253, 244, 0.40);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(52, 199, 89, 0.22);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
-    0 8px 24px -4px rgba(52, 199, 89, 0.08);
-}
-.dark .liquid-glass-emerald,
-.dark .apple-tint-green,
-[data-theme='dark'] .liquid-glass-emerald,
-[data-theme='dark'] .apple-tint-green {
-  background-color: rgba(12, 34, 22, 0.38);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(48, 209, 88, 0.25);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-    0 10px 28px -4px rgba(0, 0, 0, 0.50);
-}
-
-.liquid-glass-purple,
-.apple-tint-purple {
-  background-color: rgba(250, 245, 255, 0.40);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(175, 82, 222, 0.22);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
-    0 8px 24px -4px rgba(175, 82, 222, 0.08);
-}
-.dark .liquid-glass-purple,
-.dark .apple-tint-purple,
-[data-theme='dark'] .liquid-glass-purple,
-[data-theme='dark'] .apple-tint-purple {
-  background-color: rgba(28, 16, 42, 0.38);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(191, 90, 242, 0.25);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-    0 10px 28px -4px rgba(0, 0, 0, 0.50);
-}
-
 .liquid-glass-rose,
-.apple-tint-rose {
-  background-color: rgba(255, 241, 242, 0.40);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(255, 59, 48, 0.22);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
-    0 8px 24px -4px rgba(255, 59, 48, 0.08);
-}
-.dark .liquid-glass-rose,
-.dark .apple-tint-rose,
-[data-theme='dark'] .liquid-glass-rose,
-[data-theme='dark'] .apple-tint-rose {
-  background-color: rgba(38, 14, 20, 0.38);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(255, 69, 58, 0.25);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-    0 10px 28px -4px rgba(0, 0, 0, 0.50);
+.liquid-glass-amber,
+.liquid-glass-emerald,
+.liquid-glass-purple {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--card-foreground);
 }
 
-.liquid-glass-cyan,
-.apple-tint-cyan {
-  background-color: rgba(236, 254, 255, 0.40);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(50, 173, 230, 0.22);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
-    0 8px 24px -4px rgba(50, 173, 230, 0.08);
-}
-.dark .liquid-glass-cyan,
-.dark .apple-tint-cyan,
-[data-theme='dark'] .liquid-glass-cyan,
-[data-theme='dark'] .apple-tint-cyan {
-  background-color: rgba(10, 28, 42, 0.38);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(100, 210, 255, 0.25);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-    0 10px 28px -4px rgba(0, 0, 0, 0.50);
-}
-
-.liquid-glass-indigo,
-.apple-tint-indigo {
-  background-color: rgba(238, 242, 255, 0.40);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(88, 86, 214, 0.22);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
-    0 8px 24px -4px rgba(88, 86, 214, 0.08);
-}
-.dark .liquid-glass-indigo,
-.dark .apple-tint-indigo,
-[data-theme='dark'] .liquid-glass-indigo,
-[data-theme='dark'] .apple-tint-indigo {
-  background-color: rgba(20, 18, 46, 0.38);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(94, 92, 230, 0.25);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-    0 10px 28px -4px rgba(0, 0, 0, 0.50);
-}
-
-/* Apple HIG Translucent Badges & Indicator Pills */
 .apple-pill-blue {
-  background-color: rgba(0, 122, 255, 0.10) !important;
-  color: #007AFF !important;
-  border: 1px solid rgba(0, 122, 255, 0.25) !important;
-}
-.dark .apple-pill-blue,
-[data-theme='dark'] .apple-pill-blue {
-  background-color: rgba(10, 132, 255, 0.16) !important;
-  color: #0A84FF !important;
-  border: 1px solid rgba(10, 132, 255, 0.30) !important;
+  background-color: light-dark(rgba(0, 122, 255, 0.1), rgba(0, 122, 255, 0.2));
+  color: light-dark(#007aff, #32ade6);
+  border: 1px solid light-dark(rgba(0, 122, 255, 0.2), rgba(0, 122, 255, 0.3));
 }
 
 .apple-pill-green {
-  background-color: rgba(52, 199, 89, 0.10) !important;
-  color: #28a745 !important;
-  border: 1px solid rgba(52, 199, 89, 0.25) !important;
-}
-.dark .apple-pill-green,
-[data-theme='dark'] .apple-pill-green {
-  background-color: rgba(48, 209, 88, 0.16) !important;
-  color: #30D158 !important;
-  border: 1px solid rgba(48, 209, 88, 0.30) !important;
-}
-
-.apple-pill-purple {
-  background-color: rgba(175, 82, 222, 0.10) !important;
-  color: #8936b2 !important;
-  border: 1px solid rgba(175, 82, 222, 0.25) !important;
-}
-.dark .apple-pill-purple,
-[data-theme='dark'] .apple-pill-purple {
-  background-color: rgba(191, 90, 242, 0.16) !important;
-  color: #BF5AF2 !important;
-  border: 1px solid rgba(191, 90, 242, 0.30) !important;
+  background-color: light-dark(rgba(52, 199, 89, 0.1), rgba(52, 199, 89, 0.2));
+  color: light-dark(#28a745, #34c759);
+  border: 1px solid light-dark(rgba(52, 199, 89, 0.2), rgba(52, 199, 89, 0.3));
 }
 
 .apple-pill-amber {
-  background-color: rgba(255, 149, 0, 0.10) !important;
-  color: #d97706 !important;
-  border: 1px solid rgba(255, 149, 0, 0.25) !important;
-}
-.dark .apple-pill-amber,
-[data-theme='dark'] .apple-pill-amber {
-  background-color: rgba(255, 159, 10, 0.16) !important;
-  color: #FF9F0A !important;
-  border: 1px solid rgba(255, 159, 10, 0.30) !important;
+  background-color: light-dark(rgba(255, 149, 0, 0.1), rgba(255, 149, 0, 0.2));
+  color: light-dark(#d97706, #ff9500);
+  border: 1px solid light-dark(rgba(255, 149, 0, 0.2), rgba(255, 149, 0, 0.3));
 }
 
 .apple-pill-rose {
-  background-color: rgba(255, 59, 48, 0.10) !important;
-  color: #e11d48 !important;
-  border: 1px solid rgba(255, 59, 48, 0.25) !important;
-}
-.dark .apple-pill-rose,
-[data-theme='dark'] .apple-pill-rose {
-  background-color: rgba(255, 69, 58, 0.16) !important;
-  color: #FF453A !important;
-  border: 1px solid rgba(255, 69, 58, 0.30) !important;
+  background-color: light-dark(rgba(255, 59, 48, 0.1), rgba(255, 59, 48, 0.2));
+  color: light-dark(#dc2626, #ff3b30);
+  border: 1px solid light-dark(rgba(255, 59, 48, 0.2), rgba(255, 59, 48, 0.3));
 }
 
-.apple-pill-cyan {
-  background-color: rgba(50, 173, 230, 0.10) !important;
-  color: #0284c7 !important;
-  border: 1px solid rgba(50, 173, 230, 0.25) !important;
-}
-.dark .apple-pill-cyan,
-[data-theme='dark'] .apple-pill-cyan {
-  background-color: rgba(100, 210, 255, 0.16) !important;
-  color: #64D2FF !important;
-  border: 1px solid rgba(100, 210, 255, 0.30) !important;
-}
-
-.apple-pill-indigo {
-  background-color: rgba(88, 86, 214, 0.10) !important;
-  color: #4f46e5 !important;
-  border: 1px solid rgba(88, 86, 214, 0.25) !important;
-}
-.dark .apple-pill-indigo,
-[data-theme='dark'] .apple-pill-indigo {
-  background-color: rgba(94, 92, 230, 0.16) !important;
-  color: #5E5CE6 !important;
-  border: 1px solid rgba(94, 92, 230, 0.30) !important;
-}
-
-/* 5. TABS & SEGMENTED CONTROLS */
-.tabs,
-.tabs-boxed {
-  background-color: rgba(255, 255, 255, 0.45) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.35) !important;
-  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
-}
-
-.dark .tabs,
-.dark .tabs-boxed,
-[data-theme='dark'] .tabs,
-[data-theme='dark'] .tabs-boxed {
-  background-color: rgba(22, 22, 28, 0.45) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
-}
-
-.tab {
-  transition: all 0.15s ease;
-}
-
-.tabs-boxed .tab-active,
-.tabs-boxed .tab[aria-selected='true'],
-.tab.tab-active {
-  background-color: rgba(255, 255, 255, 0.85) !important;
-  color: var(--foreground) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
-    0 2px 8px -1px rgba(0, 0, 0, 0.08) !important;
-}
-
-.dark .tabs-boxed .tab-active,
-.dark .tabs-boxed .tab[aria-selected='true'],
-.dark .tab.tab-active,
-[data-theme='dark'] .tabs-boxed .tab-active,
-[data-theme='dark'] .tabs-boxed .tab[aria-selected='true'],
-[data-theme='dark'] .tab.tab-active {
-  background-color: rgba(50, 50, 60, 0.8) !important;
-  color: var(--foreground) !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
-    0 2px 8px -1px rgba(0, 0, 0, 0.4) !important;
-}
-
-/* 6. SWITCH / TOGGLE */
-.toggle,
-[role='switch'] {
-  background-color: rgba(210, 210, 220, 0.5) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
-  backdrop-filter: blur(16px) saturate(160%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.45) !important;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08) !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.dark .toggle,
-.dark [role='switch'],
-[data-theme='dark'] .toggle,
-[data-theme='dark'] [role='switch'] {
-  background-color: rgba(60, 60, 70, 0.5) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35) !important;
-}
-
-.toggle:checked,
-.toggle[aria-checked='true'] {
-  background-color: var(--primary) !important;
-  border-color: var(--primary) !important;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
-    0 2px 8px -1px rgba(0, 102, 204, 0.35) !important;
-}
-
-/* 7. SELECT */
-.select,
-.select-bordered,
-select {
-  background-color: rgba(255, 255, 255, 0.60) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.45) !important;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.7),
-    0 2px 6px -1px rgba(0, 0, 0, 0.04) !important;
-}
-
-.dark .select,
-.dark .select-bordered,
-.dark select,
-[data-theme='dark'] .select,
-[data-theme='dark'] .select-bordered,
-[data-theme='dark'] select {
-  background-color: rgba(28, 28, 34, 0.60) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
-    0 2px 6px -1px rgba(0, 0, 0, 0.35) !important;
-}
-
-.select:focus,
-.select-bordered:focus,
-select:focus {
-  border-color: var(--primary) !important;
-  box-shadow:
-    0 0 0 2px rgba(0, 102, 204, 0.25),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.7) !important;
-}
-
-/* 8. INPUTS & TEXTAREAS */
-.input,
-.input-bordered,
-.textarea,
-.textarea-bordered,
-.liquid-glass-input {
-  background-color: rgba(255, 255, 255, 0.55) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.45) !important;
-  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
-}
-
-.dark .input,
-.dark .input-bordered,
-.dark .textarea,
-.dark .textarea-bordered,
-.dark .liquid-glass-input,
-[data-theme='dark'] .input,
-[data-theme='dark'] .input-bordered,
-[data-theme='dark'] .textarea,
-[data-theme='dark'] .textarea-bordered,
-[data-theme='dark'] .liquid-glass-input {
-  background-color: rgba(24, 24, 30, 0.55) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
-}
-
-.input:focus,
-.input-bordered:focus,
-.textarea:focus,
-.textarea-bordered:focus {
-  border-color: var(--primary) !important;
-  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.25) !important;
-}
-
-/* 9. CHECKBOX */
-.checkbox,
-input[type='checkbox'] {
-  background-color: rgba(255, 255, 255, 0.55) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  backdrop-filter: blur(14px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.5) !important;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-}
-
-.dark .checkbox,
-.dark input[type='checkbox'],
-[data-theme='dark'] .checkbox,
-[data-theme='dark'] input[type='checkbox'] {
-  background-color: rgba(30, 30, 36, 0.55) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
-}
-
-.checkbox:checked,
-input[type='checkbox']:checked {
-  background-color: var(--primary) !important;
-  border-color: var(--primary) !important;
-}
-
-/* 10. MODAL BOXES & DIALOGS */
+/* Dialog / Modal Box */
 .modal-box,
 [role='dialog'] > div,
 .dialog-content {
-  background-color: rgba(255, 255, 255, 0.80) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(190%) !important;
-  backdrop-filter: blur(32px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.55) !important;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
-    0 24px 60px -12px rgba(0, 0, 0, 0.15) !important;
+  background-color: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
-.dark .modal-box,
-.dark [role='dialog'] > div,
-.dark .dialog-content,
-[data-theme='dark'] .modal-box,
-[data-theme='dark'] [role='dialog'] > div,
-[data-theme='dark'] .dialog-content {
-  background-color: rgba(26, 26, 32, 0.80) !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
-    0 28px 64px -12px rgba(0, 0, 0, 0.7) !important;
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 50;
 }
 
-/* 11. DROPDOWNS & POPOVERS */
-.dropdown-content,
-.popover,
-.bg-popover {
-  background-color: rgba(255, 255, 255, 0.80) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
-  backdrop-filter: blur(28px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.5) !important;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
-    0 16px 40px -8px rgba(0, 0, 0, 0.12) !important;
+.modal-open,
+.modal:target,
+.modal[open] {
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
 }
 
-.dark .dropdown-content,
-.dark .popover,
-.dark .bg-popover,
-[data-theme='dark'] .dropdown-content,
-[data-theme='dark'] .popover,
-[data-theme='dark'] .bg-popover {
-  background-color: rgba(28, 28, 34, 0.80) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-    0 18px 44px -8px rgba(0, 0, 0, 0.6) !important;
+/* Spinner / Progress */
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.2));
+  border-top-color: AccentColor;
+  border-radius: 50%;
+  animation: macos-spin 0.75s linear infinite;
+  display: inline-block;
 }
 
-/* 12. TABLES */
-.table,
-table {
-  background-color: transparent !important;
+@keyframes macos-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.table th,
-table th {
-  background-color: rgba(255, 255, 255, 0.45) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
-  backdrop-filter: blur(16px) saturate(160%) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+/* Native macOS Overlay Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.dark .table th,
-.dark table th,
-[data-theme='dark'] .table th,
-[data-theme='dark'] table th {
-  background-color: rgba(24, 24, 30, 0.45) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.table tr,
-table tr {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+::-webkit-scrollbar-thumb {
+  background: light-dark(rgba(0, 0, 0, 0.18), rgba(255, 255, 255, 0.18));
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
-.dark .table tr,
-.dark table tr,
-[data-theme='dark'] .table tr,
-[data-theme='dark'] table tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+::-webkit-scrollbar-thumb:hover {
+  background: light-dark(rgba(0, 0, 0, 0.32), rgba(255, 255, 255, 0.32));
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
-.table tbody tr:hover,
-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.35) !important;
-}
-
-.dark .table tbody tr:hover,
-.dark table tbody tr:hover,
-[data-theme='dark'] .table tbody tr:hover,
-[data-theme='dark'] table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-/* 13. PILLS & BADGES */
-.liquid-glass-pill,
-.badge-outline {
-  background-color: rgba(255, 255, 255, 0.50);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.7);
-  transition: all 0.15s ease;
-}
-
-.dark .liquid-glass-pill,
-.dark .badge-outline,
-[data-theme='dark'] .liquid-glass-pill,
-[data-theme='dark'] .badge-outline {
-  background-color: rgba(36, 36, 44, 0.50);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
-}
-
-.liquid-glass-pill:hover {
-  background-color: rgba(255, 255, 255, 0.70);
-}
-
-.dark .liquid-glass-pill:hover,
-[data-theme='dark'] .liquid-glass-pill:hover {
-  background-color: rgba(45, 45, 55, 0.70);
-}
-
-/* 14. BUTTONS (OUTLINE / GHOST) */
-.btn-outline {
-  background-color: rgba(255, 255, 255, 0.45) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
-  backdrop-filter: blur(16px) saturate(160%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.45) !important;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.6) !important;
-}
-
-.dark .btn-outline,
-[data-theme='dark'] .btn-outline {
-  background-color: rgba(32, 32, 40, 0.45) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12) !important;
-}
-
-.btn-outline:hover {
-  background-color: rgba(255, 255, 255, 0.70) !important;
-}
-
-.dark .btn-outline:hover,
-[data-theme='dark'] .btn-outline:hover {
-  background-color: rgba(48, 48, 58, 0.70) !important;
-}
-
-/* Accessibility: Reduced motion & transparency (WCAG & Apple HIG) */
+/* Accessibility: Reduced Motion & Reduced Transparency */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
@@ -1123,27 +581,19 @@ table tbody tr:hover {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  button:active:not(:disabled),
-  .btn:active:not(:disabled),
-  [role='button']:active:not([aria-disabled='true']) {
-    transform: none !important;
-  }
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .backdrop-blur-xs,
-  .backdrop-blur-sm,
-  .backdrop-blur-md,
-  .backdrop-blur-lg,
-  .backdrop-blur-xl,
-  .apple-glass,
-  .liquid-glass,
-  .liquid-glass-clear,
-  .liquid-glass-header {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background: var(--background) !important;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+  body {
+    background-color: light-dark(#f5f5f7, #1e1e20) !important;
+  }
+  .liquid-glass-header,
+  .macos-toolbar {
+    background-color: light-dark(#ededed, #2a2a2c) !important;
+  }
+  .card,
+  .liquid-glass-card,
+  .macos-card {
+    background-color: light-dark(#ffffff, #2a2a2c) !important;
   }
 }
-

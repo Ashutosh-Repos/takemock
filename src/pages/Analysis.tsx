@@ -110,10 +110,10 @@ export function Analysis() {
 
       {/* KPI Overview Cards */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="liquid-glass-purple rounded-xl p-3.5 shadow-xs">
+        <div className="card p-3.5">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Overall Accuracy</span>
-            <div className="liquid-glass-pill text-purple-600 dark:text-purple-300 rounded-lg p-1.5">
+            <div className="p-1.5 rounded-md bg-muted text-purple-600 dark:text-purple-400">
               <TrendingUp className="size-3.5" />
             </div>
           </div>
@@ -125,23 +125,23 @@ export function Analysis() {
           </p>
         </div>
 
-        <div className="liquid-glass-blue rounded-xl p-3.5 shadow-xs">
+        <div className="card p-3.5">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Average Score</span>
-            <div className="liquid-glass-pill text-blue-600 dark:text-blue-300 rounded-lg p-1.5">
+            <div className="p-1.5 rounded-md bg-muted text-blue-600 dark:text-blue-400">
               <Award className="size-3.5" />
             </div>
           </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
+          <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-bold font-mono tabular-nums tracking-tight text-foreground">{data.overallScorePercentage}%</span>
           </div>
           <p className="text-muted-foreground mt-1 text-[11px]">Across {data.completedAttempts} test{data.completedAttempts !== 1 ? 's' : ''}</p>
         </div>
 
-        <div className="liquid-glass-amber rounded-xl p-3.5 shadow-xs">
+        <div className="card p-3.5">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Speed Per Question</span>
-            <div className="liquid-glass-pill text-amber-600 dark:text-amber-300 rounded-lg p-1.5">
+            <div className="p-1.5 rounded-md bg-muted text-amber-600 dark:text-amber-400">
               <Clock className="size-3.5" />
             </div>
           </div>
@@ -151,10 +151,10 @@ export function Analysis() {
           <p className="text-muted-foreground mt-1 text-[11px]">Average response pace</p>
         </div>
 
-        <div className="liquid-glass-emerald rounded-xl p-3.5 shadow-xs">
+        <div className="card p-3.5">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Total Time</span>
-            <div className="liquid-glass-pill text-emerald-600 dark:text-emerald-300 rounded-lg p-1.5">
+            <div className="p-1.5 rounded-md bg-muted text-emerald-600 dark:text-emerald-400">
               <Flame className="size-3.5" />
             </div>
           </div>
@@ -314,7 +314,7 @@ export function Analysis() {
       {/* Difficulty & Question Type Breakdown Grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Difficulty Breakdown */}
-        <div className="liquid-glass-card rounded-xl p-4 shadow-xs">
+        <div className="card p-4">
           <h3 className="font-semibold text-sm text-foreground">Mastery by Difficulty</h3>
           <p className="text-muted-foreground text-xs mt-0.5">Performance across difficulty tiers</p>
 
@@ -349,7 +349,7 @@ export function Analysis() {
         </div>
 
         {/* Question Type Breakdown */}
-        <div className="liquid-glass-card rounded-xl p-4 shadow-xs">
+        <div className="card p-4">
           <h3 className="font-semibold text-sm text-foreground">Question Format Accuracy</h3>
           <p className="text-muted-foreground text-xs mt-0.5">Single choice, multiple selection, and numerical</p>
 
@@ -388,7 +388,7 @@ export function Analysis() {
           <span className="badge badge-ghost badge-sm text-[11px]">{data.recentScoreTrends.length} attempt{data.recentScoreTrends.length !== 1 ? 's' : ''}</span>
         </div>
 
-        <div className="liquid-glass-card overflow-x-auto rounded-xl shadow-xs">
+        <div className="card overflow-x-auto">
           <table className="table table-zebra w-full text-xs">
             <thead>
               <tr className="border-border/60 bg-muted/30 text-muted-foreground">

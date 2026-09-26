@@ -4,39 +4,23 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>takemock</title>
+    <title>TakeMock Assessment Suite</title>
     <script>
-      try {
-        const stored = localStorage.getItem('vite-ui-theme');
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const isDark = stored === 'dark' || (!stored && mediaQuery.matches) || (stored === 'system' && mediaQuery.matches);
-        const theme = isDark ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.classList.add(theme);
-
-        mediaQuery.addEventListener('change', (e) => {
-          const currentStored = localStorage.getItem('vite-ui-theme');
-          if (!currentStored || currentStored === 'system') {
-            const nextTheme = e.matches ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', nextTheme);
-            document.documentElement.classList.remove('light', 'dark');
-            document.documentElement.classList.add(nextTheme);
-          }
-        });
-      } catch (e) {}
+      (function() {
+        const media = window.matchMedia('(prefers-color-scheme: dark)');
+        function updateTheme(isDark) {
+          const theme = isDark ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.classList.toggle('dark', isDark);
+          document.documentElement.classList.toggle('light', !isDark);
+        }
+        updateTheme(media.matches);
+        media.addEventListener('change', (e) => updateTheme(e.matches));
+      })();
     </script>
   </head>
   <body>
     <div id="root"></div>
-    <!-- Apple Optical Liquid Glass Refraction Filter Definition -->
-    <svg class="sr-only" aria-hidden="true" style="position: absolute; width: 0; height: 0; pointer-events: none;">
-      <defs>
-        <filter id="apple-liquid-glass-lens" x="-10%" y="-10%" width="120%" height="120%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </defs>
-    </svg>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

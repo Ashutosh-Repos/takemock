@@ -214,13 +214,13 @@ export function Practice() {
         </div>
 
         {/* 1-Click Instant Drill Launch Card */}
-        <div className="liquid-glass-amber flex flex-wrap items-center gap-2.5 rounded-xl p-2 px-3 shadow-xs">
-          <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+        <div className="card flex flex-wrap items-center gap-2.5 p-2.5">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <span>Count:</span>
             <select
               value={drillCount}
               onChange={(e) => setDrillCount(Number(e.target.value))}
-              className="h-7 text-xs rounded-lg liquid-glass-pill px-2 font-mono text-foreground"
+              className="select h-6 text-xs font-mono"
             >
               <option value={5}>5 Qs</option>
               <option value={10}>10 Qs</option>
@@ -229,12 +229,12 @@ export function Practice() {
             </select>
           </div>
 
-          <label className="flex items-center gap-1.5 text-xs font-medium cursor-pointer text-foreground/80">
+          <label className="flex items-center gap-1.5 text-xs font-medium cursor-pointer text-foreground/85">
             <input
               type="checkbox"
               checked={drillTimed}
               onChange={(e) => setDrillTimed(e.target.checked)}
-              className="checkbox checkbox-xs checkbox-primary"
+              className="checkbox"
             />
             <span>Timed (2m/Q)</span>
           </label>
@@ -242,10 +242,10 @@ export function Practice() {
           <button
             onClick={handleLaunchDrill}
             disabled={totalCount === 0 || launchingDrill}
-            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium shadow-xs gap-1.5 rounded-lg active:scale-95"
+            className="btn btn-primary btn-sm h-6 px-3 text-xs gap-1.5"
           >
             {launchingDrill ? (
-              <span className="loading loading-spinner loading-xs" />
+              <span className="loading-spinner" />
             ) : (
               <Zap className="size-3 fill-current" />
             )}
@@ -255,32 +255,30 @@ export function Practice() {
       </div>
 
       {/* Adaptive Facets Filtering Bar */}
-      <div className="liquid-glass-card space-y-3 rounded-xl p-3.5 shadow-xs">
+      <div className="card space-y-3 p-3.5">
         {/* Row 1: Search & Dropdowns */}
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="text-muted-foreground/60 absolute top-2.5 left-2.5 size-3.5" />
+            <Search className="text-muted-foreground/60 absolute top-2 left-2.5 size-3.5 pointer-events-none" />
             <input
               ref={searchInputRef}
-              type="text"
+              type="search"
               placeholder="Search question text or tags..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 pr-3 w-full text-xs rounded-lg liquid-glass-input placeholder:text-muted-foreground/50 focus:outline-primary"
+              className="h-7 pl-8 pr-3 w-full text-xs"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {/* Difficulty Segmented Control */}
-            <div className="liquid-glass-pill p-0.5 rounded-lg flex items-center">
+            <div className="macos-segmented">
               {(['ALL', 'easy', 'medium', 'hard'] as const).map((diff) => (
                 <button
                   key={diff}
                   onClick={() => setSelectedDifficulty(diff)}
-                  className={`px-2 py-0.5 text-xs rounded-md transition-all capitalize font-medium ${
-                    selectedDifficulty === diff
-                      ? 'bg-primary text-primary-foreground shadow-xs font-semibold'
-                      : 'text-muted-foreground hover:text-foreground'
+                  className={`macos-segment-item capitalize ${
+                    selectedDifficulty === diff ? 'active' : ''
                   }`}
                 >
                   {diff}
@@ -471,7 +469,7 @@ export function Practice() {
                   role="button"
                   tabIndex={0}
                   aria-label={`Question ${questionGlobalNum} in ${q.subject}. Click to view solution.`}
-                  className="liquid-glass-card hover:scale-[1.008] cursor-pointer rounded-xl p-3.5 space-y-2.5 group focus-visible:outline-2 focus-visible:outline-primary transition-all"
+                  className="card cursor-pointer p-3.5 space-y-2.5 hover:border-foreground/20 transition-colors focus-visible:outline-2 focus-visible:outline-primary"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-2">
                     <div className="flex flex-wrap items-center gap-1.5">

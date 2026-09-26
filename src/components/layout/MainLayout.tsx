@@ -1,118 +1,166 @@
+import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
-import { AlertCircle, BarChart3, DraftingCompass, Home, Zap } from 'lucide-react';
-import { useTheme } from '../theme-provider';
-import { AnimatedThemeToggler } from '../ui/animated-theme-toggler';
-import { Dock, DockIcon, DockItem, DockLabel } from '../ui/dock';
-import { cn } from '@/lib/utils';
+import {
+  AlertCircle,
+  BarChart3,
+  BookOpen,
+  DraftingCompass,
+  Plus,
+  Zap,
+} from 'lucide-react';
 
-const dockItems = [
+interface NavSegment {
+  id: string;
+  title: string;
+  shortcut: string;
+  icon: typeof BookOpen;
+  href: string;
+  matcher: (path: string) => boolean;
+}
+
+const navSegments: NavSegment[] = [
   {
-    title: 'Home',
-    icon: <Home className="h-full w-full" />,
+    id: 'papers',
+    title: 'Papers',
+    shortcut: '⌘1',
+    icon: BookOpen,
     href: '/',
     matcher: (path: string) => path === '/' || path === '/papers',
   },
   {
+    id: 'drills',
     title: 'Drills',
-    icon: <Zap className="h-full w-full" />,
+    shortcut: '⌘2',
+    icon: Zap,
     href: '/practice',
-    matcher: (path: string) => path.startsWith('/practice') || path.startsWith('/drills') || path.startsWith('/atlas'),
+    matcher: (path: string) =>
+      path.startsWith('/practice') || path.startsWith('/drills') || path.startsWith('/atlas'),
   },
   {
+    id: 'builder',
     title: 'Builder',
-    icon: <DraftingCompass className="h-full w-full" />,
+    shortcut: '⌘3',
+    icon: DraftingCompass,
     href: '/builder',
     matcher: (path: string) => path.startsWith('/builder'),
   },
   {
+    id: 'analysis',
     title: 'Analysis',
-    icon: <BarChart3 className="h-full w-full" />,
+    shortcut: '⌘4',
+    icon: BarChart3,
     href: '/analysis',
     matcher: (path: string) => path.startsWith('/analysis'),
   },
   {
+    id: 'mistakes',
     title: 'Mistakes',
-    icon: <AlertCircle className="h-full w-full" />,
+    shortcut: '⌘5',
+    icon: AlertCircle,
     href: '/mistakes',
     matcher: (path: string) => path.startsWith('/mistakes'),
   },
 ];
 
 export function MainLayout() {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Desktop Keyboard Shortcuts (⌘1 through ⌘5)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+        if (e.key === '1') {
+          e.preventDefault();
+          navigate('/');
+        } else if (e.key === '2') {
+          e.preventDefault();
+          navigate('/practice');
+        } else if (e.key === '3') {
+          e.preventDefault();
+          navigate('/builder');
+        } else if (e.key === '4') {
+          e.preventDefault();
+          navigate('/analysis');
+        } else if (e.key === '5') {
+          e.preventDefault();
+          navigate('/mistakes');
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
+
+  const handleToolbarMouseDown = (e: React.MouseEvent) => {
+    if (
+      e.button === 0 &&
+      !(e.target as HTMLElement).closest('button, a, input, select, textarea, [role="tab"]')
+    ) {
+      import('@tauri-apps/api/window')
+        .then(({ getCurrentWindow }) => getCurrentWindow().startDragging())
+        .catch(() => {});
+    }
+  };
+
   return (
-    <div className="bg-transparent text-foreground relative flex h-screen w-screen flex-col overflow-hidden safe-area-top safe-area-bottom">
-      {/* Native Desktop Window Drag Region */}
+    <div className="bg-transparent text-foreground relative flex h-screen w-screen flex-col overflow-hidden">
+      {/* Native macOS Window Unified Toolbar */}
       <header
         data-tauri-drag-region
-        className="h-8 w-full shrink-0 select-none liquid-glass-header flex items-center justify-between px-3 text-[11px] font-medium text-muted-foreground z-40"
+        onMouseDown={handleToolbarMouseDown}
+        className="h-12 w-full shrink-0 select-none liquid-glass-header flex items-center justify-between px-4 z-40 cursor-default"
       >
-        <div className="flex items-center gap-2 pointer-events-none pl-18 sm:pl-3">
-          <div className="size-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-          <span className="font-semibold tracking-tight text-xs text-foreground">
-            TakeMock
-          </span>
-          <span className="text-[10px] text-muted-foreground/60 font-mono hidden md:inline">
-            v0.1.0
-          </span>
+        {/* Leading edge: Traffic lights inset spacing (80px) + App Identifier */}
+        <div
+          data-tauri-drag-region
+          className="flex items-center gap-2.5 pl-20 sm:pl-20 text-[13px] font-medium"
+        >
+          <span className="font-semibold tracking-tight text-foreground/90">TakeMock</span>
         </div>
 
-        {/* Center Title or Breadcrumb */}
-        <div className="text-[11px] font-medium text-muted-foreground pointer-events-none tracking-tight">
-          {dockItems.find((d) => d.matcher(location.pathname))?.title || 'Assessment'}
-        </div>
+        {/* Center: macOS Native Segmented Navigation Control */}
+        <nav
+          aria-label="Window Navigation"
+          className="macos-segmented shadow-2xs"
+          role="tablist"
+        >
+          {navSegments.map((item) => {
+            const isActive = item.matcher(location.pathname);
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                role="tab"
+                aria-selected={isActive}
+                title={`${item.title} (${item.shortcut})`}
+                onClick={() => navigate(item.href)}
+                className={`macos-segment-item ${isActive ? 'active' : ''}`}
+              >
+                <Icon className="size-3.5" />
+                <span>{item.title}</span>
+              </button>
+            );
+          })}
+        </nav>
 
-        <div className="flex items-center gap-2 pointer-events-none">
-          <span className="text-[10px] font-mono tracking-wide text-muted-foreground/75 px-1.5 py-0.5 rounded border border-border/60 bg-muted/40">
-            LOCAL
-          </span>
+        {/* Trailing edge: Quick Action Button */}
+        <div className="flex items-center gap-2" data-tauri-drag-region>
+          <button
+            onClick={() => navigate('/builder')}
+            className="btn btn-primary btn-sm gap-1.5"
+            title="Create New Paper"
+          >
+            <Plus className="size-3.5" />
+            <span>New Paper</span>
+          </button>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="w-full flex-1 overflow-x-hidden overflow-y-auto relative z-10 pb-20">
+      {/* Main Desktop Window Content Area */}
+      <main className="w-full flex-1 overflow-x-hidden overflow-y-auto relative z-10">
         <Outlet />
       </main>
-
-      <Dock
-        magnification={76}
-        distance={130}
-        direction="horizontal"
-        placement="bottom"
-        containerClassName="bottom-3 left-1/2 -translate-x-1/2"
-        className="macos-dock-glass"
-      >
-        {dockItems.map((item, idx) => {
-          const isActive = location.pathname ? item.matcher(location.pathname) : false;
-          return (
-            <DockItem
-              key={idx}
-              onClick={() => navigate(item.href)}
-              className={cn(
-                'rounded-full border cursor-pointer transition-colors duration-150 flex items-center justify-center',
-                isActive
-                  ? 'bg-primary text-primary-content border-primary shadow-md'
-                  : 'bg-white/20 dark:bg-white/10 hover:bg-white/35 dark:hover:bg-white/20 text-foreground border-white/30 dark:border-white/10 shadow-xs'
-              )}
-            >
-              <DockLabel>{item.title}</DockLabel>
-              <DockIcon>{item.icon}</DockIcon>
-            </DockItem>
-          );
-        })}
-        <DockItem
-          key="theme-icon"
-          className="bg-white/20 dark:bg-white/10 hover:bg-white/35 dark:hover:bg-white/20 text-foreground border-white/30 dark:border-white/10 rounded-full border shadow-xs cursor-pointer transition-colors duration-150 flex items-center justify-center"
-        >
-          <DockLabel>{resolvedTheme === 'dark' ? 'Light Theme' : 'Dark Theme'}</DockLabel>
-          <DockIcon>
-            <AnimatedThemeToggler className="h-full w-full" />
-          </DockIcon>
-        </DockItem>
-      </Dock>
     </div>
   );
 }
