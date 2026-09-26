@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { MathRenderer } from '@/components/shared/MathRenderer';
 import { AiPromptModal } from '@/components/shared/AiPromptModal';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { pickImportFile, sendNativeNotification } from '@/core/native/tauriBridge';
 import { detectContentFormat, sanitizeLlmMarkdown } from '@/core/parser/llmSanitizer';
 import { parseMarkdownQuestions } from '@/core/parser/markdownParser';
@@ -396,48 +397,16 @@ export function Builder() {
           {/* Top Bar Controls */}
           <div className="liquid-glass-emerald flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 shadow-xs">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-base-content/60 text-xs font-semibold uppercase tracking-wider">Format Mode:</span>
-              <div role="radiogroup" aria-label="Format Mode" className="bg-base-200/80 p-0.5 rounded-xl border border-border/60 flex items-center gap-0.5">
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={formatMode === 'AUTO'}
-                  onClick={() => setFormatMode('AUTO')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all active:scale-95 ${
-                    formatMode === 'AUTO'
-                      ? 'bg-card text-foreground shadow-xs'
-                      : 'text-base-content/60 hover:text-base-content'
-                  }`}
-                >
-                  Auto-Detect
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={formatMode === 'FULL_PAPER'}
-                  onClick={() => setFormatMode('FULL_PAPER')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all active:scale-95 ${
-                    formatMode === 'FULL_PAPER'
-                      ? 'bg-card text-foreground shadow-xs'
-                      : 'text-base-content/60 hover:text-base-content'
-                  }`}
-                >
-                  📄 Full Paper
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={formatMode === 'QUESTION_PACK'}
-                  onClick={() => setFormatMode('QUESTION_PACK')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all active:scale-95 ${
-                    formatMode === 'QUESTION_PACK'
-                      ? 'bg-card text-foreground shadow-xs'
-                      : 'text-base-content/60 hover:text-base-content'
-                  }`}
-                >
-                  🧩 Question Pack
-                </button>
-              </div>
+              <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">Format Mode:</span>
+              <SegmentedControl
+                value={formatMode}
+                onValueChange={(val) => setFormatMode(val as IngestFormat)}
+                options={[
+                  { value: 'AUTO', label: 'Auto-Detect' },
+                  { value: 'FULL_PAPER', label: '📄 Full Paper' },
+                  { value: 'QUESTION_PACK', label: '🧩 Question Pack' },
+                ]}
+              />
 
               {detectedFormat && (
                 <span className="badge badge-neutral gap-1 text-[11px]">
