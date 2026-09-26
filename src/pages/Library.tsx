@@ -23,6 +23,7 @@ import { formatTimeSeconds } from '@/core/engine/timingEngine';
 import { saveExportFile } from '@/core/native/tauriBridge';
 import { serializeTestToMarkdown } from '@/core/parser/testSerializer';
 import { assessmentRepository } from '@/core/storage/repository';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import type { QuestionModel } from '@/types/question';
 import type { TestDefinition } from '@/types/test';
 
@@ -218,32 +219,16 @@ export function Library() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b pb-4 border-border">
         <div className="flex items-center gap-3">
           {/* Segmented Filter */}
-          <div className="macos-segmented" role="tablist">
-            <button
-              role="tab"
-              aria-selected={filterMode === 'ALL'}
-              onClick={() => setFilterMode('ALL')}
-              className={`macos-segment-item ${filterMode === 'ALL' ? 'active' : ''}`}
-            >
-              All Papers
-            </button>
-            <button
-              role="tab"
-              aria-selected={filterMode === 'EXAM'}
-              onClick={() => setFilterMode('EXAM')}
-              className={`macos-segment-item ${filterMode === 'EXAM' ? 'active' : ''}`}
-            >
-              Timed Mocks
-            </button>
-            <button
-              role="tab"
-              aria-selected={filterMode === 'PRACTICE'}
-              onClick={() => setFilterMode('PRACTICE')}
-              className={`macos-segment-item ${filterMode === 'PRACTICE' ? 'active' : ''}`}
-            >
-              Practice Sets
-            </button>
-          </div>
+          <SegmentedControl
+            value={filterMode}
+            onValueChange={setFilterMode}
+            size="sm"
+            options={[
+              { value: 'ALL', label: 'All Papers' },
+              { value: 'EXAM', label: 'Timed Mocks' },
+              { value: 'PRACTICE', label: 'Practice Sets' },
+            ]}
+          />
 
           <span className="text-xs text-muted-foreground font-mono">
             {filteredPapers.length} of {papers.length}
@@ -263,22 +248,15 @@ export function Library() {
             />
           </div>
 
-          <div className="macos-segmented" role="group" aria-label="View Mode">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`macos-segment-item px-2 ${viewMode === 'list' ? 'active' : ''}`}
-              title="List View"
-            >
-              <List className="size-3.5" />
-            </button>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`macos-segment-item px-2 ${viewMode === 'grid' ? 'active' : ''}`}
-              title="Grid View"
-            >
-              <LayoutGrid className="size-3.5" />
-            </button>
-          </div>
+          <SegmentedControl
+            value={viewMode}
+            onValueChange={setViewMode}
+            size="sm"
+            options={[
+              { value: 'list', icon: List, label: '', title: 'List View' },
+              { value: 'grid', icon: LayoutGrid, label: '', title: 'Grid View' },
+            ]}
+          />
         </div>
       </div>
 

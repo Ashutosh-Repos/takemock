@@ -10,6 +10,9 @@ import {
 } from 'lucide-react';
 import { MathRenderer } from '@/components/shared/MathRenderer';
 import { QuestionDetailModal } from '@/components/shared/QuestionDetailModal';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { assessmentRepository } from '@/core/storage/repository';
 import type { QuestionModel } from '@/types/question';
 import type { TestDefinition } from '@/types/test';
@@ -214,35 +217,42 @@ export function Practice() {
         </div>
 
         {/* 1-Click Instant Drill Launch Card */}
-        <div className="card flex flex-wrap items-center gap-2.5 p-2.5">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <span>Count:</span>
-            <select
-              value={drillCount}
-              onChange={(e) => setDrillCount(Number(e.target.value))}
-              className="select h-6 text-xs font-mono"
-            >
-              <option value={5}>5 Qs</option>
-              <option value={10}>10 Qs</option>
-              <option value={20}>20 Qs</option>
-              <option value={30}>30 Qs</option>
-            </select>
+        <div className="card flex flex-wrap items-center gap-4 p-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+              Questions:
+            </span>
+            <div className="w-28 sm:w-36">
+              <Slider
+                value={drillCount}
+                min={5}
+                max={30}
+                step={5}
+                size="sm"
+                tickMarks={6}
+                showValueTooltip
+                formatValue={(val) => `${val} Qs`}
+                onValueChange={setDrillCount}
+              />
+            </div>
+            <span className="text-xs font-mono font-medium tabular-nums text-foreground/80 w-6">
+              {drillCount}
+            </span>
           </div>
 
-          <label className="flex items-center gap-1.5 text-xs font-medium cursor-pointer text-foreground/85">
-            <input
-              type="checkbox"
-              checked={drillTimed}
-              onChange={(e) => setDrillTimed(e.target.checked)}
-              className="checkbox"
-            />
-            <span>Timed (2m/Q)</span>
-          </label>
+          <div className="h-4 w-px bg-border/60" />
+
+          <Switch
+            checked={drillTimed}
+            onCheckedChange={setDrillTimed}
+            label="Timed (2m/Q)"
+            size="mini"
+          />
 
           <button
             onClick={handleLaunchDrill}
             disabled={totalCount === 0 || launchingDrill}
-            className="btn btn-primary btn-sm h-6 px-3 text-xs gap-1.5"
+            className="btn btn-primary btn-sm h-6 px-3 text-xs gap-1.5 ml-auto"
           >
             {launchingDrill ? (
               <span className="loading-spinner" />
@@ -272,19 +282,17 @@ export function Practice() {
 
           <div className="flex flex-wrap items-center gap-2">
             {/* Difficulty Segmented Control */}
-            <div className="macos-segmented">
-              {(['ALL', 'easy', 'medium', 'hard'] as const).map((diff) => (
-                <button
-                  key={diff}
-                  onClick={() => setSelectedDifficulty(diff)}
-                  className={`macos-segment-item capitalize ${
-                    selectedDifficulty === diff ? 'active' : ''
-                  }`}
-                >
-                  {diff}
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              value={selectedDifficulty}
+              onValueChange={(val) => setSelectedDifficulty(val as any)}
+              size="sm"
+              options={[
+                { value: 'ALL', label: 'All' },
+                { value: 'easy', label: 'Easy' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'hard', label: 'Hard' },
+              ]}
+            />
 
             {/* Question Type */}
             <select

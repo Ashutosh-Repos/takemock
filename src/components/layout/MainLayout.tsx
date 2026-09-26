@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import {
   AlertCircle,
@@ -6,8 +6,11 @@ import {
   BookOpen,
   DraftingCompass,
   Plus,
+  Sliders,
   Zap,
 } from 'lucide-react';
+import { SegmentedControl } from '@/components/ui/segmented-control';
+import { MacPreferencesModal } from '@/components/shared/MacPreferencesModal';
 
 interface NavSegment {
   id: string;
@@ -65,8 +68,15 @@ const navSegments: NavSegment[] = [
 export function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [prefsOpen, setPrefsOpen] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('prefs') === '1';
+    } catch {
+      return false;
+    }
+  });
 
-  // Desktop Keyboard Shortcuts (⌘1 through ⌘5)
+  // Desktop Keyboard Shortcuts (⌘1 through ⌘5, plus ⌘, for Preferences)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
@@ -85,6 +95,9 @@ export function MainLayout() {
         } else if (e.key === '5') {
           e.preventDefault();
           navigate('/mistakes');
+        } else if (e.key === ',') {
+          e.preventDefault();
+          setPrefsOpen((prev) => !prev);
         }
       }
     };
@@ -120,32 +133,32 @@ export function MainLayout() {
         </div>
 
         {/* Center: macOS Native Segmented Navigation Control */}
-        <nav
-          aria-label="Window Navigation"
-          className="macos-segmented shadow-2xs"
-          role="tablist"
-        >
-          {navSegments.map((item) => {
-            const isActive = item.matcher(location.pathname);
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                role="tab"
-                aria-selected={isActive}
-                title={`${item.title} (${item.shortcut})`}
-                onClick={() => navigate(item.href)}
-                className={`macos-segment-item ${isActive ? 'active' : ''}`}
-              >
-                <Icon className="size-3.5" />
-                <span>{item.title}</span>
-              </button>
-            );
-          })}
-        </nav>
+        <SegmentedControl
+          ariaLabel="Window Navigation"
+          variant="toolbar"
+          value={navSegments.find((item) => item.matcher(location.pathname))?.id}
+          onValueChange={(id) => {
+            const target = navSegments.find((item) => item.id === id);
+            if (target) navigate(target.href);
+          }}
+          options={navSegments.map((item) => ({
+            value: item.id,
+            label: item.title,
+            icon: item.icon,
+            title: `${item.title} (${item.shortcut})`,
+          }))}
+        />
 
-        {/* Trailing edge: Quick Action Button */}
-        <div className="flex items-center gap-2" data-tauri-drag-region>
+        {/* Trailing edge: Quick Action Button & Component Inspector */}
+        <div className="flex items-center gap-1.5" data-tauri-drag-region>
+          <button
+            onClick={() => setPrefsOpen(true)}
+            className="btn btn-sm h-7 w-7 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
+            title="macOS Components Inspector (⌘,)"
+          >
+            <Sliders className="size-3.5" />
+          </button>
+
           <button
             onClick={() => navigate('/builder')}
             className="btn btn-primary btn-sm gap-1.5"
@@ -161,6 +174,9 @@ export function MainLayout() {
       <main className="w-full flex-1 overflow-x-hidden overflow-y-auto relative z-10">
         <Outlet />
       </main>
+
+      {/* macOS Components & Preferences Modal */}
+      <MacPreferencesModal open={prefsOpen} onOpenChange={setPrefsOpen} />
     </div>
   );
 }
