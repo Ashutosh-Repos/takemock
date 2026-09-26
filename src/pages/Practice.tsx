@@ -229,25 +229,10 @@ export function Practice() {
             {totalCount} question{totalCount !== 1 ? 's' : ''} available across topics. Configure and practice below.
           </p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleLaunchDrill}
-            disabled={totalCount === 0 || launchingDrill}
-            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium gap-1.5 shadow-xs"
-          >
-            {launchingDrill ? (
-              <span className="loading-spinner" />
-            ) : (
-              <Zap className="size-3.5 fill-current" />
-            )}
-            <span>Launch Drill ({Math.min(effectiveDrillCount, totalCount)})</span>
-          </button>
-        </div>
       </div>
 
-      {/* Drill Configuration Toolbar Card */}
-      <div className="card flex flex-wrap items-center justify-between gap-4 p-3.5 sm:p-4">
+      {/* Drill Configuration Toolbar Card (Liquid Glass) */}
+      <div className="card liquid-glass-card flex flex-wrap items-center justify-between gap-4 p-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-foreground whitespace-nowrap">
@@ -257,13 +242,13 @@ export function Practice() {
               {effectiveDrillCount} Qs
             </span>
           </div>
-          <div className="w-36 sm:w-48">
+          <div className="w-40 sm:w-52">
             <Slider
               value={effectiveDrillCount}
               min={1}
               max={maxDrillQuestions}
               step={maxDrillQuestions > 10 ? 5 : 1}
-              size="regular"
+              variant="capsule"
               disabled={totalCount === 0}
               showValueTooltip
               formatValue={(val) => `${val} Questions`}
@@ -301,14 +286,14 @@ export function Practice() {
           <button
             onClick={handleLaunchDrill}
             disabled={totalCount === 0 || launchingDrill}
-            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium gap-1.5 shadow-xs"
+            className="btn btn-primary h-8 px-4 text-xs font-semibold rounded-lg inline-flex items-center justify-center gap-1.5 shadow-sm"
           >
             {launchingDrill ? (
               <span className="loading-spinner" />
             ) : (
               <Zap className="size-3.5 fill-current" />
             )}
-            <span>Launch ({Math.min(effectiveDrillCount, totalCount)})</span>
+            <span>Launch Drill ({Math.min(effectiveDrillCount, totalCount)})</span>
           </button>
         </div>
       </div>

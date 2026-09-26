@@ -122,7 +122,7 @@ export function MainLayout() {
   };
 
   return (
-    <div className="relative flex h-screen w-screen flex-col overflow-hidden text-foreground bg-transparent">
+    <div className="macos-canvas relative flex h-screen w-screen flex-col overflow-hidden text-foreground">
       {/* Native macOS Window Unified Toolbar */}
       <header
         data-tauri-drag-region
