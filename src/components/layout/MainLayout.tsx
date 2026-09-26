@@ -159,29 +159,29 @@ export function MainLayout() {
           {/* Quick Appearance Toggle */}
           <button
             onClick={() => setTheme(theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system')}
-            className="btn btn-sm h-7 w-7 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
+            className="macos-toolbar-btn"
             title={`macOS Appearance: ${theme === 'system' ? `Auto/System (${resolvedTheme})` : theme} (Click to switch)`}
           >
             {theme === 'system' ? (
-              <Monitor className="size-3.5" />
+              <Monitor className="size-4" />
             ) : resolvedTheme === 'dark' ? (
-              <Moon className="size-3.5" />
+              <Moon className="size-4" />
             ) : (
-              <Sun className="size-3.5" />
+              <Sun className="size-4" />
             )}
           </button>
 
           <button
             onClick={() => setPrefsOpen(true)}
-            className="btn btn-sm h-7 w-7 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
+            className="macos-toolbar-btn"
             title="macOS Components Inspector (⌘,)"
           >
-            <Sliders className="size-3.5" />
+            <Sliders className="size-4" />
           </button>
 
           <button
             onClick={() => navigate('/builder')}
-            className="btn btn-primary btn-sm gap-1.5"
+            className="btn btn-primary btn-sm h-7 px-3 gap-1.5 font-medium"
             title="Create New Paper"
           >
             <Plus className="size-3.5" />

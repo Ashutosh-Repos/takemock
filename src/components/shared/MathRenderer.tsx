@@ -57,18 +57,20 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content, className =
   }, [content]);
 
   return (
-    <div className={`prose max-w-none leading-relaxed text-base-content ${className}`}>
+    <div className={`leading-relaxed text-foreground ${className}`}>
       {renderedParts.map((part, idx) => {
         if (part.type === 'math') {
           try {
-            const html = katex.renderToString(part.value, {
+            // In LaTeX, % is a comment character. Escape unescaped % so percentages render correctly
+            const sanitizedValue = part.value.replace(/(?<!\\)%/g, '\\%');
+            const html = katex.renderToString(sanitizedValue, {
               displayMode: part.isBlock,
               throwOnError: false,
             });
             return (
               <span
                 key={idx}
-                className={part.isBlock ? 'my-3 block overflow-x-auto py-1 text-center' : 'inline-block px-1'}
+                className={part.isBlock ? 'my-2 block overflow-x-auto py-1 text-center' : 'inline'}
                 dangerouslySetInnerHTML={{ __html: html }}
               />
             );

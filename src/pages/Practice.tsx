@@ -49,6 +49,7 @@ export function Practice() {
   // Drill Launcher Drawer
   const [drillCount, setDrillCount] = useState(10);
   const [drillTimed, setDrillTimed] = useState(false);
+  const [paceMinutes, setPaceMinutes] = useState(1.5);
   const [launchingDrill, setLaunchingDrill] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -169,7 +170,7 @@ export function Practice() {
         ],
         timing: {
           mode: drillTimed ? 'GLOBAL' : 'NONE',
-          totalDurationSeconds: drillTimed ? selectedSubset.length * 120 : 0,
+          totalDurationSeconds: drillTimed ? Math.round(selectedSubset.length * paceMinutes * 60) : 0,
           allowPause: true,
           autoSubmitOnExpiry: drillTimed,
         },
@@ -205,78 +206,110 @@ export function Practice() {
     }
   };
 
-  // Dynamic drill max based on available questions (must be > min=5)
-  const maxDrillQuestions = Math.max(10, Math.min(totalCount || 50, 50));
-  const timePerQuestion = 2; // minutes per question
-  const totalDrillMinutes = drillCount * timePerQuestion;
+  // Dynamic drill max based on available questions
+  const availableQuestions = totalCount;
+  const maxDrillQuestions = Math.max(1, Math.min(availableQuestions || 50, 100));
+  const effectiveDrillCount = Math.min(drillCount, maxDrillQuestions);
+  const totalDrillMinutes = Math.round(effectiveDrillCount * paceMinutes);
 
   // Auto-clamp drill count when filters reduce available pool
   useEffect(() => {
-    if (totalCount > 0 && drillCount > maxDrillQuestions) {
-      setDrillCount(Math.max(5, maxDrillQuestions));
+    if (availableQuestions > 0 && drillCount > availableQuestions) {
+      setDrillCount(availableQuestions);
     }
-  }, [totalCount, maxDrillQuestions]);
+  }, [availableQuestions, drillCount]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 px-4 py-5 pb-24 md:px-6">
-      {/* Header */}
-      <div className="border-border/60 flex flex-col justify-between gap-4 border-b pb-5 md:flex-row md:items-center">
+    <div className="mx-auto max-w-6xl w-full px-6 py-6 pb-20 space-y-6">
+      {/* Standard Header */}
+      <div className="flex flex-col justify-between gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Drills</h1>
-          <p className="text-muted-foreground mt-1 text-sm font-mono tabular-nums">
-            {totalCount} question{totalCount !== 1 ? 's' : ''} available across topics
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Drills</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {totalCount} question{totalCount !== 1 ? 's' : ''} available across topics. Configure and practice below.
           </p>
         </div>
 
-        {/* 1-Click Instant Drill Launch Card (macOS Desktop Toolbar Control Group) */}
-        <div className="card flex flex-wrap items-center justify-between gap-4 p-4 sm:p-4.5">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold tracking-tight text-foreground whitespace-nowrap">
-                Questions:
-              </span>
-              <span className="badge font-mono text-xs font-semibold tabular-nums text-primary border-primary/30">
-                {drillCount} Qs
-              </span>
-            </div>
-            <div className="w-36 sm:w-44">
-              <Slider
-                value={drillCount}
-                min={5}
-                max={maxDrillQuestions}
-                step={5}
-                size="regular"
-                tickMarks={Math.min(Math.floor(maxDrillQuestions / 5), 10)}
-                showValueTooltip
-                formatValue={(val) => `${val} Questions`}
-                onValueChange={setDrillCount}
-              />
-            </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleLaunchDrill}
+            disabled={totalCount === 0 || launchingDrill}
+            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium gap-1.5 shadow-xs"
+          >
+            {launchingDrill ? (
+              <span className="loading-spinner" />
+            ) : (
+              <Zap className="size-3.5 fill-current" />
+            )}
+            <span>Launch Drill ({Math.min(effectiveDrillCount, totalCount)})</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Drill Configuration Toolbar Card */}
+      <div className="card flex flex-wrap items-center justify-between gap-4 p-3.5 sm:p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-foreground whitespace-nowrap">
+              Questions:
+            </span>
+            <span className="badge font-mono text-xs font-semibold tabular-nums text-primary border-primary/30">
+              {effectiveDrillCount} Qs
+            </span>
           </div>
-
-          <div className="hidden sm:block h-5 w-px bg-border" />
-
-          <div className="flex items-center gap-3">
-            <Switch
-              checked={drillTimed}
-              onCheckedChange={setDrillTimed}
-              label={drillTimed ? `Timed (${totalDrillMinutes}m)` : 'Untimed'}
-              variant="accent"
+          <div className="w-36 sm:w-48">
+            <Slider
+              value={effectiveDrillCount}
+              min={1}
+              max={maxDrillQuestions}
+              step={maxDrillQuestions > 10 ? 5 : 1}
+              size="regular"
+              disabled={totalCount === 0}
+              showValueTooltip
+              formatValue={(val) => `${val} Questions`}
+              onValueChange={setDrillCount}
             />
-
-            <button
-              onClick={handleLaunchDrill}
-              disabled={totalCount === 0 || launchingDrill}
-              className="btn btn-primary h-8 px-3.5 text-xs font-medium rounded-lg inline-flex items-center justify-center gap-1.5"
-            >
-              {launchingDrill ? (
-                <span className="loading-spinner" />
-              ) : (
-                <Zap className="size-3.5 fill-current" />
-              )}
-              <span>Launch Drill ({Math.min(drillCount, totalCount)})</span>
-            </button>
           </div>
+        </div>
+
+        <div className="hidden sm:block h-5 w-px bg-border/60" />
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Switch
+            checked={drillTimed}
+            onCheckedChange={setDrillTimed}
+            label={drillTimed ? `Timed (${totalDrillMinutes}m)` : 'Untimed'}
+            variant="accent"
+          />
+
+          {drillTimed && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="text-[11px] font-medium">Pace:</span>
+              <select
+                value={paceMinutes}
+                onChange={(e) => setPaceMinutes(parseFloat(e.target.value))}
+                className="h-6 text-xs rounded border border-border bg-input px-1.5 text-foreground focus:outline-none focus:border-primary"
+              >
+                <option value={1}>1.0 m/Q (Speed)</option>
+                <option value={1.5}>1.5 m/Q (Standard)</option>
+                <option value={2}>2.0 m/Q (Deep)</option>
+                <option value={3}>3.0 m/Q (Conceptual)</option>
+              </select>
+            </div>
+          )}
+
+          <button
+            onClick={handleLaunchDrill}
+            disabled={totalCount === 0 || launchingDrill}
+            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium gap-1.5 shadow-xs"
+          >
+            {launchingDrill ? (
+              <span className="loading-spinner" />
+            ) : (
+              <Zap className="size-3.5 fill-current" />
+            )}
+            <span>Launch ({Math.min(effectiveDrillCount, totalCount)})</span>
+          </button>
         </div>
       </div>
 
@@ -284,15 +317,15 @@ export function Practice() {
       <div className="card space-y-3.5 p-4 sm:p-4.5">
         {/* Row 1: Search & Dropdowns */}
         <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="text-muted-foreground absolute top-2.5 left-2.5 size-3.5 pointer-events-none" />
+          <div className="macos-search-field flex-1 min-w-[200px]">
+            <Search className="size-3.5" />
             <input
               ref={searchInputRef}
               type="search"
               placeholder="Search question text or tags..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 pr-3 w-full text-xs rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              className="w-full text-xs"
             />
           </div>
 

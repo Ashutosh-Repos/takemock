@@ -65,12 +65,12 @@ export function MistakeVault() {
       : data.bookmarkedQuestions;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5 p-4 pb-36 md:p-6">
-      {/* Header */}
-      <div className="border-border flex flex-col justify-between gap-3 border-b pb-4 md:flex-row md:items-center">
+    <div className="mx-auto max-w-6xl w-full px-6 py-6 pb-20 space-y-6">
+      {/* Standard Header */}
+      <div className="flex flex-col justify-between gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-lg font-bold tracking-tight md:text-xl text-foreground">Mistakes</h1>
-          <p className="text-muted-foreground mt-0.5 text-xs">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Mistakes</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             {data.unresolvedQuestions.length} question{data.unresolvedQuestions.length !== 1 ? 's' : ''} to review and master.
           </p>
         </div>
@@ -80,7 +80,7 @@ export function MistakeVault() {
           <button
             onClick={() => handleLaunchMistakeDrill(10)}
             disabled={data.unresolvedQuestions.length === 0}
-            className="btn btn-primary btn-sm font-medium shadow-xs gap-1.5 rounded-md active:scale-95"
+            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium shadow-xs gap-1.5 rounded-md active:scale-95"
           >
             <Play className="size-3.5 fill-current" />
             Practice Drill ({Math.min(10, data.unresolvedQuestions.length)})

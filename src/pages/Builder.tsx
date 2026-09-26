@@ -352,12 +352,12 @@ export function Builder() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-4 pb-36 md:p-8">
-      {/* Header */}
-      <div className="border-border flex flex-col justify-between gap-3 border-b pb-4 md:flex-row md:items-center">
+    <div className="mx-auto max-w-6xl w-full px-6 py-6 pb-20 space-y-6">
+      {/* Standard Header */}
+      <div className="flex flex-col justify-between gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-lg font-bold tracking-tight md:text-xl text-foreground">Builder</h1>
-          <p className="text-muted-foreground mt-0.5 text-xs">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Builder</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Import questions from text, files, or AI, or compose a paper visually.
           </p>
         </div>
@@ -379,7 +379,7 @@ export function Builder() {
         /* ====================================================================== */
         <div className="space-y-6">
           {/* Top Bar Controls */}
-          <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+          <div className="card flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">Format Mode:</span>
               <SegmentedControl
@@ -404,7 +404,7 @@ export function Builder() {
                 type="button"
                 onClick={handleCleanChatter}
                 disabled={!rawText.trim()}
-                className="btn btn-ghost btn-xs text-base-content/80 gap-1 border border-border/60 active:scale-95"
+                className="btn btn-ghost btn-sm h-7 text-xs text-foreground/80 gap-1.5 border border-border/60 active:scale-95"
                 title="Strips conversational greetings and markdown backticks"
                 aria-label="Strip AI conversation chatter"
               >
@@ -415,20 +415,20 @@ export function Builder() {
               <button
                 type="button"
                 onClick={handleNativeFilePick}
-                className="btn btn-outline btn-xs gap-1 border-border/70 active:scale-95"
+                className="btn btn-outline btn-sm h-7 text-xs gap-1.5 border-border/70 active:scale-95"
                 aria-label="Pick file from computer"
               >
-                <FolderOpen className="size-3" />
+                <FolderOpen className="size-3.5" />
                 Pick File (.md, .json)
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowAiModal(true)}
-                className="btn btn-secondary btn-xs gap-1 shadow-2xs active:scale-95"
+                className="btn btn-secondary btn-sm h-7 text-xs gap-1.5 shadow-2xs active:scale-95"
                 aria-label="Open AI Prompt Generator"
               >
-                <Bot className="size-3" />
+                <Bot className="size-3.5" />
                 AI Prompt Helper
               </button>
             </div>
@@ -1071,18 +1071,18 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
               )}
 
               {/* Search */}
-              <div className="relative">
-                <Search className="text-base-content/40 absolute top-2 left-2 size-3.5" />
+              <div className="macos-search-field">
+                <Search className="size-3.5" />
                 <input
-                  type="text"
+                  type="search"
                   placeholder="Search questions or tags..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="input input-bordered input-xs pl-7 w-48 sm:w-64"
+                  className="w-48 sm:w-64"
                 />
               </div>
 
-              <span className="text-base-content/50 text-xs">
+              <span className="text-muted-foreground text-xs">
                 {filteredQuestions.length} available • {selectedQuestionIds.size} selected
               </span>
             </div>

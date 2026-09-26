@@ -214,9 +214,28 @@ export function Library() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5 px-6 py-6 pb-12">
+    <div className="mx-auto max-w-6xl w-full px-6 py-6 pb-20 space-y-6">
+      {/* Standard Header */}
+      <div className="flex flex-col justify-between gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Papers</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Full examination papers, blueprint mocks, and practice sets.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/builder')}
+            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium gap-1.5 shadow-xs"
+          >
+            <Plus className="size-3.5" />
+            <span>Create Paper</span>
+          </button>
+        </div>
+      </div>
+
       {/* Desktop Sub-Toolbar / Action Bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b pb-4 border-border">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b pb-4 border-border/60">
         <div className="flex items-center gap-3">
           {/* Segmented Filter */}
           <SegmentedControl
@@ -238,7 +257,7 @@ export function Library() {
         {/* Search & View Switcher */}
         <div className="flex items-center gap-2.5">
           <div className="macos-search-field">
-            <Search className="size-3.5 absolute left-2 text-muted-foreground pointer-events-none" />
+            <Search className="size-3.5" />
             <input
               type="search"
               placeholder="Search papers..."

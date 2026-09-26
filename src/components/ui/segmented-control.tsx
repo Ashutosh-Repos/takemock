@@ -37,6 +37,7 @@ export function SegmentedControl<T extends string = string>({
 
   const selectedValue = controlledValue !== undefined ? controlledValue : internalValue;
   const layoutId = React.useId();
+  const cleanId = React.useMemo(() => layoutId.replace(/[^a-zA-Z0-9_-]/g, '_'), [layoutId]);
 
   const handleSelect = (val: T, disabled?: boolean) => {
     if (disabled) return;
@@ -46,7 +47,7 @@ export function SegmentedControl<T extends string = string>({
     onValueChange?.(val);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     const enabledOptions = options.filter((o) => !o.disabled);
     const currentIndex = enabledOptions.findIndex((o) => o.value === selectedValue);
 
@@ -79,7 +80,7 @@ export function SegmentedControl<T extends string = string>({
         className
       )}
     >
-      {options.map((option, index) => {
+      {options.map((option) => {
         const isSelected = selectedValue === option.value;
         const Icon = option.icon;
 
@@ -92,9 +93,10 @@ export function SegmentedControl<T extends string = string>({
             aria-selected={isSelected}
             disabled={option.disabled}
             data-disabled={option.disabled ? '' : undefined}
+            data-active={isSelected ? '' : undefined}
             tabIndex={isSelected ? 0 : -1}
             onClick={() => handleSelect(option.value, option.disabled)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
+            onKeyDown={handleKeyDown}
             className={cn(
               'macos-segment-item',
               isSelected && 'active'
@@ -103,7 +105,7 @@ export function SegmentedControl<T extends string = string>({
             {/* Smooth animated sliding pill */}
             {isSelected && (
               <motion.div
-                layoutId={`segment-pill-${layoutId}`}
+                layoutId={`segment-pill-${cleanId}`}
                 className="macos-segment-pill"
                 transition={{
                   type: 'spring',

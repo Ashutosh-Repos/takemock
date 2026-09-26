@@ -104,29 +104,35 @@ export function Result() {
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-7xl space-y-6 p-4 pb-36 md:p-6">
-      {/* Header */}
-      <div className="border-border flex flex-col justify-between gap-3 border-b pb-4 md:flex-row md:items-center">
+    <div className="mx-auto min-h-screen max-w-6xl w-full px-6 py-6 pb-20 space-y-6">
+      {/* Standard Header */}
+      <div className="flex flex-col justify-between gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold tracking-tight md:text-xl text-foreground">Scorecard</h1>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">Scorecard</h1>
             <span className={`badge ${badgeColor} badge-xs font-semibold`}>
               {performanceTier}
             </span>
           </div>
-          <p className="text-muted-foreground mt-0.5 text-xs">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {snapshot.testTitle}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={() => navigate('/mistakes')} className="btn btn-ghost btn-sm gap-1.5 text-xs rounded-md">
+          <button
+            onClick={() => navigate('/mistakes')}
+            className="btn btn-ghost btn-sm h-7 px-2.5 gap-1.5 text-xs rounded-md"
+          >
             <AlertCircle className="size-3.5" />
             Mistakes
           </button>
-          <button onClick={() => navigate('/')} className="btn btn-primary btn-sm gap-1.5 text-xs font-medium rounded-md shadow-xs">
+          <button
+            onClick={() => navigate('/')}
+            className="btn btn-primary btn-sm h-7 px-3 gap-1.5 text-xs font-medium rounded-md shadow-xs"
+          >
             <Home className="size-3.5" />
-            Home
+            Papers
           </button>
         </div>
       </div>
