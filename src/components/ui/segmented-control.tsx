@@ -104,7 +104,7 @@ export function SegmentedControl<T extends string = string>({
             {isSelected && (
               <motion.div
                 layoutId={`segment-pill-${layoutId}`}
-                className="macos-segment-indicator"
+                className="macos-segment-pill"
                 transition={{
                   type: 'spring',
                   stiffness: 500,

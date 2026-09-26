@@ -73,6 +73,13 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       onValueCommitted?.(num);
     };
 
+    React.useEffect(() => {
+      if (!isDragging) return;
+      const handlePointerUp = () => setIsDragging(false);
+      window.addEventListener('pointerup', handlePointerUp);
+      return () => window.removeEventListener('pointerup', handlePointerUp);
+    }, [isDragging]);
+
     // Calculate ticks if enabled
     const tickList = React.useMemo(() => {
       if (!tickMarks) return null;
@@ -106,17 +113,16 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           ref={ref}
           id={id}
           name={name}
+          aria-label={typeof label === 'string' ? label : undefined}
           min={min}
           max={max}
           step={step}
-          value={value}
-          defaultValue={defaultValue}
+          value={value !== undefined ? value : undefined}
+          defaultValue={defaultValue ?? min}
           disabled={disabled}
           onValueChange={handleValueChange}
           onValueCommitted={handleValueCommitted}
           onPointerDown={() => setIsDragging(true)}
-          onPointerUp={() => setIsDragging(false)}
-          onPointerLeave={() => setIsDragging(false)}
           className="w-full"
         >
           <BaseSlider.Control

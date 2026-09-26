@@ -24,7 +24,7 @@ export const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(
       {...props}
     >
       {children}
-      <BaseTabs.Indicator className="macos-segment-indicator" />
+      <BaseTabs.Indicator className="macos-tabs-indicator" />
     </BaseTabs.List>
   )
 );
