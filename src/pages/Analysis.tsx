@@ -110,10 +110,10 @@ export function Analysis() {
 
       {/* KPI Overview Cards */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="liquid-glass-card rounded-xl p-3.5 shadow-xs">
+        <div className="liquid-glass-purple rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Overall Accuracy</span>
-            <div className="liquid-glass-pill text-foreground/80 rounded-lg p-1.5">
+            <div className="liquid-glass-pill text-purple-600 dark:text-purple-300 rounded-lg p-1.5">
               <TrendingUp className="size-3.5" />
             </div>
           </div>
@@ -125,10 +125,10 @@ export function Analysis() {
           </p>
         </div>
 
-        <div className="liquid-glass-card rounded-xl p-3.5 shadow-xs">
+        <div className="liquid-glass-blue rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Average Score</span>
-            <div className="liquid-glass-pill text-foreground/80 rounded-lg p-1.5">
+            <div className="liquid-glass-pill text-blue-600 dark:text-blue-300 rounded-lg p-1.5">
               <Award className="size-3.5" />
             </div>
           </div>
@@ -138,10 +138,10 @@ export function Analysis() {
           <p className="text-muted-foreground mt-1 text-[11px]">Across {data.completedAttempts} test{data.completedAttempts !== 1 ? 's' : ''}</p>
         </div>
 
-        <div className="liquid-glass-card rounded-xl p-3.5 shadow-xs">
+        <div className="liquid-glass-amber rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Speed Per Question</span>
-            <div className="liquid-glass-pill text-foreground/80 rounded-lg p-1.5">
+            <div className="liquid-glass-pill text-amber-600 dark:text-amber-300 rounded-lg p-1.5">
               <Clock className="size-3.5" />
             </div>
           </div>
@@ -151,10 +151,10 @@ export function Analysis() {
           <p className="text-muted-foreground mt-1 text-[11px]">Average response pace</p>
         </div>
 
-        <div className="liquid-glass-card rounded-xl p-3.5 shadow-xs">
+        <div className="liquid-glass-emerald rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">Total Time</span>
-            <div className="liquid-glass-pill text-foreground/80 rounded-lg p-1.5">
+            <div className="liquid-glass-pill text-emerald-600 dark:text-emerald-300 rounded-lg p-1.5">
               <Flame className="size-3.5" />
             </div>
           </div>
@@ -185,7 +185,7 @@ export function Analysis() {
             return (
               <div
                 key={subj.subject}
-                className="bg-card border-border overflow-hidden rounded-lg border shadow-2xs transition-all"
+                className="liquid-glass-card overflow-hidden rounded-xl transition-all"
               >
                 <div
                   role="button"
@@ -388,10 +388,10 @@ export function Analysis() {
           <span className="badge badge-ghost badge-sm text-[11px]">{data.recentScoreTrends.length} attempt{data.recentScoreTrends.length !== 1 ? 's' : ''}</span>
         </div>
 
-        <div className="bg-card border-border overflow-x-auto rounded-lg border shadow-2xs">
+        <div className="liquid-glass-card overflow-x-auto rounded-xl shadow-xs">
           <table className="table table-zebra w-full text-xs">
             <thead>
-              <tr className="border-border bg-muted/40 text-muted-foreground">
+              <tr className="border-border/60 bg-muted/30 text-muted-foreground">
                 <th>Exam / Paper</th>
                 <th>Date</th>
                 <th>Score</th>

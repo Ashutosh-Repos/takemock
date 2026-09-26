@@ -214,7 +214,7 @@ export function Practice() {
         </div>
 
         {/* 1-Click Instant Drill Launch Card */}
-        <div className="liquid-glass-card flex flex-wrap items-center gap-2.5 rounded-xl p-2 px-3 shadow-xs">
+        <div className="liquid-glass-amber flex flex-wrap items-center gap-2.5 rounded-xl p-2 px-3 shadow-xs">
           <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
             <span>Count:</span>
             <select

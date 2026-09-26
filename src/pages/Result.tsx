@@ -134,7 +134,7 @@ export function Result() {
       {/* Hero Stats Section */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total Score */}
-        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+        <div className="liquid-glass-blue rounded-xl p-3.5 shadow-xs">
           <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Total Score</div>
           <div className="text-primary mt-1 text-2xl font-bold font-mono tabular-nums">
             {scoreResult.totalMarksAwarded}{' '}
@@ -144,7 +144,7 @@ export function Result() {
         </div>
 
         {/* Accuracy */}
-        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+        <div className="liquid-glass-emerald rounded-xl p-3.5 shadow-xs">
           <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Accuracy</div>
           <div className="text-foreground mt-1 text-2xl font-bold font-mono tabular-nums">{scoreResult.accuracy}%</div>
           <div className="text-[11px] text-muted-foreground mt-1">
@@ -153,7 +153,7 @@ export function Result() {
         </div>
 
         {/* Breakdown Counts */}
-        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+        <div className="liquid-glass-purple rounded-xl p-3.5 shadow-xs">
           <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Breakdown</div>
           <div className="flex items-center gap-1.5 mt-1 font-medium text-xs font-mono">
             <span className="text-emerald-600 dark:text-emerald-400">{scoreResult.totalCorrect} Correct</span> ·
@@ -166,7 +166,7 @@ export function Result() {
         </div>
 
         {/* Time Spent */}
-        <div className="bg-card border-border rounded-lg border p-3.5 shadow-2xs">
+        <div className="liquid-glass-amber rounded-xl p-3.5 shadow-xs">
           <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Total Time</div>
           <div className="text-foreground mt-1 text-2xl font-bold font-mono tabular-nums">
             {formatTimeSeconds(scoreResult.totalTimeSpentSeconds)}
@@ -178,7 +178,7 @@ export function Result() {
       </div>
 
       {/* Section-Wise Breakdown Table */}
-      <div className="bg-card border-border rounded-lg overflow-hidden border shadow-2xs">
+      <div className="liquid-glass-card rounded-xl overflow-hidden shadow-xs">
         <div className="border-border border-b p-3 sm:p-3.5">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <BarChart3 className="text-primary size-4" />
@@ -317,7 +317,7 @@ export function Result() {
                 role="button"
                 tabIndex={0}
                 aria-label={`Question ${idx + 1}, ${status.toLowerCase()}. Click to inspect answer and explanation.`}
-                className="bg-card border-border hover:border-primary/50 cursor-pointer rounded-lg border p-4 shadow-2xs space-y-2.5 transition-all duration-150 active:scale-[0.99] group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                className="liquid-glass-card hover:scale-[1.008] cursor-pointer rounded-xl p-4 shadow-xs space-y-2.5 transition-all duration-150 active:scale-[0.99] group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
               >
                 {/* Top Badge Banner */}
                 <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-border/60 pb-2.5">

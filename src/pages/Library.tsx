@@ -220,16 +220,16 @@ export function Library() {
 
       {/* SECTION 2: Mistake Vault Summary & Quick Exam Button */}
       {mistakes.unresolvedQuestions.length > 0 && (
-        <div className="liquid-glass-card border-red-500/30 overflow-hidden rounded-xl p-4 shadow-xs">
+        <div className="liquid-glass-rose overflow-hidden rounded-xl p-4 shadow-xs">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
-              <div className="bg-red-500/15 text-red-600 dark:text-red-400 rounded-lg p-2 shrink-0 border border-red-500/20 shadow-xs">
+              <div className="bg-rose-500/15 text-rose-600 dark:text-rose-400 rounded-lg p-2 shrink-0 border border-rose-500/20 shadow-xs">
                 <AlertCircle className="size-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-xs tracking-tight">Mistake Vault</h3>
-                  <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 font-semibold shadow-xs">
+                  <span className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold shadow-xs">
                     {mistakes.unresolvedQuestions.length}
                   </span>
                 </div>
@@ -263,11 +263,11 @@ export function Library() {
               <div
                 key={q.id}
                 onClick={() => navigate('/mistakes')}
-                className="liquid-glass-pill rounded-lg p-2.5 text-xs cursor-pointer transition-all flex flex-col justify-between hover:border-red-500/30"
+                className="liquid-glass-pill rounded-lg p-2.5 text-xs cursor-pointer transition-all flex flex-col justify-between hover:border-rose-400/50"
               >
                 <div>
                   <div className="flex items-center justify-between text-[11px] mb-1">
-                    <span className="font-mono text-[10px] text-red-600 dark:text-red-400 font-semibold">Error #{idx + 1}</span>
+                    <span className="font-mono text-[10px] text-rose-600 dark:text-rose-400 font-semibold">Error #{idx + 1}</span>
                     <span className="text-[10px] font-mono text-muted-foreground px-1 rounded bg-muted/60">{q.subject}</span>
                   </div>
                   <p className="line-clamp-2 text-foreground/80 text-[11px] leading-relaxed">
@@ -329,7 +329,7 @@ export function Library() {
               return (
                 <div
                   key={paper.id}
-                  className="liquid-glass-card hover:scale-[1.01] flex flex-col justify-between rounded-xl p-4 space-y-3 transition-all cursor-pointer"
+                  className="liquid-glass-blue hover:scale-[1.01] flex flex-col justify-between rounded-xl p-4 space-y-3 transition-all cursor-pointer"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">

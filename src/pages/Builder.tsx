@@ -394,7 +394,7 @@ export function Builder() {
         /* ====================================================================== */
         <div className="space-y-6">
           {/* Top Bar Controls */}
-          <div className="bg-card border-border/80 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 shadow-xs">
+          <div className="liquid-glass-emerald flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 shadow-xs">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-base-content/60 text-xs font-semibold uppercase tracking-wider">Format Mode:</span>
               <div role="radiogroup" aria-label="Format Mode" className="bg-base-200/80 p-0.5 rounded-xl border border-border/60 flex items-center gap-0.5">
@@ -498,7 +498,7 @@ export function Builder() {
           {/* Dual Split Workspace: Left Input | Right Live Preview */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Left: Input Textarea */}
-            <div className="bg-card border-border/80 flex flex-col rounded-2xl border p-4 shadow-xs">
+            <div className="liquid-glass-card flex flex-col rounded-2xl p-4 shadow-xs">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-base-content/70">
                   Input Markdown / JSON / Prompt Output
@@ -598,7 +598,7 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
             </div>
 
             {/* Right: Live Parser & KaTeX Preview */}
-            <div className="bg-card border-border/80 flex flex-col rounded-2xl border shadow-xs overflow-hidden">
+            <div className="liquid-glass-card flex flex-col rounded-2xl shadow-xs overflow-hidden">
               {/* Header + Tabs */}
               <div className="flex items-center justify-between border-b border-border/60 px-4 pt-3 pb-0">
                 <div className="flex items-center gap-2">
@@ -1001,7 +1001,7 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
         /* ====================================================================== */
         <div className="space-y-6">
           {/* Metadata Card */}
-          <div className="bg-card border-border/80 grid grid-cols-1 gap-4 rounded-2xl border p-5 shadow-xs sm:grid-cols-2 lg:grid-cols-4">
+          <div className="liquid-glass-emerald grid grid-cols-1 gap-4 rounded-2xl border p-5 shadow-xs sm:grid-cols-2 lg:grid-cols-4">
             <div className="sm:col-span-2">
               <label className="text-xs font-bold uppercase tracking-wider text-base-content/70">Paper Title</label>
               <input
@@ -1082,7 +1082,7 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
           </div>
 
           {/* Question Picker Toolbar */}
-          <div className="bg-card border-border/80 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 shadow-xs">
+          <div className="liquid-glass-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 shadow-xs">
             <div className="flex flex-wrap items-center gap-2">
               {/* Subject Filter */}
               <select
@@ -1167,8 +1167,8 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                 <div
                   key={q.id}
                   onClick={() => toggleSelectQuestion(q.id)}
-                  className={`border-border/80 flex flex-col justify-between rounded-xl border p-4 shadow-2xs cursor-pointer transition-all ${
-                    isSelected ? 'border-primary ring-2 ring-primary/40 bg-primary/5' : 'bg-card hover:bg-base-200/40'
+                  className={`flex flex-col justify-between rounded-xl p-4 shadow-xs cursor-pointer transition-all ${
+                    isSelected ? 'liquid-glass-emerald border-primary ring-2 ring-primary/40' : 'liquid-glass-card hover:border-emerald-500/40'
                   }`}
                 >
                   <div className="space-y-2">

@@ -101,8 +101,8 @@ export function MistakeVault() {
             }
           }}
           aria-pressed={activeCategory === 'UNRESOLVED'}
-          className={`liquid-glass-card flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
-            activeCategory === 'UNRESOLVED' ? 'ring-2 ring-primary border-primary bg-primary/10' : 'hover:border-primary/40'
+          className={`liquid-glass-rose flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none ${
+            activeCategory === 'UNRESOLVED' ? 'ring-2 ring-rose-500 border-rose-500/80 shadow-md' : 'hover:border-rose-400/50'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -126,8 +126,8 @@ export function MistakeVault() {
             }
           }}
           aria-pressed={activeCategory === 'TIME_SINKS'}
-          className={`liquid-glass-card flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
-            activeCategory === 'TIME_SINKS' ? 'ring-2 ring-primary border-primary bg-primary/10' : 'hover:border-primary/40'
+          className={`liquid-glass-amber flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none ${
+            activeCategory === 'TIME_SINKS' ? 'ring-2 ring-amber-500 border-amber-500/80 shadow-md' : 'hover:border-amber-400/50'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -151,8 +151,8 @@ export function MistakeVault() {
             }
           }}
           aria-pressed={activeCategory === 'BOOKMARKED'}
-          className={`liquid-glass-card flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
-            activeCategory === 'BOOKMARKED' ? 'ring-2 ring-primary border-primary bg-primary/10' : 'hover:border-primary/40'
+          className={`liquid-glass-blue flex cursor-pointer flex-col justify-between rounded-xl p-3.5 shadow-xs transition-all duration-150 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
+            activeCategory === 'BOOKMARKED' ? 'ring-2 ring-primary border-primary/80 shadow-md' : 'hover:border-blue-400/50'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -214,7 +214,7 @@ export function MistakeVault() {
                 role="button"
                 tabIndex={0}
                 aria-label={`Error #${idx + 1} in ${q.subject}. Click to view problem and solution.`}
-                className="liquid-glass-card hover:scale-[1.008] cursor-pointer rounded-xl p-4 shadow-xs transition-all duration-150 active:scale-[0.99] space-y-2.5 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                className="liquid-glass-rose hover:scale-[1.008] cursor-pointer rounded-xl p-4 shadow-xs transition-all duration-150 active:scale-[0.99] space-y-2.5 group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
               >
                 <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-border/60 pb-2.5">
                   <div className="flex flex-wrap items-center gap-1.5">
