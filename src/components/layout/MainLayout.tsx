@@ -117,7 +117,7 @@ export function MainLayout() {
   };
 
   return (
-    <div className="bg-transparent text-foreground relative flex h-screen w-screen flex-col overflow-hidden">
+    <div className="relative flex h-screen w-screen flex-col overflow-hidden text-foreground bg-[#141518] bg-[radial-gradient(ellipse_80%_60%_at_15%_10%,rgba(56,189,248,0.12)_0%,transparent_60%),radial-gradient(ellipse_70%_50%_at_85%_25%,rgba(99,102,241,0.1)_0%,transparent_55%),radial-gradient(ellipse_90%_70%_at_50%_90%,rgba(14,165,233,0.07)_0%,transparent_60%)]">
       {/* Native macOS Window Unified Toolbar */}
       <header
         data-tauri-drag-region

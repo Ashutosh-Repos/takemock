@@ -228,59 +228,63 @@ export function Practice() {
           </p>
         </div>
 
-        {/* 1-Click Instant Drill Launch Card */}
-        <div className="card flex flex-wrap items-center gap-4 p-3">
-          <div className="flex items-center gap-2.5">
-            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-              Questions:
-            </span>
-            <div className="w-32 sm:w-40">
+        {/* 1-Click Instant Drill Launch Card (macOS Control Center Widget) */}
+        <div className="card flex flex-wrap items-center justify-between gap-4 p-4 sm:p-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold tracking-tight text-foreground/90 whitespace-nowrap">
+                Questions:
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full font-mono text-xs font-bold bg-primary/20 text-primary border border-primary/30 tabular-nums">
+                {drillCount} Qs
+              </span>
+            </div>
+            <div className="w-48 sm:w-56">
               <Slider
                 value={drillCount}
                 min={5}
                 max={maxDrillQuestions}
                 step={5}
-                size="sm"
+                variant="capsule"
                 tickMarks={Math.min(Math.floor(maxDrillQuestions / 5), 10)}
                 showValueTooltip
-                formatValue={(val) => `${val} Qs`}
+                formatValue={(val) => `${val} Questions`}
                 onValueChange={setDrillCount}
               />
             </div>
-            <span className="text-sm font-mono font-semibold tabular-nums text-foreground/80 w-7">
-              {drillCount}
-            </span>
           </div>
 
-          <div className="h-5 w-px bg-border/60" />
+          <div className="hidden sm:block h-6 w-px bg-white/10" />
 
-          <Switch
-            checked={drillTimed}
-            onCheckedChange={setDrillTimed}
-            label={drillTimed ? `Timed (${totalDrillMinutes}m)` : 'Untimed'}
-            size="mini"
-          />
+          <div className="flex items-center gap-4">
+            <Switch
+              checked={drillTimed}
+              onCheckedChange={setDrillTimed}
+              label={drillTimed ? `Timed (${totalDrillMinutes}m)` : 'Untimed'}
+              variant="accent"
+            />
 
-          <button
-            onClick={handleLaunchDrill}
-            disabled={totalCount === 0 || launchingDrill}
-            className="btn btn-primary btn-sm h-8 px-4 text-sm gap-1.5 ml-auto"
-          >
-            {launchingDrill ? (
-              <span className="loading-spinner" />
-            ) : (
-              <Zap className="size-3.5 fill-current" />
-            )}
-            Launch Drill ({Math.min(drillCount, totalCount)})
-          </button>
+            <button
+              onClick={handleLaunchDrill}
+              disabled={totalCount === 0 || launchingDrill}
+              className="h-10 px-5 text-sm font-semibold rounded-xl inline-flex items-center justify-center gap-2 bg-[#007AFF] hover:bg-[#0071E3] text-white shadow-[0_4px_16px_rgba(0,122,255,0.45)] border border-[#3897FF]/30 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {launchingDrill ? (
+                <span className="loading-spinner" />
+              ) : (
+                <Zap className="size-4 fill-current" />
+              )}
+              <span>Launch Drill ({Math.min(drillCount, totalCount)})</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Adaptive Facets Filtering Bar */}
-      <div className="card space-y-3 p-4">
+      <div className="card space-y-3.5 p-4 sm:p-5">
         {/* Row 1: Search & Dropdowns */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 min-w-[220px]">
             <Search className="text-muted-foreground/60 absolute top-2.5 left-3 size-4 pointer-events-none" />
             <input
               ref={searchInputRef}
@@ -288,7 +292,7 @@ export function Practice() {
               placeholder="Search question text or tags..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-9 pr-3 w-full text-sm"
+              className="h-9 pl-9 pr-3.5 w-full text-sm rounded-xl bg-black/20 dark:bg-black/30 border border-white/10 backdrop-blur-md text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
 
@@ -309,7 +313,7 @@ export function Practice() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="h-8 text-sm rounded border border-border/70 bg-background px-2.5 text-foreground"
+              className="h-9 text-sm rounded-xl border border-white/10 bg-black/20 dark:bg-black/30 backdrop-blur-md px-3 text-foreground focus:outline-none focus:border-primary/60"
             >
               <option value="ALL">All Question Types</option>
               <option value="single_choice">Single Choice (MCQ)</option>
@@ -333,7 +337,7 @@ export function Practice() {
                   setSelectedType('ALL');
                   setSearch('');
                 }}
-                className="btn btn-ghost btn-xs h-7 text-xs text-muted-foreground hover:text-red-500 gap-1"
+                className="h-9 px-3 text-xs font-medium rounded-xl text-muted-foreground hover:text-red-400 bg-white/[0.04] hover:bg-red-500/10 border border-white/10 flex items-center gap-1.5 transition-all"
               >
                 <RotateCcw className="size-3.5" />
                 Reset
@@ -344,7 +348,7 @@ export function Practice() {
 
         {/* Row 2: Subjects Chips */}
         {subjects.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 pt-1.5 border-t border-border/40">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10">
             <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground mr-1">
               Subjects:
             </span>
@@ -353,10 +357,10 @@ export function Practice() {
                 setSelectedSubject('ALL');
                 setSelectedTopic('ALL');
               }}
-              className={`text-sm px-2.5 py-1 rounded transition-colors cursor-pointer ${
+              className={`text-xs px-3.5 py-1 rounded-full transition-all cursor-pointer font-medium ${
                 selectedSubject === 'ALL'
-                  ? 'bg-primary text-primary-foreground font-medium'
-                  : 'bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
+                  ? 'bg-[#007AFF] text-white shadow-[0_2px_8px_rgba(0,122,255,0.4)] border border-[#0A84FF]'
+                  : 'bg-white/[0.06] hover:bg-white/[0.12] text-foreground/80 hover:text-foreground border border-white/10'
               }`}
             >
               All Subjects
@@ -368,10 +372,10 @@ export function Practice() {
                   setSelectedSubject(s);
                   setSelectedTopic('ALL');
                 }}
-                className={`text-sm px-2.5 py-1 rounded transition-colors cursor-pointer ${
+                className={`text-xs px-3.5 py-1 rounded-full transition-all cursor-pointer font-medium ${
                   selectedSubject === s
-                    ? 'bg-primary text-primary-foreground font-medium'
-                    : 'bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
+                    ? 'bg-[#007AFF] text-white shadow-[0_2px_8px_rgba(0,122,255,0.4)] border border-[#0A84FF]'
+                    : 'bg-white/[0.06] hover:bg-white/[0.12] text-foreground/80 hover:text-foreground border border-white/10'
                 }`}
               >
                 {s}
@@ -382,16 +386,16 @@ export function Practice() {
 
         {/* Row 3: Topics Chips (for active subject) */}
         {topics.length > 0 && selectedSubject !== 'ALL' && (
-          <div className="flex flex-wrap items-center gap-2 pt-1.5 border-t border-border/40">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10">
             <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground mr-1">
               Topics ({selectedSubject}):
             </span>
             <button
               onClick={() => setSelectedTopic('ALL')}
-              className={`text-sm px-2.5 py-1 rounded transition-colors cursor-pointer ${
+              className={`text-xs px-3.5 py-1 rounded-full transition-all cursor-pointer font-medium ${
                 selectedTopic === 'ALL'
-                  ? 'bg-secondary text-secondary-foreground font-medium'
-                  : 'bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
+                  ? 'bg-white/20 text-white border border-white/30 shadow-xs'
+                  : 'bg-white/[0.06] hover:bg-white/[0.12] text-foreground/80 hover:text-foreground border border-white/10'
               }`}
             >
               All Topics
@@ -400,10 +404,10 @@ export function Practice() {
               <button
                 key={t}
                 onClick={() => setSelectedTopic(t)}
-                className={`text-sm px-2.5 py-1 rounded transition-colors cursor-pointer ${
+                className={`text-xs px-3.5 py-1 rounded-full transition-all cursor-pointer font-medium ${
                   selectedTopic === t
-                    ? 'bg-secondary text-secondary-foreground font-medium'
-                    : 'bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
+                    ? 'bg-white/20 text-white border border-white/30 shadow-xs'
+                    : 'bg-white/[0.06] hover:bg-white/[0.12] text-foreground/80 hover:text-foreground border border-white/10'
                 }`}
               >
                 {t}
@@ -414,7 +418,7 @@ export function Practice() {
 
         {/* Row 4: Tags Chips */}
         {tags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 pt-1.5 border-t border-border/40">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10">
             <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground mr-1">
               Tags:
             </span>
@@ -422,10 +426,10 @@ export function Practice() {
               <button
                 key={t}
                 onClick={() => setSelectedTag(selectedTag === t ? 'ALL' : t)}
-                className={`text-xs font-mono px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                className={`text-xs font-mono px-2.5 py-0.5 rounded-full transition-all cursor-pointer ${
                   selectedTag === t
-                    ? 'bg-primary/10 text-primary border border-primary/30 font-medium'
-                    : 'bg-muted/30 hover:bg-muted text-muted-foreground border border-border/50'
+                    ? 'bg-primary/20 text-primary border border-primary/40 font-medium'
+                    : 'bg-white/[0.05] hover:bg-white/[0.1] text-muted-foreground border border-white/10'
                 }`}
               >
                 #{t}
@@ -434,7 +438,7 @@ export function Practice() {
             {tags.length > 10 && (
               <button
                 onClick={() => setShowAllTags(!showAllTags)}
-                className="text-xs text-primary hover:underline ml-1 font-mono"
+                className="text-xs text-primary hover:underline ml-1 font-mono cursor-pointer"
               >
                 {showAllTags ? 'Show less' : `+${tags.length - 10} more`}
               </button>
@@ -488,25 +492,25 @@ export function Practice() {
                   role="button"
                   tabIndex={0}
                   aria-label={`Question ${questionGlobalNum} in ${q.subject}. Click to view solution.`}
-                  className="card cursor-pointer p-4 space-y-3 hover:border-foreground/20 transition-colors focus-visible:outline-2 focus-visible:outline-primary"
+                  className="card cursor-pointer p-5 space-y-3.5 focus-visible:outline-2 focus-visible:outline-primary transition-all duration-200"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-mono font-medium px-2 py-0.5 rounded border border-border/60 bg-muted/40 text-foreground">
+                      <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full border border-white/12 bg-white/5 text-foreground/90">
                         {q.subject}
                       </span>
                       {q.topic && (
-                        <span className="text-xs font-mono px-2 py-0.5 rounded border border-border/50 text-muted-foreground">
+                        <span className="text-xs font-mono px-2.5 py-0.5 rounded-full border border-white/10 text-muted-foreground bg-white/[0.03]">
                           {q.topic}
                         </span>
                       )}
                       <span
-                        className={`text-xs font-mono capitalize px-2 py-0.5 rounded border font-medium ${
+                        className={`text-xs font-mono capitalize px-2.5 py-0.5 rounded-full border font-semibold ${
                           q.difficulty === 'easy'
-                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400 shadow-[0_0_8px_rgba(52,199,89,0.2)]'
                             : q.difficulty === 'medium'
-                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                            : 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
+                            ? 'border-amber-500/30 bg-amber-500/15 text-amber-400 shadow-[0_0_8px_rgba(255,159,10,0.2)]'
+                            : 'border-red-500/30 bg-red-500/15 text-red-400 shadow-[0_0_8px_rgba(255,69,58,0.2)]'
                         }`}
                       >
                         {q.difficulty}
@@ -515,12 +519,12 @@ export function Practice() {
 
                     <div className="flex items-center gap-2 text-sm font-mono text-muted-foreground tabular-nums">
                       <span>+{q.marks || 1} mark{q.marks !== 1 ? 's' : ''}</span>
-                      <span className="font-semibold text-foreground">Q{questionGlobalNum}</span>
+                      <span className="font-bold text-foreground">Q{questionGlobalNum}</span>
                     </div>
                   </div>
 
                   {/* Question Prompt Snippet */}
-                  <div className="text-[15px] leading-relaxed line-clamp-3 selectable-content text-foreground/90">
+                  <div className="text-[15px] leading-relaxed line-clamp-3 selectable-content text-foreground font-normal">
                     <MathRenderer content={q.body} />
                   </div>
 
@@ -528,7 +532,7 @@ export function Practice() {
                   {q.tags && q.tags.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                       {q.tags.map((t) => (
-                        <span key={t} className="text-xs font-mono text-muted-foreground/75 px-1.5 rounded bg-muted/40">
+                        <span key={t} className="text-xs font-mono text-muted-foreground px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/10">
                           #{t}
                         </span>
                       ))}
@@ -536,8 +540,8 @@ export function Practice() {
                   )}
 
                   {/* Card Action Hint */}
-                  <div className="flex items-center justify-between border-t border-border/40 pt-2 text-sm">
-                    <span className="text-muted-foreground/50 text-xs group-hover:text-muted-foreground transition-colors">
+                  <div className="flex items-center justify-between border-t border-white/10 pt-2.5 text-sm">
+                    <span className="text-muted-foreground/60 text-xs">
                       Click to review question & solution
                     </span>
                     <button
@@ -545,7 +549,7 @@ export function Practice() {
                         e.stopPropagation();
                         setModalIndex(idx);
                       }}
-                      className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                      className="text-[#007AFF] hover:text-[#3897FF] hover:underline text-sm font-semibold flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       View Solution
                       <ChevronRight className="size-3.5" />

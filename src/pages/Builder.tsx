@@ -363,30 +363,14 @@ export function Builder() {
         </div>
 
         {/* Studio Mode Selector */}
-        <div className="bg-muted/50 border-border flex items-center rounded-lg border p-0.5 shadow-2xs">
-          <button
-            onClick={() => setMode('INGEST')}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-              mode === 'INGEST'
-                ? 'bg-primary text-primary-content shadow-2xs'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Sparkles className="size-3.5" />
-            AI & Text Ingest
-          </button>
-          <button
-            onClick={() => setMode('COMPOSER')}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-              mode === 'COMPOSER'
-                ? 'bg-primary text-primary-content shadow-2xs'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Layers className="size-3.5" />
-            Visual Composer
-          </button>
-        </div>
+        <SegmentedControl
+          value={mode}
+          onValueChange={(val) => setMode(val as 'INGEST' | 'COMPOSER')}
+          options={[
+            { value: 'INGEST', label: 'AI & Text Ingest', icon: Sparkles },
+            { value: 'COMPOSER', label: 'Visual Composer', icon: Layers },
+          ]}
+        />
       </div>
 
       {mode === 'INGEST' ? (
@@ -395,7 +379,7 @@ export function Builder() {
         /* ====================================================================== */
         <div className="space-y-6">
           {/* Top Bar Controls */}
-          <div className="liquid-glass-emerald flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 shadow-xs">
+          <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">Format Mode:</span>
               <SegmentedControl

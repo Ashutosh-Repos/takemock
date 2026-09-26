@@ -16,7 +16,7 @@ export const Switch = React.forwardRef<HTMLSpanElement, SwitchProps>(
     {
       className,
       size = 'regular',
-      variant = 'success',
+      variant = 'accent',
       label,
       description,
       labelPlacement = 'trailing',
@@ -54,16 +54,16 @@ export const Switch = React.forwardRef<HTMLSpanElement, SwitchProps>(
       <label
         htmlFor={switchId}
         className={cn(
-          'inline-flex items-center gap-2 cursor-default select-none text-xs',
+          'inline-flex items-center gap-2.5 cursor-pointer select-none text-sm',
           disabled && 'opacity-50 cursor-not-allowed',
           labelPlacement === 'leading' && 'flex-row-reverse justify-between'
         )}
       >
         {switchElement}
         <div className="flex flex-col">
-          {label && <span className="font-medium text-foreground">{label}</span>}
+          {label && <span className="font-medium text-foreground tracking-tight">{label}</span>}
           {description && (
-            <span className="text-[11px] text-muted-foreground">{description}</span>
+            <span className="text-xs text-muted-foreground">{description}</span>
           )}
         </div>
       </label>

@@ -12,10 +12,12 @@ export interface SliderProps {
   onValueCommitted?: (value: number) => void;
   disabled?: boolean;
   size?: 'regular' | 'sm';
-  variant?: 'accent' | 'success';
+  variant?: 'accent' | 'success' | 'capsule';
   label?: React.ReactNode;
   minLabel?: React.ReactNode;
   maxLabel?: React.ReactNode;
+  startIcon?: React.ReactNode;
+  endIcon?: React.ReactNode;
   tickMarks?: boolean | number;
   showValueTooltip?: boolean;
   formatValue?: (val: number) => string;
@@ -40,6 +42,8 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       label,
       minLabel,
       maxLabel,
+      startIcon,
+      endIcon,
       tickMarks = false,
       showValueTooltip = false,
       formatValue,
@@ -95,6 +99,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         className={cn(
           'macos-slider-root',
           size === 'sm' && 'macos-slider-sm',
+          variant === 'capsule' && 'macos-slider-capsule',
           variant === 'success' && 'macos-slider-success',
           disabled && 'is-disabled',
           className
@@ -109,42 +114,56 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           </div>
         )}
 
-        <BaseSlider.Root
-          ref={ref}
-          id={id}
-          name={name}
-          aria-label={typeof label === 'string' ? label : undefined}
-          min={min}
-          max={max}
-          step={step}
-          value={value !== undefined ? value : undefined}
-          defaultValue={defaultValue ?? min}
-          disabled={disabled}
-          onValueChange={handleValueChange}
-          onValueCommitted={handleValueCommitted}
-          onPointerDown={() => setIsDragging(true)}
-          className="w-full"
-        >
-          <BaseSlider.Control
-            className="macos-slider-control"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            <BaseSlider.Track className="macos-slider-track">
-              <BaseSlider.Indicator className="macos-slider-indicator" />
-            </BaseSlider.Track>
+        <div className="flex items-center gap-2 w-full">
+          {startIcon && (
+            <span className="shrink-0 text-muted-foreground select-none pointer-events-none">
+              {startIcon}
+            </span>
+          )}
 
-            <BaseSlider.Thumb
-              className={cn('macos-slider-thumb', isDragging && 'is-dragging')}
+          <BaseSlider.Root
+            ref={ref}
+            id={id}
+            name={name}
+            aria-label={typeof label === 'string' ? label : undefined}
+            min={min}
+            max={max}
+            step={step}
+            value={value !== undefined ? value : undefined}
+            defaultValue={defaultValue ?? min}
+            disabled={disabled}
+            onValueChange={handleValueChange}
+            onValueCommitted={handleValueCommitted}
+            onPointerDown={() => setIsDragging(true)}
+            className="w-full flex-1"
+          >
+            <BaseSlider.Control
+              className="macos-slider-control"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
             >
-              {showValueTooltip && (isHovered || isDragging) && (
-                <div className="macos-slider-tooltip animate-in fade-in zoom-in-95 duration-100">
-                  {displayValue}
-                </div>
-              )}
-            </BaseSlider.Thumb>
-          </BaseSlider.Control>
-        </BaseSlider.Root>
+              <BaseSlider.Track className="macos-slider-track">
+                <BaseSlider.Indicator className="macos-slider-indicator" />
+              </BaseSlider.Track>
+
+              <BaseSlider.Thumb
+                className={cn('macos-slider-thumb', isDragging && 'is-dragging')}
+              >
+                {showValueTooltip && (isHovered || isDragging) && (
+                  <div className="macos-slider-tooltip animate-in fade-in zoom-in-95 duration-100">
+                    {displayValue}
+                  </div>
+                )}
+              </BaseSlider.Thumb>
+            </BaseSlider.Control>
+          </BaseSlider.Root>
+
+          {endIcon && (
+            <span className="shrink-0 text-muted-foreground select-none pointer-events-none">
+              {endIcon}
+            </span>
+          )}
+        </div>
 
         {tickList && (
           <div className="macos-slider-ticks" aria-hidden="true">
