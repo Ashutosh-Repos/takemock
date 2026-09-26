@@ -1,7 +1,6 @@
 import { Outlet, useLocation, useNavigate } from 'react-router';
-import { AlertCircle, BarChart3, DraftingCompass, Home, Zap } from 'lucide-react';
+import { AlertCircle, BarChart3, DraftingCompass, Home, Moon, Sun, Zap } from 'lucide-react';
 import { useTheme } from '../theme-provider';
-import { AnimatedThemeToggler } from '../ui/animated-theme-toggler';
 import { Dock, DockIcon, DockItem, DockLabel, DockSeparator } from '../ui/dock';
 import { cn } from '@/lib/utils';
 
@@ -44,9 +43,57 @@ const dockItems = [
 ];
 
 export function MainLayout() {
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const handleToggleTheme = (e?: React.MouseEvent) => {
+    const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
+
+    if (typeof document.startViewTransition === 'function') {
+      const x = e?.clientX ?? window.innerWidth / 2;
+      const y = e?.clientY ?? window.innerHeight / 2;
+      const maxRadius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+
+      const root = document.documentElement;
+      root.dataset.magicuiThemeVt = 'active';
+      root.style.setProperty('--magicui-theme-toggle-vt-duration', '400ms');
+
+      const transition = document.startViewTransition(() => {
+        setTheme(nextTheme);
+      });
+
+      const cleanup = () => {
+        delete root.dataset.magicuiThemeVt;
+        root.style.removeProperty('--magicui-theme-toggle-vt-duration');
+      };
+
+      transition.finished.finally(cleanup).catch(() => {});
+
+      transition.ready
+        ?.then(() => {
+          root.animate(
+            {
+              clipPath: [
+                `circle(0% at ${x}px ${y}px)`,
+                `circle(${maxRadius}px at ${x}px ${y}px)`,
+              ],
+            },
+            {
+              duration: 400,
+              easing: 'ease-in-out',
+              pseudoElement: '::view-transition-new(root)',
+            }
+          );
+        })
+        .catch(() => {});
+    } else {
+      setTheme(nextTheme);
+    }
+  };
 
   return (
     <div className="bg-background text-foreground relative flex h-screen w-screen flex-col overflow-hidden safe-area-top safe-area-bottom">
@@ -124,16 +171,21 @@ export function MainLayout() {
 
         <DockItem
           key="theme-icon"
+          onClick={handleToggleTheme}
           aria-label={resolvedTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
           className={cn(
-            'rounded-[14px] transition-all duration-180 flex items-center justify-center relative p-2',
+            'rounded-[14px] transition-all duration-180 flex items-center justify-center relative p-2 cursor-pointer',
             'border shadow-xs backdrop-blur-md',
             'bg-white/40 dark:bg-white/8 hover:bg-white/60 dark:hover:bg-white/14 border-white/50 dark:border-white/12 text-muted-foreground hover:text-foreground shadow-[0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.6)]'
           )}
         >
           <DockLabel>{resolvedTheme === 'dark' ? 'Light Theme' : 'Dark Theme'}</DockLabel>
           <DockIcon>
-            <AnimatedThemeToggler className="h-full w-full" />
+            {resolvedTheme === 'dark' ? (
+              <Sun className="h-full w-full text-amber-400 group-hover:text-amber-300 transition-transform group-hover:rotate-45 duration-300" />
+            ) : (
+              <Moon className="h-full w-full text-indigo-500 group-hover:text-indigo-600 transition-transform group-hover:-rotate-12 duration-300" />
+            )}
           </DockIcon>
         </DockItem>
       </Dock>

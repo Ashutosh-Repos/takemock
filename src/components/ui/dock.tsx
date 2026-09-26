@@ -45,7 +45,7 @@ type DockProps = {
 type DockItemProps = {
   className?: string;
   children: React.ReactNode;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent) => void;
   isActive?: boolean;
   'aria-label'?: string;
   'aria-current'?: boolean | 'page' | 'step' | 'location' | 'date' | 'time';
@@ -292,10 +292,10 @@ function DockItem({
     }
   }, [placement]);
 
-  const handleClick = () => {
+  const handleClick = (e?: React.MouseEvent) => {
     setIsBouncing(true);
     setTimeout(() => setIsBouncing(false), 500);
-    onClick?.();
+    onClick?.(e);
   };
 
   const isCurrent = isActive || restProps['aria-current'] === 'page';
