@@ -34,7 +34,7 @@
   <meta name="theme-color" content="#0a0d14">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260927-2315">
 
   <!-- HTMX for partial updates -->
   <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
@@ -163,11 +163,11 @@
           </div>
           <div class="terminal-body" id="dev-terminal-body" role="tabpanel">
             <div class="terminal-line"><span class="terminal-comment"># 1. Download official DMG installer from GitHub Releases</span></div>
-            <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">curl -LO https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">$</span><span class="terminal-cmd">curl -LO https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg</span></div>
             <div class="terminal-line"><span class="terminal-comment"># 2. Mount and drag TakeMock to /Applications</span></div>
-            <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">open TakeMock_0.1.0_aarch64.dmg</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">$</span><span class="terminal-cmd">open TakeMock_0.1.0_aarch64.dmg</span></div>
             <div class="terminal-line"><span class="terminal-comment"># 3. Clear Gatekeeper quarantine for unsigned open-source binary</span></div>
-            <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">xattr -cr /Applications/TakeMock.app</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">$</span><span class="terminal-cmd">xattr -cr /Applications/TakeMock.app</span></div>
           </div>
         </div>
 
