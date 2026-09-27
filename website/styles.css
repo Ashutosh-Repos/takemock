@@ -384,13 +384,19 @@ section.hero {
   gap: 12px;
   font-size: 0.82rem;
   color: var(--text-tertiary);
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
 }
 
+.hero-terminal {
+  max-width: 820px;
+  margin: 0 auto 20px;
+  text-align: left;
+}
+
 .hero .gatekeeper-inline {
-  max-width: 760px;
-  margin: 0 auto 48px;
+  max-width: 820px;
+  margin: 0 auto 52px;
 }
 
 .meta-divider {
@@ -997,6 +1003,7 @@ section.developer {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-window);
+  text-align: left;
 }
 
 .terminal-header {
@@ -1060,24 +1067,29 @@ section.developer {
   color: var(--text-primary);
   overflow-x: auto;
   line-height: 1.8;
+  white-space: nowrap;
 }
 
 .terminal-line {
   display: flex;
   gap: 12px;
+  white-space: nowrap;
 }
 
 .terminal-prompt {
   color: var(--accent-cyan);
   user-select: none;
+  flex-shrink: 0;
 }
 
 .terminal-cmd {
   color: var(--text-primary);
+  white-space: nowrap;
 }
 
 .terminal-comment {
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 /* ==========================================================================

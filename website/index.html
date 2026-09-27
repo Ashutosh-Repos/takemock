@@ -147,6 +147,30 @@
           <button type="button" class="btn-copy-inline" onclick="copyChecksum(this)" aria-label="Copy SHA-256 checksum">Copy</button>
         </div>
 
+        <!-- Developer Terminal for CLI Install & Source Build -->
+        <div class="terminal-card hero-terminal">
+          <div class="terminal-header">
+            <div class="window-controls" aria-hidden="true">
+              <span class="window-dot dot-close"></span>
+              <span class="window-dot dot-min"></span>
+              <span class="window-dot dot-max"></span>
+            </div>
+            <div class="terminal-tabs" role="tablist" aria-label="Terminal install options">
+              <button type="button" class="tab-btn active" role="tab" aria-selected="true" hx-get="partials/tab-install.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">CLI Install</button>
+              <button type="button" class="tab-btn" role="tab" aria-selected="false" hx-get="partials/tab-build.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">Build from Source</button>
+            </div>
+            <button type="button" class="btn-copy" onclick="copyTerminalCode(this)" aria-label="Copy terminal content">Copy</button>
+          </div>
+          <div class="terminal-body" id="dev-terminal-body" role="tabpanel">
+            <div class="terminal-line"><span class="terminal-comment"># 1. Download official DMG installer from GitHub Releases</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">curl -LO https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg</span></div>
+            <div class="terminal-line"><span class="terminal-comment"># 2. Mount and drag TakeMock to /Applications</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">open TakeMock_0.1.0_aarch64.dmg</span></div>
+            <div class="terminal-line"><span class="terminal-comment"># 3. Clear Gatekeeper quarantine for unsigned open-source binary</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">xattr -cr /Applications/TakeMock.app</span></div>
+          </div>
+        </div>
+
         <div class="gatekeeper-inline">
           <span class="gatekeeper-badge">Gatekeeper Note</span>
           <span>Unsigned open-source software on macOS: right-click TakeMock.app in /Applications and select <strong>Open</strong>, or run:</span>
@@ -335,40 +359,6 @@
               <span class="stack-badge">Storage</span>
             </div>
             <p class="stack-desc">Local database storing question packs, exam sessions, attempt histories, and performance analytics entirely on your Mac.</p>
-          </div>
-        </div>
-
-        <!-- Developer Terminal with HTMX Tabs -->
-        <div class="terminal-card">
-          <div class="terminal-header">
-            <div class="window-controls" aria-hidden="true">
-              <span class="window-dot dot-close"></span>
-              <span class="window-dot dot-min"></span>
-              <span class="window-dot dot-max"></span>
-            </div>
-            <div class="terminal-tabs" role="tablist" aria-label="Developer tabs">
-              <button type="button" class="tab-btn active" role="tab" aria-selected="true" hx-get="partials/tab-schema.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">Question Pack JSON</button>
-              <button type="button" class="tab-btn" role="tab" aria-selected="false" hx-get="partials/tab-build.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">Build from Source</button>
-              <button type="button" class="tab-btn" role="tab" aria-selected="false" hx-get="partials/tab-install.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">CLI Install</button>
-            </div>
-            <button type="button" class="btn-copy" onclick="copyTerminalCode(this)" aria-label="Copy terminal content">Copy</button>
-          </div>
-          <div class="terminal-body" id="dev-terminal-body" role="tabpanel">
-            <div class="terminal-line"><span class="terminal-comment">// Question Pack JSON structure</span></div>
-            <div class="terminal-line">{</div>
-            <div class="terminal-line">&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"title"</span>: <span style="color: #10b981;">"JEE Advanced Sample Paper"</span>,</div>
-            <div class="terminal-line">&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"subject"</span>: <span style="color: #10b981;">"Physics"</span>,</div>
-            <div class="terminal-line">&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"durationMinutes"</span>: 180,</div>
-            <div class="terminal-line">&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"sections"</span>: [{</div>
-            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"name"</span>: <span style="color: #10b981;">"Section 1 (Single Correct)"</span>,</div>
-            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"markingScheme"</span>: { <span style="color: var(--accent-cyan);">"correct"</span>: 4, <span style="color: var(--accent-cyan);">"incorrect"</span>: -1 },</div>
-            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"questions"</span>: [{</div>
-            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"id"</span>: <span style="color: #10b981;">"q1"</span>,</div>
-            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"text"</span>: <span style="color: #10b981;">"Central potential $V(r) = -k/r$ satisfies..."</span>,</div>
-            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"correctOptionId"</span>: <span style="color: #10b981;">"opt1"</span></div>
-            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;}]</div>
-            <div class="terminal-line">&nbsp;&nbsp;}]</div>
-            <div class="terminal-line">}</div>
           </div>
         </div>
 
