@@ -36,7 +36,7 @@
   <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css">
 
-  <!-- HTMX (Lightweight HTML-over-the-wire for fast, serverless partial swaps) -->
+  <!-- HTMX (Lightweight HTML-over-the-wire for serverless partial swaps) -->
   <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
 
   <!-- KaTeX for formula rendering -->
@@ -79,10 +79,10 @@
 
       <nav>
         <ul class="nav-links">
-          <li><a href="#features">Features</a></li>
-          <li><a href="#macos">macOS</a></li>
-          <li><a href="#architecture">Architecture</a></li>
-          <li><a href="#install">Installation</a></li>
+          <li><a href="#simulator">Simulator</a></li>
+          <li><a href="#features">Capabilities</a></li>
+          <li><a href="#developer">Developer</a></li>
+          <li><a href="#download">Download</a></li>
           <li><a href="https://github.com/Ashutosh-Repos/takemock" target="_blank" rel="noopener">GitHub</a></li>
         </ul>
       </nav>
@@ -112,23 +112,23 @@
       </div>
 
       <h1 class="hero-title">
-        Offline mock test player<br>
+        Desktop mock test simulator<br>
         <span class="text-gradient">for macOS.</span>
       </h1>
 
       <p class="hero-subtitle">
-        TakeMock replicates the Computer-Based Test (CBT) interface used in Indian national entrance examinations (JEE, NEET, GATE). Built with Tauri v2 and React 19, it renders equations with KaTeX and runs without internet access or account logins.
+        TakeMock replicates the Computer-Based Test (CBT) interface used in Indian entrance examinations (JEE, NEET, GATE). Sub-millisecond question flipping, official 5-color palette, and KaTeX math without browser lag or internet dependencies.
       </p>
 
       <div class="hero-actions">
         <a href="https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg" class="btn-primary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Download for macOS (Apple Silicon)</span>
+          <span>Download .dmg (Apple Silicon)</span>
         </a>
 
         <a href="https://github.com/Ashutosh-Repos/takemock" target="_blank" rel="noopener" class="btn-secondary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-          <span>Source on GitHub</span>
+          <span>View on GitHub</span>
         </a>
       </div>
 
@@ -138,8 +138,8 @@
         <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 100% Offline & Open Source</span>
       </div>
 
-      <!-- Interactive CBT Simulator Showcase (Powered by HTMX) -->
-      <div class="showcase-wrapper">
+      <!-- Interactive CBT Simulator Showcase (HTMX-Powered) -->
+      <div class="showcase-wrapper" id="simulator">
         <div class="macos-window">
           <div class="window-header">
             <div class="window-controls">
@@ -231,7 +231,7 @@
     </div>
   </section>
 
-  <!-- Features Section -->
+  <!-- Capabilities Section (Consolidated, Zero Redundancy) -->
   <section class="features" id="features">
     <div class="container">
       <div class="section-header">
@@ -247,9 +247,9 @@
           <div class="feature-icon-box">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </div>
-          <h3 class="feature-title">5-State CBT Palette Engine</h3>
+          <h3 class="feature-title">Official CBT Mechanics</h3>
           <p class="feature-text">
-            Tracks Answered, Not Answered, Marked for Review, Answered & Marked, and Not Visited. Correctly includes answered-and-marked questions in the final score calculation per NTA rules.
+            5-state palette: Answered, Not Answered, Marked for Review, Answered & Marked, and Not Visited. Correctly evaluates answered-and-marked questions per NTA rules with per-section timers (+4 / -1 or custom scoring).
           </p>
         </div>
 
@@ -259,17 +259,7 @@
           </div>
           <h3 class="feature-title">KaTeX Equation Typesetting</h3>
           <p class="feature-text">
-            Renders LaTeX math formulas, matrices, integrals, and chemical reactions directly to vector paths on Retina displays. No blurry equation images or network font lag.
-          </p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <h3 class="feature-title">Local IndexedDB Storage</h3>
-          <p class="feature-text">
-            Test sessions, question packs, attempts, and error logs are stored on your Mac in IndexedDB. No server requests, no accounts, and no telemetry tracking.
+            Renders LaTeX math formulas, matrices, integrals, and chemical reactions directly to vector paths on Retina displays. No blurry equation images or network font loading.
           </p>
         </div>
 
@@ -279,7 +269,7 @@
           </div>
           <h3 class="feature-title">Mistake Vault</h3>
           <p class="feature-text">
-            Logs incorrect and skipped questions across sessions. Shows time-per-question distribution and allows bookmarking specific questions for focused re-drilling.
+            Automatically logs incorrect and skipped questions across test sessions. Review accuracy distributions, time spent per problem, and bookmark questions for targeted re-drilling.
           </p>
         </div>
 
@@ -287,145 +277,26 @@
           <div class="feature-icon-box">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           </div>
-          <h3 class="feature-title">JSON Question Packs</h3>
+          <h3 class="feature-title">Local-First & Portable Data</h3>
           <p class="feature-text">
-            Build mock tests with the visual paper editor, or import and export question sets using standard JSON files for sharing with study groups.
-          </p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
-          </div>
-          <h3 class="feature-title">Keyboard Shortcuts</h3>
-          <p class="feature-text">
-            Switch sections with <kbd>Cmd+1</kbd> / <kbd>Cmd+2</kbd>, toggle navigation with <kbd>Cmd+B</kbd>, and navigate questions with arrow keys without using the mouse.
+            All test data stays in your Mac's IndexedDB without cloud accounts or telemetry. Build mock tests with the visual editor or import/export standard JSON question packs.
           </p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- macOS Native Integration Section -->
-  <section class="macos-experience" id="macos">
-    <div class="container">
-      <div class="macos-grid">
-        <div class="macos-points">
-          <div class="section-label">Platform Integration</div>
-          <h2 class="section-title">Native macOS AppKit integration.</h2>
-          <p class="section-description">
-            Built with Tauri v2 instead of Chromium. Interacts directly with AppKit for window translucency, menu items, and dock appearance.
-          </p>
-
-          <div class="macos-point">
-            <div class="macos-point-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
-            <div>
-              <div class="macos-point-title">AppKit Window Vibrancy</div>
-              <div class="macos-point-desc">Uses <code>NSVisualEffectView</code> under window backgrounds to follow macOS system appearance and wallpaper tinting.</div>
-            </div>
-          </div>
-
-          <div class="macos-point">
-            <div class="macos-point-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
-            <div>
-              <div class="macos-point-title">Dock Icon Appearance Sync</div>
-              <div class="macos-point-desc">Tracks system appearance changes via <code>NSApplication.setApplicationIconImage</code>. Uses the default light icon, respects macOS Clear and Tinted styles, and loads the dark icon in dark mode.</div>
-            </div>
-          </div>
-
-          <div class="macos-point">
-            <div class="macos-point-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
-            <div>
-              <div class="macos-point-title">Cocoa Menu Bar & Shortcuts</div>
-              <div class="macos-point-desc">Standard macOS TakeMock, File, Edit, and View menus with native About dialogs, window controls, and keyboard bindings.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="macos-card-visual">
-          <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em;">
-            macOS Icon Appearance Modes
-          </div>
-
-          <div class="icon-showcase-row">
-            <div class="icon-item">
-              <img src="assets/icons/icon-light.png" alt="Default Light Icon" class="icon-preview-img">
-              <span class="icon-label">Default</span>
-            </div>
-            <div class="icon-item">
-              <img src="assets/icons/icon-dark.png" alt="Dark Mode Icon" class="icon-preview-img">
-              <span class="icon-label">Dark</span>
-            </div>
-            <div class="icon-item">
-              <img src="assets/icons/icon-light.png" alt="Clear Glass Style" class="icon-preview-img" style="filter: opacity(0.85) contrast(1.15);">
-              <span class="icon-label">Clear</span>
-            </div>
-            <div class="icon-item">
-              <img src="assets/icons/icon-light.png" alt="Tinted Accent Style" class="icon-preview-img" style="filter: sepia(0.6) hue-rotate(180deg) saturate(2);">
-              <span class="icon-label">Tinted</span>
-            </div>
-          </div>
-
-          <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.55; padding: 12px 16px; background: var(--bg-primary); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-            <strong>System Observers:</strong> A Rust runtime observer checks <code>AppleInterfaceStyle</code> and icon themes on appearance change notifications to keep the dock icon in sync.
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Technology / Architecture Section -->
-  <section class="tech-stack" id="architecture">
+  <!-- Developer & Packaging Section (Unified Terminal Box with HTMX Tabs) -->
+  <section class="developer" id="developer">
     <div class="container">
       <div class="section-header">
-        <div class="section-label">Architecture</div>
-        <h2 class="section-title">Tauri v2, Rust, and React 19.</h2>
+        <div class="section-label">Developer & Packaging</div>
+        <h2 class="section-title">Tauri v2 + Rust + React 19</h2>
         <p class="section-description">
-          A lightweight desktop runtime using macOS WKWebView and Rust Cocoa bindings instead of bundling a full Chromium browser.
+          Self-contained desktop application under 10 MB. Uses macOS WKWebView and Cocoa AppKit interop without shipping Chromium.
         </p>
       </div>
 
-      <div class="stack-grid">
-        <div class="stack-card">
-          <div class="stack-header">
-            <span class="stack-name">Tauri v2</span>
-            <span class="stack-badge">Runtime</span>
-          </div>
-          <p class="stack-desc">Provides the application bridge using macOS WKWebView, keeping disk usage under 10 MB and minimizing RAM footprint.</p>
-        </div>
-
-        <div class="stack-card">
-          <div class="stack-header">
-            <span class="stack-name">Rust</span>
-            <span class="stack-badge">Backend</span>
-          </div>
-          <p class="stack-desc">Handles Cocoa AppKit interop via <code>objc2</code>, window vibrancy, native menu registration, and icon appearance observers.</p>
-        </div>
-
-        <div class="stack-card">
-          <div class="stack-header">
-            <span class="stack-name">React 19 & TypeScript</span>
-            <span class="stack-badge">Frontend</span>
-          </div>
-          <p class="stack-desc">Type-safe component tree using Base UI primitives, Tailwind CSS, and local KaTeX typesetting.</p>
-        </div>
-
-        <div class="stack-card">
-          <div class="stack-header">
-            <span class="stack-name">IndexedDB</span>
-            <span class="stack-badge">Storage</span>
-          </div>
-          <p class="stack-desc">Local database storing question packs, exam sessions, attempt histories, and performance analytics entirely on your Mac.</p>
-        </div>
-      </div>
-
-      <!-- Developer Terminal with HTMX Tabs -->
       <div class="terminal-card">
         <div class="terminal-header">
           <div class="window-controls">
@@ -501,27 +372,6 @@
           <span style="font-weight: 700; color: var(--text-tertiary);">SHA-256</span>
           <span id="sha-text">1dc61f3616cf5f843f36d28a8efb3f283ee21092ce755a5b905ec162655e6519</span>
           <button class="btn-copy" onclick="copyChecksum(this)">Copy</button>
-        </div>
-      </div>
-
-      <!-- Installation Guide -->
-      <div class="install-steps-grid" id="install">
-        <div class="step-card">
-          <div class="step-number">1</div>
-          <div class="step-title">Download DMG</div>
-          <div class="step-desc">Download <code>TakeMock_0.1.0_aarch64.dmg</code> from GitHub Releases.</div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-number">2</div>
-          <div class="step-title">Mount and Move</div>
-          <div class="step-desc">Open the DMG and drag TakeMock into your <code>/Applications</code> folder.</div>
-        </div>
-
-        <div class="step-card">
-          <div class="step-number">3</div>
-          <div class="step-title">Launch</div>
-          <div class="step-desc">Open TakeMock from Spotlight or Launchpad. Questions and analytics are ready immediately offline.</div>
         </div>
       </div>
 

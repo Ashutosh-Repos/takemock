@@ -78,10 +78,9 @@ You can also view all builds on the [Releases page](https://github.com/Ashutosh-
 - Create tests locally with the built-in paper editor.
 - Import and export question sets using standard JSON files.
 
-### macOS Integration
-- Window vibrancy via `NSVisualEffectView`.
-- Native Cocoa application menus with standard shortcuts (`Cmd+,` for Settings, `Cmd+1`/`Cmd+2` for navigation, arrow keys for questions).
-- Dynamic dock icon appearance: defaults to light icon, automatically switches to dark icon when macOS switches to dark appearance.
+### Desktop Controls & Navigation
+- Keyboard shortcuts: `Cmd+,` for Settings, `Cmd+1`/`Cmd+2` for section switching, and arrow keys for question navigation.
+- Native macOS application menus with standard shortcuts, window management, and full keyboard operation.
 
 ---
 
