@@ -82,10 +82,10 @@
 
       <nav aria-label="Primary navigation">
         <ul class="nav-links">
+          <li><a href="#download">Download</a></li>
           <li><a href="#simulator">Simulator</a></li>
           <li><a href="#features">Features</a></li>
-          <li><a href="#developer">Question Packs</a></li>
-          <li><a href="#download">Download</a></li>
+          <li><a href="#architecture">Architecture</a></li>
         </ul>
       </nav>
 
@@ -120,15 +120,21 @@
           Replicates the National Testing Agency examination interface for JEE and NEET. Local-first IndexedDB storage, KaTeX vector equations, and zero network dependencies.
         </p>
 
-        <div class="hero-actions">
+        <!-- Download Action Hub -->
+        <div class="hero-actions" id="download">
           <a href="https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg" class="btn-primary">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             <span>Download .dmg (Apple Silicon)</span>
+            <span class="btn-badge">9.2 MB</span>
           </a>
 
           <a href="https://github.com/Ashutosh-Repos/takemock" target="_blank" rel="noopener" class="btn-secondary">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
             <span>View Source</span>
+          </a>
+
+          <a href="https://github.com/Ashutosh-Repos/takemock/releases" target="_blank" rel="noopener" class="btn-secondary">
+            <span>All Releases</span>
           </a>
         </div>
 
@@ -137,7 +143,15 @@
           <span class="meta-divider">•</span>
           <span>9.2 MB DMG</span>
           <span class="meta-divider">•</span>
-          <span>100% Offline & Open Source</span>
+          <span>SHA-256: <code id="sha-text">1dc61f3616cf5f843f36d28a8efb3f283ee21092ce755a5b905ec162655e6519</code></span>
+          <button type="button" class="btn-copy-inline" onclick="copyChecksum(this)" aria-label="Copy SHA-256 checksum">Copy</button>
+        </div>
+
+        <div class="gatekeeper-inline">
+          <span class="gatekeeper-badge">Gatekeeper Note</span>
+          <span>Unsigned open-source software on macOS: right-click TakeMock.app in /Applications and select <strong>Open</strong>, or run:</span>
+          <code id="gatekeeper-cmd">xattr -cr /Applications/TakeMock.app</code>
+          <button type="button" class="btn-copy-inline" onclick="copyGatekeeperCmd(this)" aria-label="Copy Gatekeeper command">Copy</button>
         </div>
 
         <!-- Interactive CBT Simulator Showcase (HTMX-Powered) -->
@@ -232,6 +246,7 @@
         </div>
       </div>
     </section>
+ 
 
     <!-- Core Capabilities (3 Columns, Zero Redundancy) -->
     <section class="features" id="features" aria-labelledby="features-heading">
@@ -278,17 +293,52 @@
       </div>
     </section>
 
-    <!-- Developer & Question Packs Section -->
-    <section class="developer" id="developer" aria-labelledby="developer-heading">
+    <!-- Architecture Section -->
+    <section class="architecture" id="architecture" aria-labelledby="architecture-heading">
       <div class="container">
         <div class="section-header">
-          <div class="section-label">Question Packs & Source</div>
-          <h2 class="section-title" id="developer-heading">Standard JSON, open format.</h2>
+          <div class="section-label">Architecture</div>
+          <h2 class="section-title" id="architecture-heading">Tauri v2, Rust &amp; React 19.</h2>
           <p class="section-description">
-            Import custom tests or export your question banks using clean, portable JSON files.
+            A lightweight desktop runtime using macOS WKWebView and Rust Cocoa bindings instead of bundling a full Chromium browser.
           </p>
         </div>
 
+        <div class="stack-grid">
+          <div class="stack-card">
+            <div class="stack-header">
+              <span class="stack-name">Tauri v2</span>
+              <span class="stack-badge">Runtime</span>
+            </div>
+            <p class="stack-desc">Provides the native OS bridge using macOS WKWebView, keeping disk usage under 10 MB and minimizing RAM footprint.</p>
+          </div>
+
+          <div class="stack-card">
+            <div class="stack-header">
+              <span class="stack-name">Rust</span>
+              <span class="stack-badge">Backend</span>
+            </div>
+            <p class="stack-desc">Handles Cocoa AppKit interop via <code>objc2</code>, window vibrancy, native menu registration, and dock appearance sync.</p>
+          </div>
+
+          <div class="stack-card">
+            <div class="stack-header">
+              <span class="stack-name">React 19 &amp; TypeScript</span>
+              <span class="stack-badge">Frontend</span>
+            </div>
+            <p class="stack-desc">Fast, type-safe exam simulator interface built with Base UI primitives, Tailwind CSS, and local KaTeX mathematical typesetting.</p>
+          </div>
+
+          <div class="stack-card">
+            <div class="stack-header">
+              <span class="stack-name">IndexedDB</span>
+              <span class="stack-badge">Storage</span>
+            </div>
+            <p class="stack-desc">Local database storing question packs, exam sessions, attempt histories, and performance analytics entirely on your Mac.</p>
+          </div>
+        </div>
+
+        <!-- Developer Terminal with HTMX Tabs -->
         <div class="terminal-card">
           <div class="terminal-header">
             <div class="window-controls" aria-hidden="true">
@@ -296,12 +346,12 @@
               <span class="window-dot dot-min"></span>
               <span class="window-dot dot-max"></span>
             </div>
-            <div class="terminal-tabs" role="tablist" aria-label="Code view tabs">
+            <div class="terminal-tabs" role="tablist" aria-label="Developer tabs">
               <button type="button" class="tab-btn active" role="tab" aria-selected="true" hx-get="partials/tab-schema.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">Question Pack JSON</button>
               <button type="button" class="tab-btn" role="tab" aria-selected="false" hx-get="partials/tab-build.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">Build from Source</button>
               <button type="button" class="tab-btn" role="tab" aria-selected="false" hx-get="partials/tab-install.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">CLI Install</button>
             </div>
-            <button type="button" class="btn-copy" onclick="copyTerminalCode(this)" aria-label="Copy code to clipboard">Copy</button>
+            <button type="button" class="btn-copy" onclick="copyTerminalCode(this)" aria-label="Copy terminal content">Copy</button>
           </div>
           <div class="terminal-body" id="dev-terminal-body" role="tabpanel">
             <div class="terminal-line"><span class="terminal-comment">// Question Pack JSON structure</span></div>
@@ -321,45 +371,20 @@
             <div class="terminal-line">}</div>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- Download Section (Unified, High Density) -->
-    <section class="download" id="download" aria-labelledby="download-heading">
-      <div class="container">
-        <div class="download-box">
-          <div class="badge-pill">
-            <span>Production Release v0.1.0</span>
-          </div>
-          <h2 class="download-title" id="download-heading">Get TakeMock for macOS</h2>
-          <p class="download-desc">
-            Native Apple Silicon DMG. Zero configuration required.
-          </p>
-
-          <div class="download-actions">
-            <a href="https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg" class="btn-download-big">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>Download TakeMock (Apple Silicon)</span>
+        <!-- Bottom Quick CTA -->
+        <div class="architecture-cta">
+          <div class="cta-text">Ready to run mocks offline on your Mac?</div>
+          <div class="cta-actions">
+            <a href="https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg" class="btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Download TakeMock</span>
               <span class="btn-badge">9.2 MB</span>
             </a>
-
-            <a href="https://github.com/Ashutosh-Repos/takemock/releases" target="_blank" rel="noopener" class="btn-secondary">
-              <span>All Releases</span>
+            <a href="#top" class="btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 15l-6-6-6 6"/></svg>
+              <span>Back to Top</span>
             </a>
-          </div>
-
-          <div class="download-meta-inline">
-            <span><strong>macOS 10.15+</strong> (Apple Silicon)</span>
-            <span class="meta-divider">•</span>
-            <span><strong>SHA-256:</strong> <code id="sha-text">1dc61f3616cf5f843f36d28a8efb3f283ee21092ce755a5b905ec162655e6519</code></span>
-            <button type="button" class="btn-copy-inline" onclick="copyChecksum(this)" aria-label="Copy SHA-256 checksum">Copy</button>
-          </div>
-
-          <div class="gatekeeper-inline">
-            <span class="gatekeeper-badge">Gatekeeper Note</span>
-            <span>Unsigned open-source software on macOS: right-click TakeMock.app in /Applications and select <strong>Open</strong>, or run:</span>
-            <code id="gatekeeper-cmd">xattr -cr /Applications/TakeMock.app</code>
-            <button type="button" class="btn-copy-inline" onclick="copyGatekeeperCmd(this)" aria-label="Copy Gatekeeper command">Copy</button>
           </div>
         </div>
       </div>
