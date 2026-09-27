@@ -33,8 +33,13 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <meta name="theme-color" content="#0a0d14">
 
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Arizonia&family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20260927-2315">
+  <link rel="stylesheet" href="styles.css?v=20260928-0032">
 
   <!-- HTMX for partial updates -->
   <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
@@ -76,8 +81,7 @@
   <header class="site-header" role="banner">
     <div class="container nav-wrap">
       <a href="#top" class="brand" aria-label="TakeMock home">
-        <img src="assets/icons/favicon-64.png" alt="" class="brand-icon" aria-hidden="true">
-        <span>TakeMock</span>
+        <span><b>TakeMock</b></span>
       </a>
 
       <nav aria-label="Primary navigation">
@@ -138,15 +142,6 @@
           </a>
         </div>
 
-        <div class="hero-meta">
-          <span>macOS 10.15+ (Apple Silicon)</span>
-          <span class="meta-divider">•</span>
-          <span>9.2 MB DMG</span>
-          <span class="meta-divider">•</span>
-          <span>SHA-256: <code id="sha-text">1dc61f3616cf5f843f36d28a8efb3f283ee21092ce755a5b905ec162655e6519</code></span>
-          <button type="button" class="btn-copy-inline" onclick="copyChecksum(this)" aria-label="Copy SHA-256 checksum">Copy</button>
-        </div>
-
         <!-- Developer Terminal for CLI Install & Source Build -->
         <div class="terminal-card hero-terminal">
           <div class="terminal-header">
@@ -171,11 +166,11 @@
           </div>
         </div>
 
-        <div class="gatekeeper-inline">
-          <span class="gatekeeper-badge">Gatekeeper Note</span>
-          <span>Unsigned open-source software on macOS: right-click TakeMock.app in /Applications and select <strong>Open</strong>, or run:</span>
-          <code id="gatekeeper-cmd">xattr -cr /Applications/TakeMock.app</code>
-          <button type="button" class="btn-copy-inline" onclick="copyGatekeeperCmd(this)" aria-label="Copy Gatekeeper command">Copy</button>
+        <div class="hero-meta">
+          <!-- <span>This app is an unsigned open-source software on macOS: right-click TakeMock.app in /Applications and select <strong>Open</strong> -->
+          <span> <span class="gatekeeper-badge">Note :</span> &nbsp; For the first time you open TakeMock, macOS may show a warning because the app is not signed with Apple Certificate because I didn't pay apple $99/year for being in the "Apple Developer Program". <b>Solution</b> is simple - Go to Applications, right-click TakeMock.app, and click <strong>Open</strong>,<br>or<br>simply run:  &nbsp;<code class="inline-code">xattr -cr /Applications/TakeMock.app</code>&nbsp;<button type="button" class="btn-copy-inline" onclick="copyGatekeeperCmd(this)" aria-label="Copy Gatekeeper command">Copy</button></span>
+         
+          
         </div>
 
         <!-- Interactive CBT Simulator Showcase (HTMX-Powered) -->
@@ -385,7 +380,6 @@
   <footer class="site-footer" role="contentinfo">
     <div class="container footer-wrap">
       <div class="footer-brand">
-        <img src="assets/icons/favicon-32.png" alt="" class="footer-brand-icon" aria-hidden="true">
         <span>TakeMock</span>
       </div>
 

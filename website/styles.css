@@ -4,7 +4,7 @@
    ========================================================================== */
 
 :root {
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "SF Mono", "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, monospace;
 
   /* Dark Theme Tokens (Default) */
@@ -144,9 +144,10 @@ section, [id] {
 }
 
 .container {
+  width: 100%;
   max-width: 1120px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 clamp(16px, 4vw, 24px);
   position: relative;
   z-index: 1;
 }
@@ -178,9 +179,10 @@ header.site-header {
   gap: 12px;
   text-decoration: none;
   color: var(--text-primary);
-  font-weight: 700;
-  font-size: 1.15rem;
-  letter-spacing: -0.02em;
+  font-family: "Arizonia", cursive;
+  font-weight: 400;
+  font-size: 1.6rem;
+  letter-spacing: 0.01em;
 }
 
 .brand-icon {
@@ -275,6 +277,32 @@ header.site-header {
   .nav-links {
     display: none;
   }
+  .btn-nav-github span {
+    display: none;
+  }
+  .btn-nav-download {
+    padding: 7px 10px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .nav-wrap {
+    height: 56px;
+  }
+  .brand {
+    font-size: 1rem;
+  }
+  .brand-icon {
+    width: 26px;
+    height: 26px;
+  }
+  .nav-actions {
+    gap: 8px;
+  }
+  .btn-nav-download {
+    display: none;
+  }
 }
 
 /* ==========================================================================
@@ -282,7 +310,7 @@ header.site-header {
    ========================================================================== */
 
 section.hero {
-  padding: 64px 0 48px;
+  padding: clamp(32px, 6vw, 64px) 0 clamp(24px, 4vw, 48px);
   text-align: center;
 }
 
@@ -381,14 +409,22 @@ section.hero {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  font-size: 0.82rem;
+  gap: 8px 12px;
+  font-size: clamp(0.72rem, 1.8vw, 0.82rem);
   color: var(--text-tertiary);
   margin-bottom: 24px;
   flex-wrap: wrap;
+  padding: 0 8px;
+  text-align: center;
+  line-height: 1.7;
+}
+
+.hero-meta code {
+  word-break: break-all;
 }
 
 .hero-terminal {
+  width: 100%;
   max-width: 820px;
   margin: 0 auto 20px;
   text-align: left;
@@ -404,11 +440,32 @@ section.hero {
   opacity: 0.5;
 }
 
+@media (max-width: 600px) {
+  .hero-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .meta-divider {
+    display: none;
+  }
+  .hero-actions {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .hero-actions .btn-primary,
+  .hero-actions .btn-secondary {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
 /* ==========================================================================
    macOS Window & Simulator Showcase
    ========================================================================== */
 
 .showcase-wrapper {
+  width: 100%;
   max-width: 980px;
   margin: 0 auto;
 }
@@ -471,6 +528,35 @@ section.hero {
 @media (max-width: 860px) {
   .window-body {
     grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .palette-pane {
+    border-left: none;
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+@media (max-width: 480px) {
+  .question-pane {
+    padding: 16px 14px;
+  }
+  .q-badge {
+    font-size: 0.72rem;
+    padding: 3px 7px;
+  }
+  .q-content {
+    font-size: 0.9rem;
+  }
+  .option-item {
+    padding: 9px 12px;
+    font-size: 0.85rem;
+  }
+  .cbt-action-row {
+    gap: 6px;
+  }
+  .btn-subtle {
+    padding: 6px 10px;
+    font-size: 0.78rem;
   }
 }
 
@@ -849,7 +935,13 @@ section.features {
   gap: 24px;
 }
 
-@media (max-width: 880px) {
+@media (max-width: 960px) {
+  .pillars-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
   .pillars-grid {
     grid-template-columns: 1fr;
   }
@@ -976,22 +1068,23 @@ section.developer {
 
 .architecture-cta {
   margin-top: 48px;
-  padding: 28px 32px;
+  padding: clamp(20px, 3vw, 28px) clamp(16px, 3vw, 32px);
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
+  width: 100%;
   max-width: 880px;
   margin-left: auto;
   margin-right: auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 20px;
   flex-wrap: wrap;
 }
 
 .cta-text {
-  font-size: 1.1rem;
+  font-size: clamp(0.95rem, 2.2vw, 1.1rem);
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
@@ -1008,17 +1101,22 @@ section.developer {
   .architecture-cta {
     flex-direction: column;
     text-align: center;
-    padding: 24px 20px;
   }
   .cta-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  .cta-actions .btn-primary,
+  .cta-actions .btn-secondary {
     width: 100%;
     justify-content: center;
   }
 }
 
 .terminal-card {
+  width: 100%;
   max-width: 880px;
-  margin: 0 auto;
+  margin: 40px auto;
   background: var(--bg-primary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -1120,6 +1218,15 @@ section.developer {
   color: var(--text-muted);
   white-space: nowrap;
   text-align: left;
+}
+
+.inline-code{
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
 }
 
 /* ==========================================================================
@@ -1293,7 +1400,9 @@ footer.site-footer {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 700;
+  font-family: "Arizonia", cursive;
+  font-weight: 400;
+  font-size: 1.4rem;
   color: var(--text-primary);
 }
 
@@ -1307,6 +1416,7 @@ footer.site-footer {
   display: flex;
   gap: 20px;
   list-style: none;
+  flex-wrap: wrap;
 }
 
 .footer-links a {
@@ -1322,6 +1432,17 @@ footer.site-footer {
 .footer-copy a {
   color: inherit;
   text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .footer-wrap {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  .footer-links {
+    justify-content: center;
+  }
 }
 
 /* Reduced Motion */
