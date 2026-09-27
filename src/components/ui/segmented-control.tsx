@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 export interface SegmentedControlOption<T extends string = string> {
   value: T;
-  label: React.ReactNode;
+  label?: React.ReactNode;
   icon?: React.ComponentType<{ className?: string }>;
   disabled?: boolean;
   title?: string;
@@ -14,9 +14,10 @@ export interface SegmentedControlProps<T extends string = string> {
   value?: T;
   defaultValue?: T;
   onValueChange?: (value: T) => void;
-  options: SegmentedControlOption<T>[];
+  options: SegmentedControlOption<NoInfer<T>>[];
   size?: 'sm' | 'regular' | 'lg';
   variant?: 'content' | 'toolbar';
+  equalWidth?: boolean;
   className?: string;
   ariaLabel?: string;
 }
@@ -28,23 +29,27 @@ export function SegmentedControl<T extends string = string>({
   options,
   size = 'regular',
   variant = 'content',
+  equalWidth,
   className,
   ariaLabel,
 }: SegmentedControlProps<T>) {
   const [internalValue, setInternalValue] = React.useState<T>(
-    defaultValue ?? (options[0]?.value as T)
+    defaultValue ?? (options[0]?.value as T),
   );
 
   const selectedValue = controlledValue !== undefined ? controlledValue : internalValue;
   const layoutId = React.useId();
   const cleanId = React.useMemo(() => layoutId.replace(/[^a-zA-Z0-9_-]/g, '_'), [layoutId]);
 
+  const isIconOnly = options.length > 0 && options.every((o) => !o.label && Boolean(o.icon));
+  const shouldEqualWidth = equalWidth ?? isIconOnly;
+
   const handleSelect = (val: T, disabled?: boolean) => {
     if (disabled) return;
     if (controlledValue === undefined) {
       setInternalValue(val);
     }
-    onValueChange?.(val);
+    (onValueChange as ((value: T) => void) | undefined)?.(val);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -68,56 +73,61 @@ export function SegmentedControl<T extends string = string>({
     }
   };
 
+  const selectedIndex = options.findIndex((o) => o.value === selectedValue);
+
   return (
     <div
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        'macos-segmented',
+        'macos-segmented shrink-0',
         size === 'sm' && 'macos-segmented-sm',
         size === 'lg' && 'macos-segmented-lg',
         variant === 'toolbar' && 'macos-segmented-toolbar',
-        className
+        isIconOnly && 'macos-segmented-icon-only',
+        shouldEqualWidth && 'macos-segmented-equal',
+        className,
       )}
     >
-      {options.map((option) => {
+      {options.map((option, idx) => {
         const isSelected = selectedValue === option.value;
         const Icon = option.icon;
+        // Show divider only between two unselected adjacent items
+        const showDivider = idx > 0 && idx !== selectedIndex && idx - 1 !== selectedIndex;
 
         return (
-          <button
-            key={option.value}
-            role="tab"
-            type="button"
-            title={option.title}
-            aria-selected={isSelected}
-            disabled={option.disabled}
-            data-disabled={option.disabled ? '' : undefined}
-            data-active={isSelected ? '' : undefined}
-            tabIndex={isSelected ? 0 : -1}
-            onClick={() => handleSelect(option.value, option.disabled)}
-            onKeyDown={handleKeyDown}
-            className={cn(
-              'macos-segment-item',
-              isSelected && 'active'
-            )}
-          >
-            {/* Smooth animated sliding pill */}
-            {isSelected && (
-              <motion.div
-                layoutId={`segment-pill-${cleanId}`}
-                className="macos-segment-pill"
-                transition={{
-                  type: 'spring',
-                  stiffness: 500,
-                  damping: 38,
-                }}
-              />
-            )}
+          <React.Fragment key={option.value}>
+            {showDivider && <span className="macos-segment-divider" aria-hidden="true" />}
+            <button
+              role="tab"
+              type="button"
+              title={option.title}
+              aria-selected={isSelected}
+              disabled={option.disabled}
+              data-disabled={option.disabled ? '' : undefined}
+              data-active={isSelected ? '' : undefined}
+              tabIndex={isSelected ? 0 : -1}
+              onClick={() => handleSelect(option.value, option.disabled)}
+              onKeyDown={handleKeyDown}
+              className={cn('macos-segment-item', isSelected && 'active')}
+            >
+              {/* Smooth animated sliding pill */}
+              {isSelected && (
+                <motion.div
+                  layoutId={`segment-pill-${cleanId}`}
+                  className="macos-segment-pill"
+                  transition={{
+                    type: 'spring',
+                    stiffness: 500,
+                    damping: 38,
+                  }}
+                />
+              )}
 
-            {Icon && <Icon className="size-3.5 relative z-10 shrink-0" />}
-            <span className="relative z-10">{option.label}</span>
-          </button>
+              {Icon && <Icon className="relative z-10 size-3.5 shrink-0" />}
+              {Boolean(option.label) && <span className="relative z-10">{option.label}</span>}
+            </button>
+          </React.Fragment>
         );
       })}
     </div>

@@ -5,11 +5,19 @@
  * Adheres strictly to docs/master_architecture_prompt_v2.md
  */
 
+import { isTauri } from '@tauri-apps/api/core';
+
 /**
  * Checks whether the current runtime is running inside a Tauri v2 native container.
  */
 export function isTauriEnvironment(): boolean {
-  return typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+  try {
+    return isTauri();
+  } catch {
+    return (
+      typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window)
+    );
+  }
 }
 
 export interface NativeFilePickResult {
@@ -89,7 +97,7 @@ export async function pickImportFile(): Promise<NativeFilePickResult | null> {
 export async function saveExportFile(
   suggestedName: string,
   content: string,
-  mimeType: string = 'text/markdown;charset=utf-8;'
+  mimeType: string = 'text/markdown;charset=utf-8;',
 ): Promise<boolean> {
   if (isTauriEnvironment()) {
     try {
@@ -159,9 +167,8 @@ export async function setWindowFullscreen(fullscreen: boolean): Promise<void> {
 export async function sendNativeNotification(title: string, body: string): Promise<void> {
   if (isTauriEnvironment()) {
     try {
-      const { isPermissionGranted, requestPermission, sendNotification } = await import(
-        '@tauri-apps/plugin-notification'
-      );
+      const { isPermissionGranted, requestPermission, sendNotification } =
+        await import('@tauri-apps/plugin-notification');
 
       let permissionGranted = await isPermissionGranted();
       if (!permissionGranted) {
@@ -190,4 +197,69 @@ export async function sendNativeNotification(title: string, body: string): Promi
       });
     }
   }
+}
+
+/**
+ * Native macOS system alert dialog (NSAlert modal sheet).
+ */
+export async function showNativeAlert(
+  msg: string,
+  options?: { title?: string; kind?: 'info' | 'warning' | 'error' },
+): Promise<void> {
+  if (isTauriEnvironment()) {
+    try {
+      const { message } = await import('@tauri-apps/plugin-dialog');
+      await message(msg, {
+        title: options?.title || 'TakeMock',
+        kind: options?.kind || 'info',
+      });
+      return;
+    } catch (err) {
+      console.warn('Native alert failed, falling back to window.alert:', err);
+    }
+  }
+  window.alert(msg);
+}
+
+/**
+ * Native macOS confirmation dialog sheet (NSAlert with Yes/Cancel or custom action buttons).
+ */
+export async function showNativeConfirm(
+  msg: string,
+  options?: {
+    title?: string;
+    kind?: 'warning' | 'info';
+    okLabel?: string;
+    cancelLabel?: string;
+  },
+): Promise<boolean> {
+  if (isTauriEnvironment()) {
+    try {
+      const { ask } = await import('@tauri-apps/plugin-dialog');
+      return await ask(msg, {
+        title: options?.title || 'TakeMock',
+        kind: options?.kind || 'warning',
+        okLabel: options?.okLabel || 'Yes',
+        cancelLabel: options?.cancelLabel || 'Cancel',
+      });
+    } catch (err) {
+      console.warn('Native confirm failed, falling back to window.confirm:', err);
+    }
+  }
+  return window.confirm(msg);
+}
+
+/**
+ * Native macOS clipboard copy with WebKit NSPasteboard integration.
+ */
+export async function writeToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Clipboard write failed:', err);
+  }
+  return false;
 }

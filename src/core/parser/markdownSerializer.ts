@@ -21,7 +21,8 @@ export function serializeSingleQuestion(q: QuestionModel): string {
   if (q.subtopic) frontmatterObj.subtopic = q.subtopic;
   if (q.difficulty && q.difficulty !== 'medium') frontmatterObj.difficulty = q.difficulty;
   if (q.marks !== undefined) frontmatterObj.marks = q.marks;
-  if (q.negativeMarks !== undefined && q.negativeMarks > 0) frontmatterObj.negativeMarks = q.negativeMarks;
+  if (q.negativeMarks !== undefined && q.negativeMarks > 0)
+    frontmatterObj.negativeMarks = q.negativeMarks;
   if (q.tags && q.tags.length > 0) frontmatterObj.tags = q.tags;
   if (q.source) frontmatterObj.source = q.source;
   if (q.sourceYear) frontmatterObj.sourceYear = q.sourceYear;
@@ -34,7 +35,8 @@ export function serializeSingleQuestion(q: QuestionModel): string {
   if (q.unit) frontmatterObj.unit = q.unit;
   if (q.correctCode) frontmatterObj.correctCode = q.correctCode;
   if (q.correctValue !== undefined) frontmatterObj.correctValue = q.correctValue;
-  if (q.acceptedAnswers && q.acceptedAnswers.length > 0) frontmatterObj.acceptedAnswers = q.acceptedAnswers;
+  if (q.acceptedAnswers && q.acceptedAnswers.length > 0)
+    frontmatterObj.acceptedAnswers = q.acceptedAnswers;
   if (q.caseSensitive !== undefined) frontmatterObj.caseSensitive = q.caseSensitive;
 
   const yamlString = YAML.stringify(frontmatterObj).trim();

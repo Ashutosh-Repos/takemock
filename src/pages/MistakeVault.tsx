@@ -3,20 +3,28 @@ import { useNavigate } from 'react-router';
 import {
   AlertCircle,
   Bookmark,
+  BookOpen,
   CheckCircle2,
   ChevronRight,
+  Copy,
   Play,
   Zap,
 } from 'lucide-react';
 import { MathRenderer } from '@/components/shared/MathRenderer';
 import { QuestionDetailModal } from '@/components/shared/QuestionDetailModal';
 import { assessmentRepository } from '@/core/storage/repository';
+import { showNativeAlert, writeToClipboard } from '@/core/native/tauriBridge';
+import { MacContextMenuPortal } from '@/components/ui/context-menu';
+import { useMacContextMenu } from '@/hooks/useMacContextMenu';
 import type { QuestionModel } from '@/types/question';
 
 export function MistakeVault() {
   const navigate = useNavigate();
+  const { contextMenuState, openContextMenu, closeContextMenu } = useMacContextMenu();
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState<'UNRESOLVED' | 'TIME_SINKS' | 'BOOKMARKED'>('UNRESOLVED');
+  const [activeCategory, setActiveCategory] = useState<'UNRESOLVED' | 'TIME_SINKS' | 'BOOKMARKED'>(
+    'UNRESOLVED',
+  );
   const [modalIndex, setModalIndex] = useState<number | null>(null);
 
   const [data, setData] = useState<{
@@ -53,7 +61,10 @@ export function MistakeVault() {
       const attempt = await assessmentRepository.generateMistakeDrill(maxCount);
       navigate(`/runner/${attempt.id}`);
     } catch (err: any) {
-      alert(err.message || 'No mistakes available to practice.');
+      await showNativeAlert(err.message || 'No mistakes available to practice.', {
+        title: 'Mistake Drill',
+        kind: 'info',
+      });
     }
   };
 
@@ -61,26 +72,56 @@ export function MistakeVault() {
     activeCategory === 'UNRESOLVED'
       ? data.unresolvedQuestions
       : activeCategory === 'TIME_SINKS'
-      ? data.timeSinkQuestions
-      : data.bookmarkedQuestions;
+        ? data.timeSinkQuestions
+        : data.bookmarkedQuestions;
+
+  const handleQuestionContextMenu = (e: React.MouseEvent, q: QuestionModel, idx: number) => {
+    openContextMenu(e, [
+      {
+        id: 'view-solution',
+        label: 'View Problem & Explanation',
+        icon: BookOpen,
+        shortcut: '↵',
+        onClick: () => setModalIndex(idx),
+      },
+      {
+        id: 'practice-category',
+        label: 'Launch Drill for Errors',
+        icon: Play,
+        onClick: () => handleLaunchMistakeDrill(10),
+      },
+      { type: 'divider' },
+      {
+        id: 'copy-text',
+        label: 'Copy Question Text',
+        icon: Copy,
+        shortcut: '⌘C',
+        onClick: () => {
+          writeToClipboard(q.body);
+        },
+      },
+    ]);
+  };
 
   return (
-    <div className="mx-auto max-w-6xl w-full px-6 py-6 pb-20 space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-5 px-6 py-5 pb-20 lg:px-8">
       {/* Standard Header */}
-      <div className="flex flex-col justify-between gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center">
+      <div className="border-border/60 flex flex-col justify-between gap-3 border-b pb-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Mistakes</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {data.unresolvedQuestions.length} question{data.unresolvedQuestions.length !== 1 ? 's' : ''} to review and master.
+          <h1 className="text-foreground text-xl font-bold tracking-tight">Mistakes</h1>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            {data.unresolvedQuestions.length} question
+            {data.unresolvedQuestions.length !== 1 ? 's' : ''} to review and master.
           </p>
         </div>
 
         {/* Mistake Drill Launcher */}
         <div className="flex items-center gap-2">
           <button
+            id="mistake-launch-drill-btn"
             onClick={() => handleLaunchMistakeDrill(10)}
             disabled={data.unresolvedQuestions.length === 0}
-            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium shadow-xs gap-1.5 rounded-md active:scale-95"
+            className="btn btn-primary btn-sm h-7 gap-1.5 rounded-md px-3 text-xs font-medium shadow-xs active:scale-95"
           >
             <Play className="size-3.5 fill-current" />
             Practice Drill ({Math.min(10, data.unresolvedQuestions.length)})
@@ -89,7 +130,7 @@ export function MistakeVault() {
       </div>
 
       {/* Metric Category Cards */}
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div
           role="button"
           tabIndex={0}
@@ -101,16 +142,24 @@ export function MistakeVault() {
             }
           }}
           aria-pressed={activeCategory === 'UNRESOLVED'}
-          className={`card flex cursor-pointer flex-col justify-between p-3.5 transition-colors ${
-            activeCategory === 'UNRESOLVED' ? 'ring-2 ring-primary border-transparent' : 'hover:border-border'
+          className={`card flex cursor-pointer flex-col justify-between p-4 transition-all ${
+            activeCategory === 'UNRESOLVED'
+              ? 'border-primary ring-primary bg-primary/3 shadow-xs ring-1'
+              : 'hover:border-border/80'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-medium">Incorrect</span>
-            <AlertCircle className="size-3.5 text-rose-500" />
+            <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+              Incorrect
+            </span>
+            <div className="rounded-md bg-rose-500/10 p-1.5 text-rose-600 dark:text-rose-400">
+              <AlertCircle className="size-3.5" />
+            </div>
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-xl font-bold font-mono text-rose-600 dark:text-rose-400 tracking-tight">{data.unresolvedQuestions.length}</span>
+          <div className="mt-2.5 flex items-baseline gap-2">
+            <span className="font-mono text-2xl font-bold tracking-tight text-rose-600 tabular-nums dark:text-rose-400">
+              {data.unresolvedQuestions.length}
+            </span>
             <span className="text-muted-foreground text-[11px]">unresolved</span>
           </div>
         </div>
@@ -126,16 +175,24 @@ export function MistakeVault() {
             }
           }}
           aria-pressed={activeCategory === 'TIME_SINKS'}
-          className={`card flex cursor-pointer flex-col justify-between p-3.5 transition-colors ${
-            activeCategory === 'TIME_SINKS' ? 'ring-2 ring-primary border-transparent' : 'hover:border-border'
+          className={`card flex cursor-pointer flex-col justify-between p-4 transition-all ${
+            activeCategory === 'TIME_SINKS'
+              ? 'border-primary ring-primary bg-primary/3 shadow-xs ring-1'
+              : 'hover:border-border/80'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-medium">Time Sinks</span>
-            <span className="text-[10px] text-amber-500 font-mono font-semibold">&gt;2.5m</span>
+            <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+              Time Sinks
+            </span>
+            <div className="rounded-md bg-amber-500/10 p-1.5 text-amber-600 dark:text-amber-400">
+              <span className="font-mono text-[10px] font-bold">&gt;2.5m</span>
+            </div>
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 tracking-tight">{data.timeSinkQuestions.length}</span>
+          <div className="mt-2.5 flex items-baseline gap-2">
+            <span className="font-mono text-2xl font-bold tracking-tight text-amber-600 tabular-nums dark:text-amber-400">
+              {data.timeSinkQuestions.length}
+            </span>
             <span className="text-muted-foreground text-[11px]">slow responses</span>
           </div>
         </div>
@@ -151,16 +208,24 @@ export function MistakeVault() {
             }
           }}
           aria-pressed={activeCategory === 'BOOKMARKED'}
-          className={`card flex cursor-pointer flex-col justify-between p-3.5 transition-colors ${
-            activeCategory === 'BOOKMARKED' ? 'ring-2 ring-primary border-transparent' : 'hover:border-border'
+          className={`card flex cursor-pointer flex-col justify-between p-4 transition-all ${
+            activeCategory === 'BOOKMARKED'
+              ? 'border-primary ring-primary bg-primary/3 shadow-xs ring-1'
+              : 'hover:border-border/80'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-medium">Bookmarked</span>
-            <Bookmark className="size-3.5 text-primary" />
+            <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+              Bookmarked
+            </span>
+            <div className="rounded-md bg-blue-500/10 p-1.5 text-blue-600 dark:text-blue-400">
+              <Bookmark className="size-3.5" />
+            </div>
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-xl font-bold font-mono text-primary tracking-tight">{data.bookmarkedQuestions.length}</span>
+          <div className="mt-2.5 flex items-baseline gap-2">
+            <span className="text-primary font-mono text-2xl font-bold tracking-tight tabular-nums">
+              {data.bookmarkedQuestions.length}
+            </span>
             <span className="text-muted-foreground text-[11px]">saved questions</span>
           </div>
         </div>
@@ -169,34 +234,37 @@ export function MistakeVault() {
       {/* Question Ledger */}
       {loading ? (
         <div className="flex min-h-[30vh] items-center justify-center">
-          <span className="loading loading-spinner text-primary loading-sm" />
+          <span className="loading-spinner" />
         </div>
       ) : currentQuestions.length === 0 ? (
-        <div className="card flex flex-col items-center justify-center p-10 text-center">
-          <CheckCircle2 className="text-emerald-500 size-10" />
-          <h3 className="mt-3 text-sm font-semibold text-foreground">No Questions in This Category</h3>
+        <div className="card flex flex-col items-center justify-center p-12 text-center">
+          <CheckCircle2 className="mb-2 size-10 text-emerald-500" />
+          <h3 className="text-foreground text-sm font-semibold">No Questions in This Category</h3>
           <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-xs">
             {activeCategory === 'UNRESOLVED'
               ? 'Great job! You have resolved all recorded mistakes.'
               : activeCategory === 'TIME_SINKS'
-              ? 'No questions exceeded your 2.5-minute time threshold with incorrect answers.'
-              : 'You have no questions bookmarked for review.'}
+                ? 'No questions exceeded your 2.5-minute time threshold with incorrect answers.'
+                : 'You have no questions bookmarked for review.'}
           </p>
-          <button onClick={() => navigate('/')} className="btn btn-primary btn-sm mt-4 gap-1.5">
+          <button
+            onClick={() => navigate('/')}
+            className="btn btn-primary btn-sm mt-4 gap-1.5 rounded-md"
+          >
             <Play className="size-3" />
-            Explore Papers
+            <span>Explore Papers</span>
           </button>
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="text-muted-foreground flex items-center justify-between font-mono text-xs">
             <span>Showing {currentQuestions.length} question(s)</span>
             <button
               onClick={() => handleLaunchMistakeDrill(currentQuestions.length)}
-              className="btn btn-sm text-xs gap-1"
+              className="btn btn-outline btn-xs h-6 gap-1 rounded-full px-2.5 text-[11px] font-medium"
             >
-              <Zap className="size-3" />
-              Practice All {currentQuestions.length}
+              <Zap className="size-2.5" />
+              <span>Practice All ({currentQuestions.length})</span>
             </button>
           </div>
 
@@ -205,6 +273,7 @@ export function MistakeVault() {
               <div
                 key={q.id}
                 onClick={() => setModalIndex(idx)}
+                onContextMenu={(e) => handleQuestionContextMenu(e, q, idx)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -214,33 +283,41 @@ export function MistakeVault() {
                 role="button"
                 tabIndex={0}
                 aria-label={`Error #${idx + 1} in ${q.subject}. Click to view problem and solution.`}
-                className="card cursor-pointer p-4 space-y-2.5 hover:border-foreground/20 transition-colors focus-visible:outline-2 focus-visible:outline-primary"
+                className="card hover:border-border/80 focus-visible:outline-primary cursor-pointer space-y-2.5 p-4 transition-colors focus-visible:outline-2"
               >
-                <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-border/60 pb-2.5">
+                <div className="border-border/40 flex flex-wrap items-center justify-between gap-1.5 border-b pb-2.5">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="badge badge-error badge-xs font-semibold">
+                    <span className="inline-flex items-center rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 font-mono text-[11px] font-medium text-rose-600 dark:text-rose-400">
                       Error #{idx + 1}
                     </span>
-                    <span className="badge badge-neutral text-[11px] font-semibold">{q.subject}</span>
-                    {q.topic && <span className="badge badge-outline text-[11px]">{q.topic}</span>}
-                    <span className="badge badge-ghost text-[10px] font-mono uppercase text-muted-foreground">
+                    <span className="text-foreground/85 border-border/50 inline-flex items-center rounded-full border bg-black/4 px-2 py-0.5 font-mono text-[11px] font-medium dark:bg-white/6">
+                      {q.subject}
+                    </span>
+                    {q.topic && (
+                      <span className="text-muted-foreground border-border/30 inline-flex items-center rounded-full border bg-black/2 px-2 py-0.5 font-mono text-[11px] dark:bg-white/3">
+                        {q.topic}
+                      </span>
+                    )}
+                    <span className="text-muted-foreground inline-flex items-center px-2 py-0.5 font-mono text-[10px] uppercase">
                       {q.type.replace('_', ' ')}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground">
-                    <span>+{q.marks || 1} mark{q.marks !== 1 ? 's' : ''}</span>
+                  <div className="text-muted-foreground flex items-center gap-2 font-mono text-[11px]">
+                    <span>
+                      +{q.marks || 1} mark{q.marks !== 1 ? 's' : ''}
+                    </span>
                   </div>
                 </div>
 
-                {/* Question Prompt Snippet */}
-                <div className="text-xs leading-relaxed line-clamp-2 md:line-clamp-3 selectable-content text-foreground/90">
+                {/* Question Prompt Snippet - Fully responsive with zero text clipping */}
+                <div className="selectable-content text-foreground overflow-visible text-[13px] leading-relaxed font-normal wrap-break-word">
                   <MathRenderer content={q.body} />
                 </div>
 
                 {/* Card Action Hint */}
-                <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs">
-                  <span className="text-muted-foreground text-[11px] group-hover:text-foreground transition-colors">
+                <div className="border-border/40 flex items-center justify-between border-t pt-2.5 text-xs">
+                  <span className="text-muted-foreground text-[11px]">
                     Click to review problem & solution
                   </span>
                   <button
@@ -248,10 +325,10 @@ export function MistakeVault() {
                       e.stopPropagation();
                       setModalIndex(idx);
                     }}
-                    className="btn btn-ghost btn-xs text-primary gap-1 font-medium group-hover:bg-primary/10 active:scale-95"
+                    className="text-primary flex cursor-pointer items-center gap-1 text-xs font-semibold transition-colors hover:underline"
                   >
-                    View Answer & Explanation
-                    <ChevronRight className="size-3" />
+                    <span>View Answer & Explanation</span>
+                    <ChevronRight className="size-3.5" />
                   </button>
                 </div>
               </div>
@@ -269,6 +346,8 @@ export function MistakeVault() {
         onNavigateIndex={(newIdx) => setModalIndex(newIdx)}
         titlePrefix="Error #"
       />
+      {/* Native macOS Contextual Menu Portal */}
+      <MacContextMenuPortal state={contextMenuState} onClose={closeContextMenu} />
     </div>
   );
 }

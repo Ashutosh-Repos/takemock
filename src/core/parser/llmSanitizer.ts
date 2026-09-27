@@ -12,11 +12,7 @@
  */
 
 export type DetectedFormat =
-  | 'MARKDOWN_FULL_TEST'
-  | 'MARKDOWN_QUESTIONS'
-  | 'JSON_FULL_TEST'
-  | 'JSON_QUESTIONS'
-  | 'UNKNOWN';
+  'MARKDOWN_FULL_TEST' | 'MARKDOWN_QUESTIONS' | 'JSON_FULL_TEST' | 'JSON_QUESTIONS' | 'UNKNOWN';
 
 /**
  * Strips outer markdown code block fences (```markdown ... ``` or ```json ... ```)
@@ -47,7 +43,12 @@ export function stripCodeFences(text: string): string {
   if (unclosedMatch && !cleaned.endsWith('```')) {
     // Check if the extracted content actually looks like markdown/YAML
     const inner = unclosedMatch[1].trim();
-    if (inner.includes('---') || inner.includes('schemaVersion') || inner.includes('type:') || inner.includes('# Section:')) {
+    if (
+      inner.includes('---') ||
+      inner.includes('schemaVersion') ||
+      inner.includes('type:') ||
+      inner.includes('# Section:')
+    ) {
       return inner;
     }
   }
@@ -83,7 +84,10 @@ export function sanitizeLlmMarkdown(raw: string): string {
   content = content.replace(/\r\n/g, '\n');
 
   // Normalize question delimiters (e.g. "## === question ===" or "===question===" -> "=== question ===")
-  content = content.replace(/^[ \t]*#{1,6}[ \t]*===[ \t]*question[ \t]*===[ \t]*$/gim, '=== question ===');
+  content = content.replace(
+    /^[ \t]*#{1,6}[ \t]*===[ \t]*question[ \t]*===[ \t]*$/gim,
+    '=== question ===',
+  );
   content = content.replace(/^[ \t]*===[ \t]*question[ \t]*===[ \t]*$/gim, '=== question ===');
 
   // Normalize checkbox task list bullets: "* [x]" or "+ [x]" -> "- [x]"
@@ -112,7 +116,11 @@ export function sanitizeLlmMarkdown(raw: string): string {
 
   // Handle case where ChatGPT output omitted opening '---' for the first question
   // e.g. starts directly with schemaVersion: "2.0"
-  if (/^[ \t]*(?:schemaVersion|type|id)[ \t]*:/m.test(content) && !content.trim().startsWith('---') && !content.trim().startsWith('# Section:')) {
+  if (
+    /^[ \t]*(?:schemaVersion|type|id)[ \t]*:/m.test(content) &&
+    !content.trim().startsWith('---') &&
+    !content.trim().startsWith('# Section:')
+  ) {
     const firstAnchorMatch = content.match(/^[ \t]*(?:schemaVersion|type|id)[ \t]*:/m);
     if (firstAnchorMatch && firstAnchorMatch.index !== undefined && firstAnchorMatch.index <= 10) {
       content = '---\n' + content.trimStart();
@@ -128,7 +136,11 @@ export function sanitizeLlmMarkdown(raw: string): string {
   // Boundary C: End of a question attribute (correctValue, unit, toleranceAbsolute, etc.)
   const lastSolutionClose = content.lastIndexOf(':::');
   const lastOptionMatch = [...content.matchAll(/^[ \t]*-[ \t]*\[[ xX]\][ \t]*.+$/gm)].pop();
-  const lastAttributeMatch = [...content.matchAll(/^[ \t]*(?:correctValue|toleranceAbsolute|toleranceRelative|unit|correctCode|allowPartialCredit|acceptedAnswers|difficulty|marks)[ \t]*:[ \t]*.+$/gm)].pop();
+  const lastAttributeMatch = [
+    ...content.matchAll(
+      /^[ \t]*(?:correctValue|toleranceAbsolute|toleranceRelative|unit|correctCode|allowPartialCredit|acceptedAnswers|difficulty|marks)[ \t]*:[ \t]*.+$/gm,
+    ),
+  ].pop();
 
   let lastSemanticEnd = -1;
 
@@ -215,7 +227,10 @@ export function detectContentFormat(rawText: string): DetectedFormat {
         if (Array.isArray(parsed.questions) && !parsed.sections && !parsed.timing) {
           return 'JSON_QUESTIONS';
         }
-        if (parsed.sections || (parsed.title && (parsed.timing || parsed.durationMinutes || parsed.mode))) {
+        if (
+          parsed.sections ||
+          (parsed.title && (parsed.timing || parsed.durationMinutes || parsed.mode))
+        ) {
           return 'JSON_FULL_TEST';
         }
       }
@@ -238,9 +253,10 @@ export function detectContentFormat(rawText: string): DetectedFormat {
     if (nextDash !== -1) {
       const firstBlock = cleaned.slice(3, nextDash);
       const isQuestionBlock = /^[ \t]*(?:type|schemaVersion)[ \t]*:/m.test(firstBlock);
-      const hasBlueprintKeys = /^[ \t]*(?:durationMinutes|timingMode|timing|navigation|scoring|title|mode)[ \t]*:/m.test(
-        firstBlock
-      );
+      const hasBlueprintKeys =
+        /^[ \t]*(?:durationMinutes|timingMode|timing|navigation|scoring|title|mode)[ \t]*:/m.test(
+          firstBlock,
+        );
       if (hasBlueprintKeys && !isQuestionBlock) {
         return 'MARKDOWN_FULL_TEST';
       }

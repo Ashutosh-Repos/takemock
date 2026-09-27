@@ -33,7 +33,11 @@ import {
   resolveQuestionVisitStatus,
 } from '@/core/engine/navigationEngine';
 import { formatTimeSeconds, TimingEngine } from '@/core/engine/timingEngine';
-import { sendNativeNotification, setWindowFullscreen } from '@/core/native/tauriBridge';
+import {
+  sendNativeNotification,
+  setWindowFullscreen,
+  showNativeAlert,
+} from '@/core/native/tauriBridge';
 import { assessmentRepository } from '@/core/storage/repository';
 import type { AnswerHistoryEntry, AttemptState, QuestionVisitStatus } from '@/types/attempt';
 import type { QuestionModel } from '@/types/question';
@@ -52,7 +56,9 @@ export function Runner() {
   // Responses & visit statuses in local memory (synced to IndexedDB)
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [visitStatuses, setVisitStatuses] = useState<Record<string, QuestionVisitStatus>>({});
-  const [timings, setTimings] = useState<Record<string, { timeSpentSeconds: number; visitCount: number }>>({});
+  const [timings, setTimings] = useState<
+    Record<string, { timeSpentSeconds: number; visitCount: number }>
+  >({});
   const [answerHistory, setAnswerHistory] = useState<Record<string, AnswerHistoryEntry[]>>({});
 
   // Practice mode instant checks
@@ -159,15 +165,18 @@ export function Runner() {
         const scored = await assessmentRepository.submitAttempt(attemptId, isAutoSubmit);
         await sendNativeNotification(
           'Exam Completed',
-          `Your attempt for "${curAttempt?.snapshot.testTitle || 'Test'}" has been successfully submitted and scored.`
+          `Your attempt for "${curAttempt?.snapshot.testTitle || 'Test'}" has been successfully submitted and scored.`,
         );
         navigate(`/result/${scored.id}`);
       } catch (err: any) {
-        alert(`Submission failed: ${err.message || 'Unknown error'}`);
+        await showNativeAlert(`Submission failed: ${err.message || 'Unknown error'}`, {
+          title: 'Submission Error',
+          kind: 'error',
+        });
         setIsSubmitting(false);
       }
     },
-    [attemptId, navigate]
+    [attemptId, navigate],
   );
 
   const handleFinalSubmitRef = useRef(handleFinalSubmit);
@@ -183,12 +192,19 @@ export function Runner() {
       try {
         const att = await assessmentRepository.getAttemptById(attemptId);
         if (!att) {
-          alert('Attempt not found!');
+          await showNativeAlert('Attempt not found!', {
+            title: 'Not Found',
+            kind: 'warning',
+          });
           navigate('/');
           return;
         }
 
-        if (att.status === 'SCORED' || att.status === 'SUBMITTED' || att.status === 'AUTO_SUBMITTED') {
+        if (
+          att.status === 'SCORED' ||
+          att.status === 'SUBMITTED' ||
+          att.status === 'AUTO_SUBMITTED'
+        ) {
           navigate(`/result/${att.id}`);
           return;
         }
@@ -203,7 +219,9 @@ export function Runner() {
 
         const initialSec = att.currentSectionId || att.snapshot.sections[0]?.id || '';
         const initialQ =
-          att.currentQuestionId || att.snapshot.sections.find((s) => s.id === initialSec)?.questions[0]?.id || '';
+          att.currentQuestionId ||
+          att.snapshot.sections.find((s) => s.id === initialSec)?.questions[0]?.id ||
+          '';
         setCurrentSectionId(initialSec);
         setCurrentQuestionId(initialQ);
 
@@ -249,7 +267,7 @@ export function Runner() {
     newTimings = timings,
     newHistory = answerHistory,
     targetSectionId = currentSectionId,
-    targetQuestionId = currentQuestionId
+    targetQuestionId = currentQuestionId,
   ) => {
     if (!attempt) return;
     try {
@@ -273,7 +291,7 @@ export function Runner() {
   const navigateToQuestion = (
     secId: string,
     qId: string,
-    overrideVisits?: Record<string, QuestionVisitStatus>
+    overrideVisits?: Record<string, QuestionVisitStatus>,
   ) => {
     if (secId === currentSectionId && qId === currentQuestionId) return;
 
@@ -349,13 +367,21 @@ export function Runner() {
       });
     }
 
-    syncToDb(updatedResponses, updatedVisits, timings, updatedHistory, currentSectionId, currentQuestionId);
+    syncToDb(
+      updatedResponses,
+      updatedVisits,
+      timings,
+      updatedHistory,
+      currentSectionId,
+      currentQuestionId,
+    );
   };
 
   // Action: Save & Next
   const handleSaveAndNext = () => {
     if (!attempt) return;
-    const hasResp = responses[currentQuestionId] !== undefined && responses[currentQuestionId] !== '';
+    const hasResp =
+      responses[currentQuestionId] !== undefined && responses[currentQuestionId] !== '';
     const newStatus = resolveQuestionVisitStatus(hasResp, false);
     const updatedVisits = { ...visitStatuses, [currentQuestionId]: newStatus };
     setVisitStatuses(updatedVisits);
@@ -364,14 +390,22 @@ export function Runner() {
     if (next) {
       navigateToQuestion(next.sectionId, next.questionId, updatedVisits);
     } else {
-      syncToDb(responses, updatedVisits, timings, answerHistory, currentSectionId, currentQuestionId);
+      syncToDb(
+        responses,
+        updatedVisits,
+        timings,
+        answerHistory,
+        currentSectionId,
+        currentQuestionId,
+      );
     }
   };
 
   // Action: Mark for Review & Next
   const handleMarkForReviewAndNext = () => {
     if (!attempt) return;
-    const hasResp = responses[currentQuestionId] !== undefined && responses[currentQuestionId] !== '';
+    const hasResp =
+      responses[currentQuestionId] !== undefined && responses[currentQuestionId] !== '';
     const newStatus = resolveQuestionVisitStatus(hasResp, true);
     const updatedVisits = { ...visitStatuses, [currentQuestionId]: newStatus };
     setVisitStatuses(updatedVisits);
@@ -388,7 +422,14 @@ export function Runner() {
     if (next) {
       navigateToQuestion(next.sectionId, next.questionId, updatedVisits);
     } else {
-      syncToDb(responses, updatedVisits, timings, answerHistory, currentSectionId, currentQuestionId);
+      syncToDb(
+        responses,
+        updatedVisits,
+        timings,
+        answerHistory,
+        currentSectionId,
+        currentQuestionId,
+      );
     }
   };
 
@@ -398,7 +439,10 @@ export function Runner() {
     delete updatedResponses[currentQuestionId];
     setResponses(updatedResponses);
 
-    const updatedVisits: Record<string, QuestionVisitStatus> = { ...visitStatuses, [currentQuestionId]: 'SKIPPED' };
+    const updatedVisits: Record<string, QuestionVisitStatus> = {
+      ...visitStatuses,
+      [currentQuestionId]: 'SKIPPED',
+    };
     setVisitStatuses(updatedVisits);
 
     if (attemptId) {
@@ -409,7 +453,14 @@ export function Runner() {
       });
     }
 
-    syncToDb(updatedResponses, updatedVisits, timings, answerHistory, currentSectionId, currentQuestionId);
+    syncToDb(
+      updatedResponses,
+      updatedVisits,
+      timings,
+      answerHistory,
+      currentSectionId,
+      currentQuestionId,
+    );
   };
 
   // Action: Previous Question
@@ -427,17 +478,19 @@ export function Runner() {
   };
 
   // Stable actions ref for keyboard shortcuts and proctoring
-  const actionsRef = useRef({
-    handleSaveAndNext,
-    handlePrevious,
-    handleMarkForReviewAndNext,
-    handleClearResponse,
-    setShowSubmitModal,
-    toggleFullscreen,
-    isExam: attempt?.snapshot?.mode === 'EXAM',
-    isInProgress: attempt?.status === 'IN_PROGRESS',
-  });
+  const actionsRef = useRef<{
+    handleSaveAndNext: () => void;
+    handlePrevious: () => void;
+    handleMarkForReviewAndNext: () => void;
+    handleClearResponse: () => void;
+    setShowSubmitModal: (show: boolean) => void;
+    toggleFullscreen: () => void;
+    isExam: boolean;
+    isInProgress: boolean;
+  } | null>(null);
 
+  // Always keep actionsRef fresh with latest handlers
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     actionsRef.current = {
       handleSaveAndNext,
@@ -449,16 +502,7 @@ export function Runner() {
       isExam: attempt?.snapshot?.mode === 'EXAM',
       isInProgress: attempt?.status === 'IN_PROGRESS',
     };
-  }, [
-    handleSaveAndNext,
-    handlePrevious,
-    handleMarkForReviewAndNext,
-    handleClearResponse,
-    setShowSubmitModal,
-    toggleFullscreen,
-    attempt?.snapshot?.mode,
-    attempt?.status,
-  ]);
+  });
 
   // Keyboard shortcut & native proctoring listeners (bound once)
   useEffect(() => {
@@ -470,34 +514,34 @@ export function Runner() {
 
       if (e.altKey && e.key.toLowerCase() === 'n') {
         e.preventDefault();
-        actionsRef.current.handleSaveAndNext();
+        actionsRef.current?.handleSaveAndNext();
       } else if (e.altKey && e.key.toLowerCase() === 'b') {
         e.preventDefault();
-        actionsRef.current.handlePrevious();
+        actionsRef.current?.handlePrevious();
       } else if (e.altKey && e.key.toLowerCase() === 'm') {
         e.preventDefault();
-        actionsRef.current.handleMarkForReviewAndNext();
+        actionsRef.current?.handleMarkForReviewAndNext();
       } else if (e.altKey && e.key.toLowerCase() === 'c') {
         e.preventDefault();
-        actionsRef.current.handleClearResponse();
+        actionsRef.current?.handleClearResponse();
       } else if (e.altKey && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        actionsRef.current.setShowSubmitModal(true);
+        actionsRef.current?.setShowSubmitModal(true);
       } else if (e.key === 'F11') {
         e.preventDefault();
-        actionsRef.current.toggleFullscreen();
+        actionsRef.current?.toggleFullscreen();
       }
     };
 
     const handleContextMenu = (e: MouseEvent) => {
       // In CBT Exam mode, suppress web context menu to maintain exam integrity
-      if (actionsRef.current.isExam) {
+      if (actionsRef.current?.isExam) {
         e.preventDefault();
       }
     };
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (actionsRef.current.isInProgress) {
+      if (actionsRef.current?.isInProgress) {
         e.preventDefault();
         e.returnValue = '';
       }
@@ -524,8 +568,9 @@ export function Runner() {
 
   // Robust section and question lookup across all sections
   let currentSection = attempt.snapshot.sections.find((s) => s.id === currentSectionId);
-  let currentQuestion: QuestionModel | undefined =
-    currentSection?.questions.find((q) => q.id === currentQuestionId);
+  let currentQuestion: QuestionModel | undefined = currentSection?.questions.find(
+    (q) => q.id === currentQuestionId,
+  );
 
   // If question was not in currentSection, search across all sections to auto-correct section
   if (!currentQuestion) {
@@ -544,7 +589,8 @@ export function Runner() {
   if (!currentQuestion && currentSection) currentQuestion = currentSection.questions[0];
 
   const isPractice = attempt.snapshot.mode === 'PRACTICE';
-  const hasTimer = attempt.snapshot.timing.mode !== 'NONE' && attempt.snapshot.timing.totalDurationSeconds > 0;
+  const hasTimer =
+    attempt.snapshot.timing.mode !== 'NONE' && attempt.snapshot.timing.totalDurationSeconds > 0;
 
   // Counts for palette
   let answeredCount = 0;
@@ -565,22 +611,28 @@ export function Runner() {
   });
 
   return (
-    <div className="bg-transparent text-foreground flex min-h-screen flex-col font-sans select-none">
+    <div className="text-foreground flex min-h-screen flex-col bg-transparent font-sans select-none">
       {/* ======================================================================
           CBT Header Bar (Native Window Drag Region)
          ====================================================================== */}
       <header
         data-tauri-drag-region
-        className="liquid-glass-header sticky top-0 z-40 flex items-center justify-between px-4 py-2 shadow-2xs md:px-6"
+        className={`liquid-glass-header sticky top-0 z-40 flex items-center justify-between px-4 py-2 shadow-2xs transition-[padding] duration-150 md:px-6 ${
+          !isFullscreen ? 'pl-19.5 md:pl-21' : ''
+        }`}
       >
         <div data-tauri-drag-region className="flex items-center gap-2.5">
-          <div className="bg-primary/10 text-primary rounded-md px-1.5 py-0.5 text-xs font-bold hidden sm:block pointer-events-none">
+          <div className="bg-primary/10 text-primary pointer-events-none hidden rounded-md px-1.5 py-0.5 text-xs font-bold sm:block">
             CBT
           </div>
           <div data-tauri-drag-region>
-            <h1 className="text-sm font-semibold md:text-base line-clamp-1 tracking-tight text-foreground">{attempt.snapshot.testTitle}</h1>
-            <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-              <span className="badge badge-xs badge-neutral uppercase font-mono">{attempt.snapshot.mode}</span>
+            <h1 className="text-foreground line-clamp-1 text-sm font-semibold tracking-tight md:text-base">
+              {attempt.snapshot.testTitle}
+            </h1>
+            <div className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="badge badge-xs badge-neutral font-mono uppercase">
+                {attempt.snapshot.mode}
+              </span>
               <span className="hidden sm:inline">Attempt #{attempt.id.slice(-6)}</span>
             </div>
           </div>
@@ -593,7 +645,7 @@ export function Runner() {
               role="timer"
               aria-live="polite"
               aria-label={`Time remaining: ${formatTimeSeconds(timerSnapshot.remainingSeconds)}`}
-              className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-xs sm:text-sm font-semibold shadow-2xs transition-colors ${
+              className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-xs font-semibold shadow-2xs transition-colors sm:text-sm ${
                 timerSnapshot.isWarning
                   ? 'border-error/60 bg-error/15 text-error animate-pulse'
                   : 'border-border bg-muted/60 text-foreground'
@@ -612,7 +664,11 @@ export function Runner() {
                   className="btn btn-ghost btn-xs btn-circle ml-0.5 active:scale-90"
                   aria-label={timerSnapshot.state === 'RUNNING' ? 'Pause timer' : 'Resume timer'}
                 >
-                  {timerSnapshot.state === 'RUNNING' ? <Pause className="size-3" /> : <Play className="size-3" />}
+                  {timerSnapshot.state === 'RUNNING' ? (
+                    <Pause className="size-3" />
+                  ) : (
+                    <Play className="size-3" />
+                  )}
                 </button>
               )}
             </div>
@@ -620,7 +676,7 @@ export function Runner() {
             <div
               role="timer"
               aria-label={`Elapsed time: ${formatTimeSeconds(timerSnapshot.elapsedSeconds)}`}
-              className="badge badge-outline border-border gap-1 py-2 font-mono text-xs text-muted-foreground"
+              className="badge badge-outline border-border text-muted-foreground gap-1 py-2 font-mono text-xs"
             >
               <Clock className="size-3" />
               Elapsed: {formatTimeSeconds(timerSnapshot.elapsedSeconds)}
@@ -633,7 +689,7 @@ export function Runner() {
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
             aria-label={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-            className="btn btn-ghost btn-xs btn-circle hidden md:flex text-muted-foreground hover:text-foreground active:scale-90"
+            className="btn btn-ghost btn-xs btn-circle text-muted-foreground hover:text-foreground hidden active:scale-90 md:flex"
           >
             {isFullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
           </button>
@@ -643,7 +699,7 @@ export function Runner() {
             type="button"
             onClick={() => setShowMobilePalette(true)}
             aria-label="Open Question Palette"
-            className="btn btn-outline btn-xs gap-1 lg:hidden active:scale-95"
+            className="btn btn-outline btn-xs gap-1 active:scale-95 lg:hidden"
           >
             <Grid className="size-3.5" />
             <span>Palette</span>
@@ -664,8 +720,13 @@ export function Runner() {
       {/* ======================================================================
           Section Navigation Bar
          ====================================================================== */}
-      <nav aria-label="Exam Sections" className="liquid-glass-header flex items-center gap-1.5 border-b px-4 py-1.5 overflow-x-auto md:px-6">
-        <span className="text-[11px] font-semibold text-muted-foreground uppercase mr-1 shrink-0">Sections:</span>
+      <nav
+        aria-label="Exam Sections"
+        className="liquid-glass-header flex items-center gap-1.5 overflow-x-auto border-b px-4 py-1.5 md:px-6"
+      >
+        <span className="text-muted-foreground mr-1 shrink-0 text-[11px] font-semibold uppercase">
+          Sections:
+        </span>
         <div className="flex items-center gap-1.5">
           {attempt.snapshot.sections.map((sec) => {
             const isActive = sec.id === currentSectionId;
@@ -677,12 +738,14 @@ export function Runner() {
                   if (firstQ) navigateToQuestion(sec.id, firstQ.id);
                 }}
                 aria-current={isActive ? 'true' : undefined}
-                className={`btn btn-xs font-medium transition-all shrink-0 rounded-lg active:scale-95 ${
-                  isActive ? 'btn-primary shadow-xs' : 'liquid-glass-pill text-muted-foreground hover:text-foreground'
+                className={`btn btn-xs shrink-0 rounded-lg font-medium transition-all active:scale-95 ${
+                  isActive
+                    ? 'btn-primary shadow-xs'
+                    : 'bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground border-border/60 border'
                 }`}
               >
                 {sec.title}
-                <span className="badge badge-xs font-mono ml-1">{sec.questions.length}</span>
+                <span className="badge badge-xs ml-1 font-mono">{sec.questions.length}</span>
               </button>
             );
           })}
@@ -692,18 +755,19 @@ export function Runner() {
       {/* ======================================================================
           Main Examination Split Layout
          ====================================================================== */}
-      <div className="flex flex-1 flex-col lg:flex-row overflow-hidden pb-6 md:pb-0">
+      <div className="flex flex-1 flex-col overflow-hidden pb-6 md:pb-0 lg:flex-row">
         {/* Left/Center: Question Stimulus & Response Form */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+        <main className="flex-1 space-y-4 overflow-y-auto p-4 md:p-6">
           {currentQuestion ? (
-            <div className="liquid-glass-card rounded-2xl p-4 md:p-6 shadow-xs space-y-5">
+            <div className="card space-y-5 p-4 shadow-xs md:p-6">
               {/* Question Header */}
               <div className="border-border/60 flex flex-wrap items-center justify-between gap-2 border-b pb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-primary text-base font-bold tracking-tight">
-                    Question {currentSection.questions.findIndex((q) => q.id === currentQuestion.id) + 1}
+                    Question{' '}
+                    {currentSection.questions.findIndex((q) => q.id === currentQuestion.id) + 1}
                   </span>
-                  <span className="badge badge-outline border-border/80 text-[11px] font-mono">
+                  <span className="badge badge-outline border-border/80 font-mono text-[11px]">
                     {currentQuestion.type}
                   </span>
                 </div>
@@ -720,7 +784,7 @@ export function Runner() {
 
               {/* Question Image if any */}
               {currentQuestion.imageUrl && (
-                <div className="max-w-md overflow-hidden rounded-md border border-border/60">
+                <div className="border-border/60 max-w-md overflow-hidden rounded-md border">
                   <img
                     src={currentQuestion.imageUrl}
                     alt={currentQuestion.imageAlt || 'Question diagram'}
@@ -746,10 +810,13 @@ export function Runner() {
 
               {/* Practice Mode: Instant Check Answer & Verified Solution */}
               {isPractice && (
-                <div className="border-border/60 border-t pt-3 space-y-3">
+                <div className="border-border/60 space-y-3 border-t pt-3">
                   <div className="flex items-center gap-2">
-                    <button onClick={handleCheckAnswer} className="btn btn-outline btn-xs gap-1.5 active:scale-95">
-                      <CheckCircle2 className="size-3.5 text-success" />
+                    <button
+                      onClick={handleCheckAnswer}
+                      className="btn btn-outline btn-xs gap-1.5 active:scale-95"
+                    >
+                      <CheckCircle2 className="text-success size-3.5" />
                       Check Answer
                     </button>
                     {currentQuestion.solution && (
@@ -760,17 +827,19 @@ export function Runner() {
                             [currentQuestion.id]: !prev[currentQuestion.id],
                           }))
                         }
-                        className="btn btn-ghost btn-xs gap-1 text-primary font-medium active:scale-95"
+                        className="btn btn-ghost btn-xs text-primary gap-1 font-medium active:scale-95"
                       >
                         <Eye className="size-3.5" />
-                        {showSolutionInstant[currentQuestion.id] ? 'Hide Solution' : 'Show Solution'}
+                        {showSolutionInstant[currentQuestion.id]
+                          ? 'Hide Solution'
+                          : 'Show Solution'}
                       </button>
                     )}
                   </div>
 
                   {showSolutionInstant[currentQuestion.id] && currentQuestion.solution && (
-                    <div className="bg-muted/40 border-border/60 rounded-md border p-3.5 text-xs animate-fade-in selectable-content">
-                      <div className="text-primary flex items-center gap-1.5 mb-1.5 text-[11px] font-bold uppercase tracking-wider">
+                    <div className="bg-muted/40 border-border/60 animate-fade-in selectable-content rounded-md border p-3.5 text-xs">
+                      <div className="text-primary mb-1.5 flex items-center gap-1.5 text-[11px] font-bold tracking-wider uppercase">
                         <Sparkles className="size-3.5" />
                         Explanation & Solution
                       </div>
@@ -781,16 +850,16 @@ export function Runner() {
               )}
             </div>
           ) : (
-            <div className="text-center p-8 text-muted-foreground text-sm">Question not found.</div>
+            <div className="text-muted-foreground p-8 text-center text-sm">Question not found.</div>
           )}
 
           {/* Bottom Action Controls */}
-          <div className="bg-card border-border rounded-lg flex flex-wrap items-center justify-between gap-2 border p-3 shadow-2xs">
+          <div className="bg-card border-border flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 shadow-2xs">
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleMarkForReviewAndNext}
-                className="btn btn-outline border-border text-foreground/80 hover:bg-muted btn-sm gap-1.5 text-xs font-medium rounded-md active:scale-95"
+                className="btn btn-outline border-border text-foreground/80 hover:bg-muted btn-sm gap-1.5 rounded-md text-xs font-medium active:scale-95"
               >
                 <Bookmark className="size-3.5 text-amber-500" />
                 <span className="hidden sm:inline">Mark for Review & Next</span>
@@ -799,7 +868,7 @@ export function Runner() {
               <button
                 type="button"
                 onClick={handleClearResponse}
-                className="btn btn-ghost btn-sm text-xs text-muted-foreground hover:text-foreground gap-1.5 rounded-md active:scale-95"
+                className="btn btn-ghost btn-sm text-muted-foreground hover:text-foreground gap-1.5 rounded-md text-xs active:scale-95"
               >
                 <RotateCcw className="size-3" />
                 Clear
@@ -807,11 +876,19 @@ export function Runner() {
             </div>
 
             <div className="flex items-center gap-1.5">
-              <button type="button" onClick={handlePrevious} className="btn btn-outline border-border btn-sm text-xs font-medium rounded-md gap-1 active:scale-95">
+              <button
+                type="button"
+                onClick={handlePrevious}
+                className="btn btn-outline border-border btn-sm gap-1 rounded-md text-xs font-medium active:scale-95"
+              >
                 <ChevronLeft className="size-3.5" />
                 Previous
               </button>
-              <button type="button" onClick={handleSaveAndNext} className="btn btn-primary btn-sm text-xs font-medium rounded-md gap-1 active:scale-95">
+              <button
+                type="button"
+                onClick={handleSaveAndNext}
+                className="btn btn-primary btn-sm gap-1 rounded-md text-xs font-medium active:scale-95"
+              >
                 Save & Next
                 <ChevronRight className="size-3.5" />
               </button>
@@ -822,38 +899,43 @@ export function Runner() {
         {/* ====================================================================
             Right Column: Official CBT Question Palette (Desktop Split View)
            ==================================================================== */}
-        <aside aria-label="Question Palette" className="liquid-glass-header w-full border-t lg:w-72 lg:border-t-0 lg:border-l p-3.5 hidden lg:flex flex-col justify-between overflow-y-auto">
+        <aside
+          aria-label="Question Palette"
+          className="border-border/60 bg-muted/20 hidden w-full flex-col justify-between overflow-y-auto border-t p-3.5 lg:flex lg:w-72 lg:border-t-0 lg:border-l"
+        >
           <div className="space-y-4">
             {/* Palette Status Legend (Section 37 Non-color accessible) */}
             <div className="space-y-2">
-              <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Question Palette</h4>
+              <h4 className="text-muted-foreground text-[11px] font-bold tracking-wider uppercase">
+                Question Palette
+              </h4>
               <div className="grid grid-cols-2 gap-1.5 text-xs">
                 <div className="flex items-center gap-1.5">
-                  <span className="size-4.5 rounded bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">
+                  <span className="flex size-4.5 items-center justify-center rounded bg-emerald-600 text-[10px] font-bold text-white">
                     ✓
                   </span>
                   <span className="text-[11px]">Answered ({answeredCount})</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="size-4.5 rounded bg-rose-600 text-white flex items-center justify-center text-[10px] font-bold">
+                  <span className="flex size-4.5 items-center justify-center rounded bg-rose-600 text-[10px] font-bold text-white">
                     ✕
                   </span>
                   <span className="text-[11px]">Skipped ({skippedCount})</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="size-4.5 rounded bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold">
+                  <span className="flex size-4.5 items-center justify-center rounded bg-amber-500 text-[10px] font-bold text-white">
                     •
                   </span>
                   <span className="text-[11px]">Review ({markedCount})</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="size-4.5 rounded bg-amber-500 text-white ring-2 ring-emerald-400 flex items-center justify-center text-[10px] font-bold">
+                  <span className="flex size-4.5 items-center justify-center rounded bg-amber-500 text-[10px] font-bold text-white ring-2 ring-emerald-400">
                     ★
                   </span>
                   <span className="text-[11px]">Ans & Rev ({answeredMarkedCount})</span>
                 </div>
-                <div className="flex items-center gap-1.5 col-span-2">
-                  <span className="size-4.5 rounded bg-muted text-muted-foreground border border-border flex items-center justify-center text-[10px] font-bold">
+                <div className="col-span-2 flex items-center gap-1.5">
+                  <span className="bg-muted text-muted-foreground border-border flex size-4.5 items-center justify-center rounded border text-[10px] font-bold">
                     -
                   </span>
                   <span className="text-[11px]">Unvisited ({notVisitedCount})</span>
@@ -863,7 +945,7 @@ export function Runner() {
 
             {/* Questions Grid for Current Section */}
             <div className="border-border/60 border-t pt-3">
-              <div className="text-[11px] font-semibold text-muted-foreground mb-2">
+              <div className="text-muted-foreground mb-2 text-[11px] font-semibold">
                 Questions in {currentSection.title}:
               </div>
               <div className="grid grid-cols-5 gap-1.5">
@@ -879,7 +961,8 @@ export function Runner() {
                   } else if (status === 'MARKED_FOR_REVIEW') {
                     bgStyle = 'bg-amber-500 text-white border-amber-600 shadow-2xs';
                   } else if (status === 'ANSWERED_AND_MARKED') {
-                    bgStyle = 'bg-amber-500 text-white border-amber-600 ring-2 ring-emerald-400 shadow-2xs';
+                    bgStyle =
+                      'bg-amber-500 text-white border-amber-600 ring-2 ring-emerald-400 shadow-2xs';
                   }
 
                   return (
@@ -888,8 +971,8 @@ export function Runner() {
                       onClick={() => navigateToQuestion(currentSection.id, q.id)}
                       aria-label={`Question ${idx + 1}, ${status.replace(/_/g, ' ').toLowerCase()}`}
                       aria-current={isCurrent ? 'page' : undefined}
-                      className={`btn btn-xs aspect-square p-0 font-bold border rounded-md transition-all active:scale-90 ${bgStyle} ${
-                        isCurrent ? 'ring-2 ring-primary ring-offset-1' : ''
+                      className={`btn btn-xs aspect-square rounded-md border p-0 font-bold transition-all active:scale-90 ${bgStyle} ${
+                        isCurrent ? 'ring-primary ring-2 ring-offset-1' : ''
                       }`}
                     >
                       {idx + 1}
@@ -901,10 +984,10 @@ export function Runner() {
           </div>
 
           {/* Quick Submit button at bottom of drawer */}
-          <div className="border-border border-t pt-3 mt-4">
+          <div className="border-border mt-4 border-t pt-3">
             <button
               onClick={() => setShowSubmitModal(true)}
-              className="btn btn-outline btn-primary btn-sm w-full gap-1.5 font-medium rounded-md"
+              className="btn btn-outline btn-primary btn-sm w-full gap-1.5 rounded-md font-medium"
             >
               <Send className="size-3.5" />
               Submit Test
@@ -921,11 +1004,13 @@ export function Runner() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="mobile-palette-title"
-          className="modal modal-open modal-bottom lg:hidden bg-black/40 backdrop-blur-xs z-50"
+          className="modal modal-open modal-bottom z-50 bg-black/40 backdrop-blur-xs lg:hidden"
         >
-          <div className="modal-box border-border max-w-sm border p-4 rounded-xl shadow-xl bg-card">
-            <div className="flex items-center justify-between border-b border-border/60 pb-2.5 mb-3">
-              <h3 id="mobile-palette-title" className="font-semibold text-sm">Question Palette: {currentSection.title}</h3>
+          <div className="modal-box border-border bg-card max-w-sm rounded-xl border p-4 shadow-xl">
+            <div className="border-border/60 mb-3 flex items-center justify-between border-b pb-2.5">
+              <h3 id="mobile-palette-title" className="text-sm font-semibold">
+                Question Palette: {currentSection.title}
+              </h3>
               <button
                 type="button"
                 onClick={() => setShowMobilePalette(false)}
@@ -937,27 +1022,35 @@ export function Runner() {
             </div>
 
             {/* Mobile Status Legend */}
-            <div className="grid grid-cols-2 gap-1.5 text-xs mb-3">
+            <div className="mb-3 grid grid-cols-2 gap-1.5 text-xs">
               <div className="flex items-center gap-1.5">
-                <span className="size-4 rounded bg-emerald-600 text-white flex items-center justify-center text-[9px] font-bold">✓</span>
+                <span className="flex size-4 items-center justify-center rounded bg-emerald-600 text-[9px] font-bold text-white">
+                  ✓
+                </span>
                 <span className="text-[11px]">Answered ({answeredCount})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="size-4 rounded bg-rose-600 text-white flex items-center justify-center text-[9px] font-bold">✕</span>
+                <span className="flex size-4 items-center justify-center rounded bg-rose-600 text-[9px] font-bold text-white">
+                  ✕
+                </span>
                 <span className="text-[11px]">Skipped ({skippedCount})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="size-4 rounded bg-amber-500 text-white flex items-center justify-center text-[9px] font-bold">•</span>
+                <span className="flex size-4 items-center justify-center rounded bg-amber-500 text-[9px] font-bold text-white">
+                  •
+                </span>
                 <span className="text-[11px]">Review ({markedCount + answeredMarkedCount})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="size-4 rounded bg-muted text-muted-foreground border border-border flex items-center justify-center text-[9px] font-bold">-</span>
+                <span className="bg-muted text-muted-foreground border-border flex size-4 items-center justify-center rounded border text-[9px] font-bold">
+                  -
+                </span>
                 <span className="text-[11px]">Unvisited ({notVisitedCount})</span>
               </div>
             </div>
 
             {/* Mobile Grid */}
-            <div className="grid grid-cols-5 gap-1.5 max-h-56 overflow-y-auto p-0.5">
+            <div className="grid max-h-56 grid-cols-5 gap-1.5 overflow-y-auto p-0.5">
               {currentSection.questions.map((q, idx) => {
                 const isCurrent = q.id === currentQuestionId;
                 const status = visitStatuses[q.id] || 'NOT_VISITED';
@@ -965,8 +1058,10 @@ export function Runner() {
                 let bgStyle = 'bg-muted/60 text-muted-foreground border-border';
                 if (status === 'ANSWERED') bgStyle = 'bg-emerald-600 text-white border-emerald-700';
                 else if (status === 'SKIPPED') bgStyle = 'bg-rose-600 text-white border-rose-700';
-                else if (status === 'MARKED_FOR_REVIEW') bgStyle = 'bg-amber-500 text-white border-amber-600';
-                else if (status === 'ANSWERED_AND_MARKED') bgStyle = 'bg-amber-500 text-white border-amber-600 ring-2 ring-emerald-400';
+                else if (status === 'MARKED_FOR_REVIEW')
+                  bgStyle = 'bg-amber-500 text-white border-amber-600';
+                else if (status === 'ANSWERED_AND_MARKED')
+                  bgStyle = 'bg-amber-500 text-white border-amber-600 ring-2 ring-emerald-400';
 
                 return (
                   <button
@@ -977,8 +1072,8 @@ export function Runner() {
                     }}
                     aria-label={`Question ${idx + 1}, ${status.replace(/_/g, ' ').toLowerCase()}`}
                     aria-current={isCurrent ? 'page' : undefined}
-                    className={`btn btn-xs aspect-square p-0 font-bold border rounded-md transition-all active:scale-90 ${bgStyle} ${
-                      isCurrent ? 'ring-2 ring-primary ring-offset-1' : ''
+                    className={`btn btn-xs aspect-square rounded-md border p-0 font-bold transition-all active:scale-90 ${bgStyle} ${
+                      isCurrent ? 'ring-primary ring-2 ring-offset-1' : ''
                     }`}
                   >
                     {idx + 1}
@@ -987,14 +1082,14 @@ export function Runner() {
               })}
             </div>
 
-            <div className="modal-action border-t border-border/60 pt-2.5 mt-3">
+            <div className="modal-action border-border/60 mt-3 border-t pt-2.5">
               <button
                 type="button"
                 onClick={() => {
                   setShowMobilePalette(false);
                   setShowSubmitModal(true);
                 }}
-                className="btn btn-primary btn-sm w-full gap-1.5 font-medium rounded-md active:scale-95"
+                className="btn btn-primary btn-sm w-full gap-1.5 rounded-md font-medium active:scale-95"
               >
                 <Send className="size-3.5" />
                 Finish & Submit Test
@@ -1012,34 +1107,48 @@ export function Runner() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="submit-modal-title"
-          className="modal modal-open modal-bottom sm:modal-middle bg-black/40 backdrop-blur-sm z-50"
+          className="modal modal-open modal-bottom sm:modal-middle z-50 bg-black/40 backdrop-blur-sm"
         >
-          <div className="modal-box liquid-glass max-w-md p-5 rounded-2xl shadow-2xl">
-            <div className="flex items-center gap-2.5 text-warning mb-2">
+          <div className="bg-card/95 text-card-foreground border-border/80 max-w-md rounded-2xl border p-5 shadow-2xl backdrop-blur-xl">
+            <div className="text-warning mb-2 flex items-center gap-2.5">
               <AlertTriangle className="size-5 shrink-0" />
-              <h3 id="submit-modal-title" className="text-base font-semibold text-foreground tracking-tight">Submit Exam</h3>
+              <h3
+                id="submit-modal-title"
+                className="text-foreground text-base font-semibold tracking-tight"
+              >
+                Submit Exam
+              </h3>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Are you sure you want to finish your test? You will not be able to change your answers once submitted.
+            <p className="text-muted-foreground text-xs">
+              Are you sure you want to finish your test? You will not be able to change your answers
+              once submitted.
             </p>
 
             {/* Candidate Summary Stats */}
-            <div className="bg-muted/40 rounded-lg border border-border my-3 p-3 grid grid-cols-2 gap-2 text-xs">
+            <div className="bg-muted/40 border-border my-3 grid grid-cols-2 gap-2 rounded-lg border p-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Answered:</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-mono">{answeredCount}</span>
+                <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                  {answeredCount}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Skipped:</span>
-                <span className="font-semibold text-rose-600 dark:text-rose-400 font-mono">{skippedCount}</span>
+                <span className="font-mono font-semibold text-rose-600 dark:text-rose-400">
+                  {skippedCount}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Review:</span>
-                <span className="font-semibold text-amber-600 dark:text-amber-400 font-mono">{markedCount + answeredMarkedCount}</span>
+                <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">
+                  {markedCount + answeredMarkedCount}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Unvisited:</span>
-                <span className="font-semibold text-muted-foreground font-mono">{notVisitedCount}</span>
+                <span className="text-muted-foreground font-mono font-semibold">
+                  {notVisitedCount}
+                </span>
               </div>
             </div>
 
@@ -1048,7 +1157,7 @@ export function Runner() {
                 type="button"
                 onClick={() => setShowSubmitModal(false)}
                 disabled={isSubmitting}
-                className="btn btn-ghost btn-sm text-xs rounded-md active:scale-95"
+                className="btn btn-ghost btn-sm rounded-md text-xs active:scale-95"
               >
                 Continue Test
               </button>
@@ -1056,7 +1165,7 @@ export function Runner() {
                 type="button"
                 onClick={() => handleFinalSubmit(false)}
                 disabled={isSubmitting}
-                className="btn btn-primary btn-sm gap-1.5 font-medium rounded-md active:scale-95 shadow-xs"
+                className="btn btn-primary btn-sm gap-1.5 rounded-md font-medium shadow-xs active:scale-95"
               >
                 {isSubmitting ? (
                   <span className="loading loading-spinner loading-xs" />

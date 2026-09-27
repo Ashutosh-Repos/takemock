@@ -19,7 +19,7 @@ export function roundScore(value: number, decimals: number = 2): number {
 export function evaluateAttempt(
   snapshot: TestSnapshot,
   responses: Record<string, unknown>,
-  timings: Record<string, QuestionTimingRecord> = {}
+  timings: Record<string, QuestionTimingRecord> = {},
 ): AttemptScoreResult {
   const questionScores: Record<string, QuestionScore> = {};
   const sectionScores: Record<string, SectionScore> = {};
@@ -53,7 +53,11 @@ export function evaluateAttempt(
       const qScore = handler.score(q, resp, snapshot.scoring, timeSpent);
 
       // Apply unattempted penalty if configured and question is unattempted
-      if (qScore.status === 'UNATTEMPTED' && snapshot.scoring.unattemptedPenalty && snapshot.scoring.unattemptedPenalty > 0) {
+      if (
+        qScore.status === 'UNATTEMPTED' &&
+        snapshot.scoring.unattemptedPenalty &&
+        snapshot.scoring.unattemptedPenalty > 0
+      ) {
         qScore.marksAwarded = -snapshot.scoring.unattemptedPenalty;
       }
 
@@ -111,7 +115,8 @@ export function evaluateAttempt(
   }
 
   const roundedGrandMarks = roundScore(grandTotalMarks, 2);
-  const overallAccuracy = grandAttempted > 0 ? roundScore((grandCorrect / grandAttempted) * 100, 1) : 0;
+  const overallAccuracy =
+    grandAttempted > 0 ? roundScore((grandCorrect / grandAttempted) * 100, 1) : 0;
   const overallPercentage =
     grandTotalMaxMarks > 0 ? roundScore((roundedGrandMarks / grandTotalMaxMarks) * 100, 1) : 0;
 

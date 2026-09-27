@@ -446,7 +446,7 @@ Note for numerical questions: Omit options and include "correctValue": <number>,
 export function buildLlmFormatSuffix(
   format: OutputFormat = 'MARKDOWN',
   selectedTypes?: string[],
-  target: GenerationTarget = 'QUESTION_PACK'
+  target: GenerationTarget = 'QUESTION_PACK',
 ): string {
   if (target === 'FULL_PAPER') {
     return format === 'JSON'
@@ -476,7 +476,7 @@ export function buildLlmFullPrompt(params: {
  */
 export function buildLlmSystemPrompt(
   format: OutputFormat = 'MARKDOWN',
-  target: GenerationTarget = 'QUESTION_PACK'
+  target: GenerationTarget = 'QUESTION_PACK',
 ): string {
   const targetDesc = target === 'FULL_PAPER' ? 'complete mock exam papers' : 'assessment questions';
   return `You are the Takemock Exam Authoring Assistant.
@@ -485,7 +485,9 @@ Your sole role is to produce rigorous, authentic ${targetDesc} formatted strictl
 Format Rules:
 1. Always output ONLY valid ${
     format === 'JSON'
-      ? target === 'FULL_PAPER' ? 'JSON object' : 'JSON array'
+      ? target === 'FULL_PAPER'
+        ? 'JSON object'
+        : 'JSON array'
       : 'takemock Markdown v2'
   } without conversational text or greetings.
 2. In Markdown, begin directly with '---' YAML frontmatter.${

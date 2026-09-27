@@ -151,7 +151,7 @@ export const EXAM_PRESETS: ExamPresetDefinition[] = [
  */
 export function buildTestDefinitionFromPreset(
   preset: ExamPresetDefinition,
-  customTitle?: string
+  customTitle?: string,
 ): TestDefinition {
   return {
     id: `test_${preset.id}_${Date.now()}`,

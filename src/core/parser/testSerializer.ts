@@ -54,7 +54,7 @@ export function serializeTestToMarkdown(
     id: string;
     title: string;
     questions: QuestionModel[];
-  }>
+  }>,
 ): string {
   const frontmatterObj: Record<string, any> = {
     schemaVersion: '2.0',
@@ -111,7 +111,7 @@ export function serializeTestToJson(
     id: string;
     title: string;
     questions: QuestionModel[];
-  }>
+  }>,
 ): string {
   const jsonBundle = {
     schemaVersion: '2.0',
@@ -219,8 +219,15 @@ export function parseFullTestMarkdown(rawText: string): FullTestParsedResult {
           if (m) candidateMeta.mode = m[1].toUpperCase();
         }
         if (!candidateMeta.instructions) {
-          const m = candidateYaml.match(/^[ \t]*instructions[ \t]*:[ \t]*([|>]-?)?\s*\n?([\s\S]*?)(?=(?:^[ \t]*[a-zA-Z0-9_-]+[ \t]*:)|$)/m);
-          if (m) candidateMeta.instructions = (m[2] || m[0].replace(/^[ \t]*instructions[ \t]*:[ \t]*/, '')).replace(/^["']|["']$/g, '').trim();
+          const m = candidateYaml.match(
+            /^[ \t]*instructions[ \t]*:[ \t]*([|>]-?)?\s*\n?([\s\S]*?)(?=(?:^[ \t]*[a-zA-Z0-9_-]+[ \t]*:)|$)/m,
+          );
+          if (m)
+            candidateMeta.instructions = (
+              m[2] || m[0].replace(/^[ \t]*instructions[ \t]*:[ \t]*/, '')
+            )
+              .replace(/^["']|["']$/g, '')
+              .trim();
         }
         if (!candidateMeta.description) {
           const m = candidateYaml.match(/^[ \t]*description[ \t]*:[ \t]*(.+)$/m);
@@ -233,7 +240,7 @@ export function parseFullTestMarkdown(rawText: string): FullTestParsedResult {
         candidateMeta.mode ||
         candidateMeta.durationMinutes !== undefined ||
         candidateMeta.timing ||
-        candidateMeta.sections
+        candidateMeta.sections,
       );
 
       if (hasTestBlueprint && !isQuestionLike) {
@@ -283,10 +290,14 @@ export function parseFullTestMarkdown(rawText: string): FullTestParsedResult {
     for (let s = 0; s < sectionMatches.length; s++) {
       const current = sectionMatches[s];
       const startPos = current.index;
-      const endPos = s + 1 < sectionMatches.length ? sectionMatches[s + 1].index : remainingText.length;
+      const endPos =
+        s + 1 < sectionMatches.length ? sectionMatches[s + 1].index : remainingText.length;
 
       // Extract section text excluding the header line itself
-      const sectionRaw = remainingText.slice(startPos, endPos).replace(/^# Section:.*$/m, '').trim();
+      const sectionRaw = remainingText
+        .slice(startPos, endPos)
+        .replace(/^# Section:.*$/m, '')
+        .trim();
       const parseRes = parseMarkdownQuestions(sectionRaw);
 
       allQuestions.push(...parseRes.questions);
@@ -364,7 +375,10 @@ export function parseFullTestJson(rawJson: string): FullTestParsedResult {
       defaultMarks: data.defaultMarks ?? data.scoring?.defaultMarks,
       negativeMarks: data.negativeMarks ?? data.scoring?.negativeMarks,
       allowPartialCredit: data.allowPartialCredit ?? data.scoring?.allowPartialCredit,
-      sections: sections.length > 0 ? sections : [{ id: 'sec_1', title: 'Section 1: General', questions: [] }],
+      sections:
+        sections.length > 0
+          ? sections
+          : [{ id: 'sec_1', title: 'Section 1: General', questions: [] }],
       allQuestions,
       errors,
     };

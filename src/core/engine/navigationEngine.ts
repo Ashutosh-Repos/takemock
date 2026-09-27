@@ -52,7 +52,7 @@ export function canNavigateTo(
   targetSectionId: string,
   currentQuestionId: string,
   targetQuestionId: string,
-  flattened: ReturnType<typeof getFlattenedQuestions>
+  flattened: ReturnType<typeof getFlattenedQuestions>,
 ): boolean {
   if (currentQuestionId === targetQuestionId && currentSectionId === targetSectionId) {
     return true;
@@ -82,10 +82,12 @@ export function canNavigateTo(
 export function getNextQuestion(
   snapshot: TestSnapshot,
   currentSectionId: string,
-  currentQuestionId: string
+  currentQuestionId: string,
 ): NavigationTarget | null {
   const flat = getFlattenedQuestions(snapshot);
-  let curIdx = flat.findIndex((f) => f.questionId === currentQuestionId && f.sectionId === currentSectionId);
+  let curIdx = flat.findIndex(
+    (f) => f.questionId === currentQuestionId && f.sectionId === currentSectionId,
+  );
   if (curIdx === -1) {
     curIdx = flat.findIndex((f) => f.questionId === currentQuestionId);
   }
@@ -102,10 +104,12 @@ export function getNextQuestion(
 export function getPreviousQuestion(
   snapshot: TestSnapshot,
   currentSectionId: string,
-  currentQuestionId: string
+  currentQuestionId: string,
 ): NavigationTarget | null {
   const flat = getFlattenedQuestions(snapshot);
-  let curIdx = flat.findIndex((f) => f.questionId === currentQuestionId && f.sectionId === currentSectionId);
+  let curIdx = flat.findIndex(
+    (f) => f.questionId === currentQuestionId && f.sectionId === currentSectionId,
+  );
   if (curIdx === -1) {
     curIdx = flat.findIndex((f) => f.questionId === currentQuestionId);
   }
@@ -121,7 +125,7 @@ export function getPreviousQuestion(
  */
 export function resolveQuestionVisitStatus(
   hasResponse: boolean,
-  isMarkedForReview: boolean
+  isMarkedForReview: boolean,
 ): QuestionVisitStatus {
   if (hasResponse && isMarkedForReview) {
     return 'ANSWERED_AND_MARKED';

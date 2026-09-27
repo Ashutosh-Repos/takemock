@@ -38,7 +38,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
                 key={opt.id}
                 className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors active:scale-[0.995] ${
                   isSelected
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary/40 text-foreground'
+                    ? 'border-primary bg-primary/5 ring-primary/40 text-foreground ring-1'
                     : 'border-border/70 bg-card hover:bg-muted/30 hover:border-border text-foreground'
                 } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
               >
@@ -51,12 +51,12 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
                   disabled={disabled}
                   className="radio radio-primary radio-xs mt-1 shrink-0"
                 />
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-start gap-2">
-                    <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border border-border/60 bg-muted/40 text-muted-foreground shrink-0 mt-0.5">
+                    <span className="border-border/60 bg-muted/40 text-muted-foreground mt-0.5 shrink-0 rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium">
                       {getLetter(idx)}
                     </span>
-                    <div className="flex-1 selectable-content text-xs sm:text-sm leading-relaxed">
+                    <div className="selectable-content flex-1 text-xs leading-relaxed sm:text-sm">
                       <MathRenderer content={opt.text} />
                     </div>
                   </div>
@@ -83,7 +83,9 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
 
       return (
         <div className="space-y-2">
-          <div className="text-xs text-muted-foreground font-medium">Select all correct options:</div>
+          <div className="text-muted-foreground text-xs font-medium">
+            Select all correct options:
+          </div>
           {options.map((opt, idx) => {
             const isSelected = currentSelected.includes(opt.id);
             return (
@@ -91,7 +93,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
                 key={opt.id}
                 className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors active:scale-[0.995] ${
                   isSelected
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary/40 text-foreground'
+                    ? 'border-primary bg-primary/5 ring-primary/40 text-foreground ring-1'
                     : 'border-border/70 bg-card hover:bg-muted/30 hover:border-border text-foreground'
                 } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
               >
@@ -102,12 +104,12 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
                   disabled={disabled}
                   className="checkbox checkbox-primary checkbox-xs mt-1 shrink-0"
                 />
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-start gap-2">
-                    <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border border-border/60 bg-muted/40 text-muted-foreground shrink-0 mt-0.5">
+                    <span className="border-border/60 bg-muted/40 text-muted-foreground mt-0.5 shrink-0 rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium">
                       {getLetter(idx)}
                     </span>
-                    <div className="flex-1 selectable-content text-xs sm:text-sm leading-relaxed">
+                    <div className="selectable-content flex-1 text-xs leading-relaxed sm:text-sm">
                       <MathRenderer content={opt.text} />
                     </div>
                   </div>
@@ -126,7 +128,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
       ];
 
       return (
-        <div className="grid grid-cols-2 gap-3 max-w-sm">
+        <div className="grid max-w-sm grid-cols-2 gap-3">
           {options.map((opt) => {
             const isSelected = response === opt.id;
             return (
@@ -135,7 +137,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
                 type="button"
                 onClick={() => onChange(opt.id)}
                 disabled={disabled}
-                className={`btn btn-sm h-9 font-medium text-xs rounded-md transition-colors active:scale-95 ${
+                className={`btn btn-sm h-9 rounded-md text-xs font-medium transition-colors active:scale-95 ${
                   isSelected
                     ? 'btn-primary shadow-xs'
                     : 'btn-outline border-border/70 hover:bg-muted text-foreground'
@@ -152,7 +154,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
     case 'numerical': {
       return (
         <div className="max-w-xs space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">Numerical Answer:</label>
+          <label className="text-muted-foreground text-xs font-medium">Numerical Answer:</label>
           <div className="join w-full">
             <input
               type="number"
@@ -161,16 +163,16 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
               value={response ?? ''}
               onChange={(e) => onChange(e.target.value === '' ? undefined : e.target.value)}
               disabled={disabled}
-              className="input input-bordered input-sm join-item w-full font-mono text-xs rounded-l-md border-border/70 bg-background"
+              className="input input-bordered input-sm join-item border-border/70 bg-background w-full rounded-l-md font-mono text-xs"
             />
             {question.unit && (
-              <span className="bg-muted/40 border-border/70 text-muted-foreground join-item flex items-center px-3 font-mono text-xs border">
+              <span className="bg-muted/40 border-border/70 text-muted-foreground join-item flex items-center border px-3 font-mono text-xs">
                 {question.unit}
               </span>
             )}
           </div>
           {question.toleranceAbsolute ? (
-            <p className="text-[11px] text-muted-foreground font-mono">
+            <p className="text-muted-foreground font-mono text-[11px]">
               Tolerance accepted: ±{question.toleranceAbsolute} {question.unit || ''}
             </p>
           ) : null}
@@ -181,7 +183,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
     case 'integer': {
       return (
         <div className="max-w-xs space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">Integer Answer:</label>
+          <label className="text-muted-foreground text-xs font-medium">Integer Answer:</label>
           <input
             type="number"
             step="1"
@@ -192,9 +194,9 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
               onChange(val === '' ? undefined : parseInt(val, 10));
             }}
             disabled={disabled}
-            className="input input-bordered input-sm w-full font-mono text-xs rounded-md border-border/70 bg-background"
+            className="input input-bordered input-sm border-border/70 bg-background w-full rounded-md font-mono text-xs"
           />
-          <p className="text-[11px] text-muted-foreground">Only integer answers are accepted.</p>
+          <p className="text-muted-foreground text-[11px]">Only integer answers are accepted.</p>
         </div>
       );
     }
@@ -202,14 +204,14 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
     case 'fill_blank': {
       return (
         <div className="max-w-md space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">Your Answer:</label>
+          <label className="text-muted-foreground text-xs font-medium">Your Answer:</label>
           <input
             type="text"
             placeholder="Type answer here..."
             value={response ?? ''}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
-            className="input input-bordered input-sm w-full text-xs rounded-md border-border/70 bg-background"
+            className="input input-bordered input-sm border-border/70 bg-background w-full rounded-md text-xs"
           />
         </div>
       );
@@ -217,7 +219,8 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
 
     case 'match': {
       const matches = question.matches || [];
-      const currentMap: Record<string, string> = typeof response === 'object' && response !== null ? response : {};
+      const currentMap: Record<string, string> =
+        typeof response === 'object' && response !== null ? response : {};
       const rightOptions = Array.from(new Set(matches.map((m) => m.right)));
 
       const handleSelect = (left: string, right: string) => {
@@ -227,19 +230,19 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
 
       return (
         <div className="space-y-3">
-          <div className="text-xs text-muted-foreground font-medium">Match each item:</div>
+          <div className="text-muted-foreground text-xs font-medium">Match each item:</div>
           <div className="space-y-2">
             {matches.map((m, idx) => (
               <div
                 key={idx}
                 className="bg-card border-border/70 flex flex-col justify-between gap-2.5 rounded-lg border p-3 sm:flex-row sm:items-center"
               >
-                <div className="text-xs sm:text-sm text-foreground sm:w-1/2">
+                <div className="text-foreground text-xs sm:w-1/2 sm:text-sm">
                   <MathRenderer content={m.left} />
                 </div>
                 <div className="sm:w-1/2">
                   <select
-                    className="select select-bordered select-xs w-full rounded border-border/70 bg-background"
+                    className="select select-bordered select-xs border-border/70 bg-background w-full rounded"
                     value={currentMap[m.left] || ''}
                     onChange={(e) => handleSelect(m.left, e.target.value)}
                     disabled={disabled}
@@ -261,8 +264,16 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
 
     case 'assertion_reason': {
       const options: QuestionOption[] = question.options || [
-        { id: 'A', text: 'Both (A) and (R) are true and (R) is the correct explanation of (A)', isCorrect: false },
-        { id: 'B', text: 'Both (A) and (R) are true but (R) is not the correct explanation of (A)', isCorrect: false },
+        {
+          id: 'A',
+          text: 'Both (A) and (R) are true and (R) is the correct explanation of (A)',
+          isCorrect: false,
+        },
+        {
+          id: 'B',
+          text: 'Both (A) and (R) are true but (R) is not the correct explanation of (A)',
+          isCorrect: false,
+        },
         { id: 'C', text: '(A) is true but (R) is false', isCorrect: false },
         { id: 'D', text: '(A) is false but (R) is true', isCorrect: false },
         { id: 'E', text: 'Both (A) and (R) are false', isCorrect: false },
@@ -270,7 +281,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
 
       return (
         <div className="space-y-2">
-          <div className="text-xs text-muted-foreground font-medium">Select option:</div>
+          <div className="text-muted-foreground text-xs font-medium">Select option:</div>
           {options.map((opt) => {
             const isSelected = response === opt.id;
             return (
@@ -278,7 +289,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
                 key={opt.id}
                 className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors active:scale-[0.995] ${
                   isSelected
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary/40 text-foreground'
+                    ? 'border-primary bg-primary/5 ring-primary/40 text-foreground ring-1'
                     : 'border-border/70 bg-card hover:bg-muted/30 hover:border-border text-foreground'
                 } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
               >
@@ -291,11 +302,11 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
                   disabled={disabled}
                   className="radio radio-primary radio-xs mt-1 shrink-0"
                 />
-                <div className="flex-1 selectable-content">
-                  <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border border-primary/20 bg-primary/10 text-primary mr-2">
+                <div className="selectable-content flex-1">
+                  <span className="border-primary/20 bg-primary/10 text-primary mr-2 rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium">
                     {opt.id}
                   </span>
-                  <span className="text-xs sm:text-sm font-medium leading-relaxed">{opt.text}</span>
+                  <span className="text-xs leading-relaxed font-medium sm:text-sm">{opt.text}</span>
                 </div>
               </label>
             );

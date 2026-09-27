@@ -57,7 +57,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content, className =
   }, [content]);
 
   return (
-    <div className={`leading-relaxed text-foreground ${className}`}>
+    <div className={`text-foreground leading-relaxed ${className}`}>
       {renderedParts.map((part, idx) => {
         if (part.type === 'math') {
           try {
@@ -76,7 +76,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ content, className =
             );
           } catch {
             return (
-              <code key={idx} className="font-mono text-error">
+              <code key={idx} className="text-error font-mono">
                 {part.value}
               </code>
             );

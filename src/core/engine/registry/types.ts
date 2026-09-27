@@ -3,7 +3,12 @@
  * Allows adding new question types without modifying the core attempt or scoring engines.
  */
 
-import type { CandidateQuestionView, QuestionModel, QuestionType, ValidationDiagnostic } from '@/types/question';
+import type {
+  CandidateQuestionView,
+  QuestionModel,
+  QuestionType,
+  ValidationDiagnostic,
+} from '@/types/question';
 import type { QuestionScore } from '@/types/scoring';
 import type { ScoringPolicy } from '@/types/test';
 
@@ -33,7 +38,7 @@ export interface QuestionTypeHandler<TResponse = unknown> {
     question: QuestionModel,
     candidateResponse: TResponse | undefined,
     policy: ScoringPolicy,
-    timeSpentSeconds: number
+    timeSpentSeconds: number,
   ): QuestionScore;
 
   /**

@@ -38,7 +38,8 @@ function normalizeBase(q: QuestionModel): QuestionModel {
     topic: (q.topic || 'General').trim(),
     difficulty: q.difficulty || 'medium',
     marks: typeof q.marks === 'number' && q.marks > 0 ? q.marks : 4,
-    negativeMarks: typeof q.negativeMarks === 'number' && q.negativeMarks >= 0 ? q.negativeMarks : 0,
+    negativeMarks:
+      typeof q.negativeMarks === 'number' && q.negativeMarks >= 0 ? q.negativeMarks : 0,
     tags: Array.isArray(q.tags) ? q.tags.map((t) => t.trim().toLowerCase()).filter(Boolean) : [],
     body: (q.body || '').trim(),
   };
@@ -52,8 +53,14 @@ export const SingleChoiceHandler: QuestionTypeHandler<string> = {
 
   validate(q: QuestionModel): ValidationDiagnostic[] {
     const diags: ValidationDiagnostic[] = [];
-    if (!q.id) diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
-    if (!q.body) diags.push({ level: 'ERROR', code: 'MISSING_BODY', message: 'Question body text is required' });
+    if (!q.id)
+      diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
+    if (!q.body)
+      diags.push({
+        level: 'ERROR',
+        code: 'MISSING_BODY',
+        message: 'Question body text is required',
+      });
 
     const options = q.options || [];
     if (options.length < 2) {
@@ -88,7 +95,11 @@ export const SingleChoiceHandler: QuestionTypeHandler<string> = {
     }
 
     if (!q.solution) {
-      diags.push({ level: 'WARNING', code: 'MISSING_SOLUTION', message: 'Solution explanation is recommended' });
+      diags.push({
+        level: 'WARNING',
+        code: 'MISSING_SOLUTION',
+        message: 'Solution explanation is recommended',
+      });
     }
     return diags;
   },
@@ -106,7 +117,12 @@ export const SingleChoiceHandler: QuestionTypeHandler<string> = {
     };
   },
 
-  score(q: QuestionModel, response: string | undefined, _policy: ScoringPolicy, timeSpent: number): QuestionScore {
+  score(
+    q: QuestionModel,
+    response: string | undefined,
+    _policy: ScoringPolicy,
+    timeSpent: number,
+  ): QuestionScore {
     const correctOpt = q.options?.find((o) => o.isCorrect);
     const correctAnswer = correctOpt ? correctOpt.id : '';
 
@@ -155,8 +171,14 @@ export const MultipleChoiceHandler: QuestionTypeHandler<string[]> = {
 
   validate(q: QuestionModel): ValidationDiagnostic[] {
     const diags: ValidationDiagnostic[] = [];
-    if (!q.id) diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
-    if (!q.body) diags.push({ level: 'ERROR', code: 'MISSING_BODY', message: 'Question body text is required' });
+    if (!q.id)
+      diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
+    if (!q.body)
+      diags.push({
+        level: 'ERROR',
+        code: 'MISSING_BODY',
+        message: 'Question body text is required',
+      });
 
     const options = q.options || [];
     if (options.length < 2) {
@@ -197,7 +219,12 @@ export const MultipleChoiceHandler: QuestionTypeHandler<string[]> = {
     };
   },
 
-  score(q: QuestionModel, response: string[] | undefined, policy: ScoringPolicy, timeSpent: number): QuestionScore {
+  score(
+    q: QuestionModel,
+    response: string[] | undefined,
+    policy: ScoringPolicy,
+    timeSpent: number,
+  ): QuestionScore {
     const correctIds = new Set((q.options || []).filter((o) => o.isCorrect).map((o) => o.id));
     const correctAnswer = Array.from(correctIds);
 
@@ -304,8 +331,14 @@ export const TrueFalseHandler: QuestionTypeHandler<string> = {
 
   validate(q: QuestionModel): ValidationDiagnostic[] {
     const diags: ValidationDiagnostic[] = [];
-    if (!q.id) diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
-    if (!q.body) diags.push({ level: 'ERROR', code: 'MISSING_BODY', message: 'Question body text is required' });
+    if (!q.id)
+      diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
+    if (!q.body)
+      diags.push({
+        level: 'ERROR',
+        code: 'MISSING_BODY',
+        message: 'Question body text is required',
+      });
 
     const options = q.options || [];
     if (options.length !== 2) {
@@ -330,7 +363,12 @@ export const TrueFalseHandler: QuestionTypeHandler<string> = {
     return SingleChoiceHandler.normalize(q);
   },
 
-  score(q: QuestionModel, response: string | undefined, policy: ScoringPolicy, timeSpent: number): QuestionScore {
+  score(
+    q: QuestionModel,
+    response: string | undefined,
+    policy: ScoringPolicy,
+    timeSpent: number,
+  ): QuestionScore {
     return SingleChoiceHandler.score(q, response, policy, timeSpent);
   },
 
@@ -347,8 +385,14 @@ export const NumericalHandler: QuestionTypeHandler<number | string> = {
 
   validate(q: QuestionModel): ValidationDiagnostic[] {
     const diags: ValidationDiagnostic[] = [];
-    if (!q.id) diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
-    if (!q.body) diags.push({ level: 'ERROR', code: 'MISSING_BODY', message: 'Question body text is required' });
+    if (!q.id)
+      diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
+    if (!q.body)
+      diags.push({
+        level: 'ERROR',
+        code: 'MISSING_BODY',
+        message: 'Question body text is required',
+      });
 
     if (q.correctValue === undefined || q.correctValue === null || isNaN(Number(q.correctValue))) {
       diags.push({
@@ -358,7 +402,11 @@ export const NumericalHandler: QuestionTypeHandler<number | string> = {
       });
     }
     if (q.toleranceAbsolute !== undefined && q.toleranceAbsolute < 0) {
-      diags.push({ level: 'ERROR', code: 'INVALID_TOLERANCE', message: 'toleranceAbsolute cannot be negative' });
+      diags.push({
+        level: 'ERROR',
+        code: 'INVALID_TOLERANCE',
+        message: 'toleranceAbsolute cannot be negative',
+      });
     }
     return diags;
   },
@@ -374,7 +422,12 @@ export const NumericalHandler: QuestionTypeHandler<number | string> = {
     };
   },
 
-  score(q: QuestionModel, response: number | string | undefined, _policy: ScoringPolicy, timeSpent: number): QuestionScore {
+  score(
+    q: QuestionModel,
+    response: number | string | undefined,
+    _policy: ScoringPolicy,
+    timeSpent: number,
+  ): QuestionScore {
     const correctVal = Number(q.correctValue);
     const tolAbs = Number(q.toleranceAbsolute || 0);
     const tolRel = Number(q.toleranceRelative || 0);
@@ -440,8 +493,14 @@ export const IntegerHandler: QuestionTypeHandler<number | string> = {
 
   validate(q: QuestionModel): ValidationDiagnostic[] {
     const diags: ValidationDiagnostic[] = [];
-    if (!q.id) diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
-    if (!q.body) diags.push({ level: 'ERROR', code: 'MISSING_BODY', message: 'Question body text is required' });
+    if (!q.id)
+      diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
+    if (!q.body)
+      diags.push({
+        level: 'ERROR',
+        code: 'MISSING_BODY',
+        message: 'Question body text is required',
+      });
 
     if (q.correctValue === undefined || !Number.isInteger(Number(q.correctValue))) {
       diags.push({
@@ -461,7 +520,12 @@ export const IntegerHandler: QuestionTypeHandler<number | string> = {
     };
   },
 
-  score(q: QuestionModel, response: number | string | undefined, _policy: ScoringPolicy, timeSpent: number): QuestionScore {
+  score(
+    q: QuestionModel,
+    response: number | string | undefined,
+    _policy: ScoringPolicy,
+    timeSpent: number,
+  ): QuestionScore {
     const correctInt = Number(q.correctValue);
 
     if (response === undefined || response === null || String(response).trim() === '') {
@@ -511,8 +575,14 @@ export const FillBlankHandler: QuestionTypeHandler<string> = {
 
   validate(q: QuestionModel): ValidationDiagnostic[] {
     const diags: ValidationDiagnostic[] = [];
-    if (!q.id) diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
-    if (!q.body) diags.push({ level: 'ERROR', code: 'MISSING_BODY', message: 'Question body text is required' });
+    if (!q.id)
+      diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
+    if (!q.body)
+      diags.push({
+        level: 'ERROR',
+        code: 'MISSING_BODY',
+        message: 'Question body text is required',
+      });
 
     const accepted = q.acceptedAnswers || [];
     if (accepted.length === 0 || accepted.every((a) => !a.trim())) {
@@ -534,7 +604,12 @@ export const FillBlankHandler: QuestionTypeHandler<string> = {
     };
   },
 
-  score(q: QuestionModel, response: string | undefined, _policy: ScoringPolicy, timeSpent: number): QuestionScore {
+  score(
+    q: QuestionModel,
+    response: string | undefined,
+    _policy: ScoringPolicy,
+    timeSpent: number,
+  ): QuestionScore {
     const accepted = q.acceptedAnswers || [];
     const caseSensitive = Boolean(q.caseSensitive);
 
@@ -584,8 +659,14 @@ export const MatchHandler: QuestionTypeHandler<Record<string, string>> = {
 
   validate(q: QuestionModel): ValidationDiagnostic[] {
     const diags: ValidationDiagnostic[] = [];
-    if (!q.id) diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
-    if (!q.body) diags.push({ level: 'ERROR', code: 'MISSING_BODY', message: 'Question body text is required' });
+    if (!q.id)
+      diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
+    if (!q.body)
+      diags.push({
+        level: 'ERROR',
+        code: 'MISSING_BODY',
+        message: 'Question body text is required',
+      });
 
     const matches = q.matches || [];
     if (matches.length < 2) {
@@ -610,7 +691,7 @@ export const MatchHandler: QuestionTypeHandler<Record<string, string>> = {
     q: QuestionModel,
     response: Record<string, string> | undefined,
     policy: ScoringPolicy,
-    timeSpent: number
+    timeSpent: number,
   ): QuestionScore {
     const matches = q.matches || [];
     const correctMap: Record<string, string> = {};
@@ -702,8 +783,14 @@ export const AssertionReasonHandler: QuestionTypeHandler<string> = {
 
   validate(q: QuestionModel): ValidationDiagnostic[] {
     const diags: ValidationDiagnostic[] = [];
-    if (!q.id) diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
-    if (!q.body) diags.push({ level: 'ERROR', code: 'MISSING_BODY', message: 'Question body text is required' });
+    if (!q.id)
+      diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
+    if (!q.body)
+      diags.push({
+        level: 'ERROR',
+        code: 'MISSING_BODY',
+        message: 'Question body text is required',
+      });
 
     if (!q.correctCode || !['A', 'B', 'C', 'D', 'E'].includes(q.correctCode)) {
       diags.push({
@@ -719,8 +806,16 @@ export const AssertionReasonHandler: QuestionTypeHandler<string> = {
     const base = normalizeBase(q);
     const code = q.correctCode?.toUpperCase() as 'A' | 'B' | 'C' | 'D' | 'E';
     const standardOptions = [
-      { id: 'A', text: 'Both (A) and (R) are true and (R) is the correct explanation of (A)', isCorrect: code === 'A' },
-      { id: 'B', text: 'Both (A) and (R) are true but (R) is not the correct explanation of (A)', isCorrect: code === 'B' },
+      {
+        id: 'A',
+        text: 'Both (A) and (R) are true and (R) is the correct explanation of (A)',
+        isCorrect: code === 'A',
+      },
+      {
+        id: 'B',
+        text: 'Both (A) and (R) are true but (R) is not the correct explanation of (A)',
+        isCorrect: code === 'B',
+      },
       { id: 'C', text: '(A) is true but (R) is false', isCorrect: code === 'C' },
       { id: 'D', text: '(A) is false but (R) is true', isCorrect: code === 'D' },
       { id: 'E', text: 'Both (A) and (R) are false', isCorrect: code === 'E' },
@@ -732,7 +827,12 @@ export const AssertionReasonHandler: QuestionTypeHandler<string> = {
     };
   },
 
-  score(q: QuestionModel, response: string | undefined, _policy: ScoringPolicy, timeSpent: number): QuestionScore {
+  score(
+    q: QuestionModel,
+    response: string | undefined,
+    _policy: ScoringPolicy,
+    timeSpent: number,
+  ): QuestionScore {
     const correctCode = q.correctCode || 'A';
 
     if (!response || response.trim() === '') {
@@ -780,13 +880,20 @@ export const PassageHandler: QuestionTypeHandler<string> = {
 
   validate(q: QuestionModel): ValidationDiagnostic[] {
     const diags: ValidationDiagnostic[] = [];
-    if (!q.id) diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
-    if (!q.body) diags.push({ level: 'ERROR', code: 'MISSING_BODY', message: 'Passage body text is required' });
+    if (!q.id)
+      diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
+    if (!q.body)
+      diags.push({
+        level: 'ERROR',
+        code: 'MISSING_BODY',
+        message: 'Passage body text is required',
+      });
     if (!q.questionGroupId) {
       diags.push({
         level: 'WARNING',
         code: 'MISSING_GROUP_ID',
-        message: 'Passage questions should define questionGroupId so child questions can link to it',
+        message:
+          'Passage questions should define questionGroupId so child questions can link to it',
       });
     }
     return diags;
@@ -800,7 +907,12 @@ export const PassageHandler: QuestionTypeHandler<string> = {
     };
   },
 
-  score(q: QuestionModel, response: string | undefined, policy: ScoringPolicy, timeSpent: number): QuestionScore {
+  score(
+    q: QuestionModel,
+    response: string | undefined,
+    policy: ScoringPolicy,
+    timeSpent: number,
+  ): QuestionScore {
     // If the passage question has options itself, score like SingleChoice; otherwise neutral
     if (q.options && q.options.length > 0) {
       return SingleChoiceHandler.score(q, response, policy, timeSpent);
@@ -835,7 +947,8 @@ export const ImageBasedHandler: QuestionTypeHandler<string> = {
 
   validate(q: QuestionModel): ValidationDiagnostic[] {
     const diags: ValidationDiagnostic[] = [];
-    if (!q.id) diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
+    if (!q.id)
+      diags.push({ level: 'ERROR', code: 'MISSING_ID', message: 'Question ID is required' });
     if (!q.imageUrl) {
       diags.push({
         level: 'ERROR',
@@ -853,7 +966,12 @@ export const ImageBasedHandler: QuestionTypeHandler<string> = {
     return SingleChoiceHandler.normalize(q);
   },
 
-  score(q: QuestionModel, response: string | undefined, policy: ScoringPolicy, timeSpent: number): QuestionScore {
+  score(
+    q: QuestionModel,
+    response: string | undefined,
+    policy: ScoringPolicy,
+    timeSpent: number,
+  ): QuestionScore {
     return SingleChoiceHandler.score(q, response, policy, timeSpent);
   },
 

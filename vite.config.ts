@@ -43,5 +43,6 @@ export default defineConfig({
     minify: !process.env.TAURI_ENV_DEBUG,
     // produce sourcemaps for debug builds
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
+    chunkSizeWarningLimit: 1500,
   },
 });

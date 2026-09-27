@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import {
   AlertCircle,
   AlertTriangle,
   Award,
   BarChart3,
+  BookOpen,
   Bot,
   CheckCircle2,
   ChevronDown,
@@ -24,7 +25,7 @@ import {
 import { MathRenderer } from '@/components/shared/MathRenderer';
 import { AiPromptModal } from '@/components/shared/AiPromptModal';
 import { SegmentedControl } from '@/components/ui/segmented-control';
-import { pickImportFile, sendNativeNotification } from '@/core/native/tauriBridge';
+import { pickImportFile, sendNativeNotification, showNativeAlert } from '@/core/native/tauriBridge';
 import { detectContentFormat, sanitizeLlmMarkdown } from '@/core/parser/llmSanitizer';
 import { parseMarkdownQuestions } from '@/core/parser/markdownParser';
 import { parseJsonQuestions } from '@/core/parser/jsonConverter';
@@ -96,6 +97,7 @@ type LivePreviewResult =
 
 export function Builder() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Mode
   const [mode, setMode] = useState<BuilderMode>('INGEST');
@@ -248,6 +250,14 @@ export function Builder() {
     }
   };
 
+  // If launched via native macOS menu item "File -> Import Question Pack..." (⌘O)
+  useEffect(() => {
+    if (searchParams.get('import') === '1') {
+      handleNativeFilePick();
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   const handleExecuteIngest = async (autoLaunch: boolean = false) => {
     if (!rawText.trim()) return;
     setIngesting(true);
@@ -270,7 +280,7 @@ export function Builder() {
           const paper = await assessmentRepository.createPaperFromQuestions(
             `Imported Drill (${parsed.questions.length} Qs)`,
             parsed.questions,
-            { mode: 'PRACTICE' }
+            { mode: 'PRACTICE' },
           );
           const attempt = await assessmentRepository.startAttempt(paper.id);
           navigate(`/runner/${attempt.id}`);
@@ -291,7 +301,9 @@ export function Builder() {
       if (searchQuery.trim()) {
         const qText = q.body?.toLowerCase() || '';
         const matchSearch = qText.includes(searchQuery.toLowerCase());
-        const matchTag = (q.tags || []).some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+        const matchTag = (q.tags || []).some((t) =>
+          t.toLowerCase().includes(searchQuery.toLowerCase()),
+        );
         if (!matchSearch && !matchTag) return false;
       }
       return true;
@@ -321,7 +333,10 @@ export function Builder() {
 
   const handleCreatePaperFromComposer = async (autoLaunch: boolean = false) => {
     if (selectedQuestionIds.size === 0) {
-      alert('Please select at least one question for your paper.');
+      await showNativeAlert('Please select at least one question for your paper.', {
+        title: 'Empty Selection',
+        kind: 'warning',
+      });
       return;
     }
 
@@ -337,7 +352,7 @@ export function Builder() {
           mode: composerMode,
           defaultMarks: composerDefaultMarks,
           negativeMarks: composerNegativeMarks,
-        }
+        },
       );
 
       if (autoLaunch) {
@@ -347,17 +362,20 @@ export function Builder() {
         navigate('/');
       }
     } catch (err: any) {
-      alert(`Could not create paper: ${err.message || 'Unknown error'}`);
+      await showNativeAlert(`Could not create paper: ${err.message || 'Unknown error'}`, {
+        title: 'Creation Error',
+        kind: 'error',
+      });
     }
   };
 
   return (
-    <div className="mx-auto max-w-6xl w-full px-6 py-6 pb-20 space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-5 px-6 py-5 pb-20 lg:px-8">
       {/* Standard Header */}
-      <div className="flex flex-col justify-between gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center">
+      <div className="border-border/60 flex flex-col justify-between gap-3 border-b pb-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Builder</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h1 className="text-foreground text-xl font-bold tracking-tight">Builder</h1>
+          <p className="text-muted-foreground mt-0.5 text-xs">
             Import questions from text, files, or AI, or compose a paper visually.
           </p>
         </div>
@@ -381,14 +399,17 @@ export function Builder() {
           {/* Top Bar Controls */}
           <div className="card flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">Format Mode:</span>
+              <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                Format Mode:
+              </span>
               <SegmentedControl
                 value={formatMode}
                 onValueChange={(val) => setFormatMode(val as IngestFormat)}
+                size="sm"
                 options={[
-                  { value: 'AUTO', label: 'Auto-Detect' },
-                  { value: 'FULL_PAPER', label: '📄 Full Paper' },
-                  { value: 'QUESTION_PACK', label: '🧩 Question Pack' },
+                  { value: 'AUTO', label: 'Auto-Detect', icon: Wand2 },
+                  { value: 'FULL_PAPER', label: 'Full Paper', icon: BookOpen },
+                  { value: 'QUESTION_PACK', label: 'Question Pack', icon: Layers },
                 ]}
               />
 
@@ -404,19 +425,21 @@ export function Builder() {
                 type="button"
                 onClick={handleCleanChatter}
                 disabled={!rawText.trim()}
-                className="btn btn-ghost btn-sm h-7 text-xs text-foreground/80 gap-1.5 border border-border/60 active:scale-95"
+                className="btn btn-ghost btn-sm text-foreground/80 border-border/60 h-7 gap-1.5 border text-xs active:scale-95"
                 title="Strips conversational greetings and markdown backticks"
                 aria-label="Strip AI conversation chatter"
               >
-                <Wand2 className="size-3 text-secondary" />
+                <Wand2 className="text-secondary size-3" />
                 Strip Chatter
               </button>
 
               <button
+                id="builder-pick-file-btn"
                 type="button"
                 onClick={handleNativeFilePick}
-                className="btn btn-outline btn-sm h-7 text-xs gap-1.5 border-border/70 active:scale-95"
+                className="btn btn-outline btn-sm border-border/70 h-7 gap-1.5 text-xs active:scale-95"
                 aria-label="Pick file from computer"
+                title="Pick File from Computer (⌘O)"
               >
                 <FolderOpen className="size-3.5" />
                 Pick File (.md, .json)
@@ -425,25 +448,25 @@ export function Builder() {
               <button
                 type="button"
                 onClick={() => setShowAiModal(true)}
-                className="btn btn-secondary btn-sm h-7 text-xs gap-1.5 shadow-2xs active:scale-95"
-                aria-label="Open AI Prompt Generator"
+                className="btn btn-secondary btn-sm h-7 gap-1.5 text-xs shadow-2xs active:scale-95"
+                aria-label="Open AI Format Suffix"
               >
                 <Bot className="size-3.5" />
-                AI Prompt Helper
+                Format Suffix
               </button>
             </div>
           </div>
 
           {/* Feedback Alerts */}
           {ingestSuccess && (
-            <div className="alert alert-success shadow-xs text-xs">
-              <CheckCircle2 className="size-4 shrink-0" />
+            <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2.5 text-xs text-emerald-700 dark:text-emerald-300">
+              <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
               <span>{ingestSuccess}</span>
             </div>
           )}
           {ingestError && (
-            <div className="alert alert-error shadow-xs text-xs">
-              <AlertCircle className="size-4 shrink-0" />
+            <div className="flex items-center gap-2.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-700 dark:text-rose-300">
+              <AlertCircle className="size-4 shrink-0 text-rose-500" />
               <span>{ingestError}</span>
             </div>
           )}
@@ -451,12 +474,12 @@ export function Builder() {
           {/* Dual Split Workspace: Left Input | Right Live Preview */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Left: Input Textarea */}
-            <div className="liquid-glass-card flex flex-col rounded-2xl p-4 shadow-xs">
+            <div className="card flex flex-col p-4 shadow-xs">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-base-content/70">
+                <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
                   Input Markdown / JSON / Prompt Output
                 </span>
-                <span className="text-[11px] font-mono text-base-content/50">
+                <span className="text-muted-foreground font-mono text-[11px]">
                   {rawText.length} chars • {rawText.split(/\r?\n/).length} lines
                 </span>
               </div>
@@ -504,7 +527,7 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
 - [ ] Anaphase
 - [ ] Prophase
 - [ ] Telophase`}
-                className="textarea textarea-bordered border-border/80 font-mono text-xs w-full flex-1 min-h-[460px] p-3 leading-relaxed focus:border-primary resize-y"
+                className="border-border/80 bg-background/50 text-foreground placeholder:text-muted-foreground/60 focus:ring-primary/20 focus:border-primary min-h-115 w-full flex-1 resize-y rounded-xl border p-3.5 font-mono text-xs leading-relaxed transition-all focus:ring-2 focus:outline-none dark:bg-black/20"
               />
 
               <div className="mt-3 flex items-center justify-between">
@@ -512,7 +535,7 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                   type="button"
                   onClick={() => setRawText('')}
                   disabled={!rawText.trim()}
-                  className="btn btn-ghost btn-xs text-base-content/50 hover:text-error active:scale-90"
+                  className="btn btn-ghost btn-xs text-muted-foreground hover:text-destructive active:scale-95"
                 >
                   <Trash2 className="size-3" />
                   Clear
@@ -523,10 +546,10 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                     type="button"
                     onClick={() => handleExecuteIngest(false)}
                     disabled={!rawText.trim() || ingesting}
-                    className="btn btn-outline btn-sm font-bold shadow-xs active:scale-95"
+                    className="btn btn-outline btn-sm font-medium shadow-xs active:scale-95"
                   >
                     {ingesting ? (
-                      <span className="loading loading-spinner loading-xs" />
+                      <span className="loading-spinner size-3.5" />
                     ) : (
                       <CheckCircle2 className="size-3.5" />
                     )}
@@ -537,68 +560,79 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                     type="button"
                     onClick={() => handleExecuteIngest(true)}
                     disabled={!rawText.trim() || ingesting}
-                    className="btn btn-primary btn-sm font-bold shadow-md active:scale-95"
+                    className="btn btn-primary btn-sm font-medium shadow-xs active:scale-95"
                   >
                     {ingesting ? (
-                      <span className="loading loading-spinner loading-xs" />
+                      <span className="loading-spinner size-3.5" />
                     ) : (
                       <Play className="size-3.5" />
                     )}
-                    {effectiveFormat === 'FULL_PAPER' ? 'Save & Start Exam' : 'Package & Start Drill'}
+                    {effectiveFormat === 'FULL_PAPER'
+                      ? 'Save & Start Exam'
+                      : 'Package & Start Drill'}
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Right: Live Parser & KaTeX Preview */}
-            <div className="liquid-glass-card flex flex-col rounded-2xl shadow-xs overflow-hidden">
+            <div className="card flex flex-col overflow-hidden shadow-xs">
               {/* Header + Tabs */}
-              <div className="flex items-center justify-between border-b border-border/60 px-4 pt-3 pb-0">
+              <div className="border-border/60 flex items-center justify-between border-b px-4 pt-3 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Eye className="size-3.5 text-primary" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-base-content/70">
+                  <Eye className="text-primary size-3.5" />
+                  <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
                     Live Preview
                   </span>
                   {livePreview && livePreview.kind !== 'ERROR' && (
-                    <span className="badge badge-success badge-xs font-bold gap-0.5 text-success-content">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="size-2.5" />
-                      {livePreview.errors.length === 0 ? 'Valid' : `${livePreview.errors.length} issue${livePreview.errors.length > 1 ? 's' : ''}`}
+                      {livePreview.errors.length === 0
+                        ? 'Valid'
+                        : `${livePreview.errors.length} issue${livePreview.errors.length > 1 ? 's' : ''}`}
                     </span>
                   )}
-                  {livePreview && livePreview.kind !== 'ERROR' && livePreview.warnings.length > 0 && (
-                    <span className="badge badge-warning badge-xs font-bold gap-0.5">
-                      <AlertTriangle className="size-2.5" />
-                      {livePreview.warnings.length}
-                    </span>
-                  )}
+                  {livePreview &&
+                    livePreview.kind !== 'ERROR' &&
+                    livePreview.warnings.length > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                        <AlertTriangle className="size-2.5" />
+                        {livePreview.warnings.length}
+                      </span>
+                    )}
                 </div>
               </div>
 
-              {/* Tab bar — only show when we have content */}
+              {/* Native macOS Segmented Control Tab Bar */}
               {livePreview && livePreview.kind !== 'ERROR' && (
-                <div className="flex border-b border-border/40 px-4 gap-1">
-                  {(['overview', 'questions', 'diagnostics'] as PreviewTab[]).map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setPreviewTab(tab)}
-                      className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider border-b-2 transition-colors ${
-                        previewTab === tab
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-base-content/50 hover:text-base-content/80'
-                      }`}
-                    >
-                      {tab === 'overview' && <BarChart3 className="size-3 inline mr-1 -mt-0.5" />}
-                      {tab === 'questions' && <Layers className="size-3 inline mr-1 -mt-0.5" />}
-                      {tab === 'diagnostics' && <AlertCircle className="size-3 inline mr-1 -mt-0.5" />}
-                      {tab}
-                      {tab === 'questions' && (
-                        <span className="ml-1 text-[10px] opacity-60">({livePreview.questionsCount})</span>
-                      )}
-                      {tab === 'diagnostics' && (livePreview.errors.length + livePreview.warnings.length) > 0 && (
-                        <span className="ml-1 badge badge-error badge-xs text-[9px] px-1">{livePreview.errors.length + livePreview.warnings.length}</span>
-                      )}
-                    </button>
-                  ))}
+                <div className="border-border/40 bg-muted/10 flex items-center border-b px-3.5 py-2">
+                  <SegmentedControl
+                    value={previewTab}
+                    onValueChange={(val) => setPreviewTab(val as PreviewTab)}
+                    size="sm"
+                    options={[
+                      { value: 'overview', label: 'Overview', icon: BarChart3 },
+                      {
+                        value: 'questions',
+                        label: `Questions (${livePreview.questionsCount})`,
+                        icon: Layers,
+                      },
+                      {
+                        value: 'diagnostics',
+                        label: (
+                          <span className="flex items-center gap-1.5">
+                            Diagnostics
+                            {livePreview.errors.length + livePreview.warnings.length > 0 && (
+                              <span className="py-0.2 rounded-full border border-rose-500/20 bg-rose-500/10 px-1.5 text-[9px] font-bold text-rose-600 dark:text-rose-400">
+                                {livePreview.errors.length + livePreview.warnings.length}
+                              </span>
+                            )}
+                          </span>
+                        ),
+                        icon: AlertCircle,
+                      },
+                    ]}
+                  />
                 </div>
               )}
 
@@ -606,65 +640,82 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
               <div className="flex-1 overflow-y-auto p-4" style={{ maxHeight: '600px' }}>
                 {!livePreview ? (
                   /* Empty state */
-                  <div className="border-border/60 flex flex-col items-center justify-center rounded-xl border border-dashed p-8 text-center min-h-[400px]">
-                    <Code2 className="text-base-content/30 size-12" />
-                    <h3 className="mt-3 text-sm font-bold">Awaiting Input</h3>
-                    <p className="text-base-content/50 mx-auto mt-1 max-w-xs text-xs">
-                      Paste markdown or JSON on the left to see live question extraction, sections, and LaTeX equations.
+                  <div className="border-border/60 flex min-h-100 flex-col items-center justify-center rounded-xl border border-dashed p-8 text-center">
+                    <Code2 className="text-muted-foreground/40 size-12" />
+                    <h3 className="text-foreground mt-3 text-sm font-semibold">Awaiting Input</h3>
+                    <p className="text-muted-foreground mx-auto mt-1 max-w-xs text-xs">
+                      Paste markdown or JSON on the left to see live question extraction, sections,
+                      and LaTeX equations.
                     </p>
                   </div>
                 ) : livePreview.kind === 'ERROR' ? (
                   /* Fatal parse error */
-                  <div className="border-error/40 bg-error/5 flex flex-col items-center justify-center rounded-xl border p-6 text-center min-h-[400px]">
-                    <AlertCircle className="size-10 text-error" />
-                    <h3 className="text-error mt-2 font-bold text-sm">Parser Error</h3>
-                    <p className="text-base-content/70 mt-1 max-w-sm text-xs font-mono">{livePreview.message}</p>
+                  <div className="flex min-h-100 flex-col items-center justify-center rounded-xl border border-rose-500/30 bg-rose-500/5 p-6 text-center">
+                    <AlertCircle className="size-10 text-rose-500" />
+                    <h3 className="mt-2 text-sm font-semibold text-rose-600 dark:text-rose-400">
+                      Parser Error
+                    </h3>
+                    <p className="text-muted-foreground mt-1 max-w-sm font-mono text-xs">
+                      {livePreview.message}
+                    </p>
                   </div>
                 ) : previewTab === 'overview' ? (
                   /* ══════════════════ OVERVIEW TAB ══════════════════ */
                   <div className="space-y-4">
                     {/* Paper/Pack header card */}
-                    <div className="bg-base-200/50 border-border/60 rounded-xl border p-4">
+                    <div className="bg-muted/30 border-border/60 rounded-xl border p-4">
                       <div className="flex items-center gap-2">
-                        <span className={`badge text-[10px] font-bold ${livePreview.kind === 'FULL_PAPER' ? 'badge-primary' : 'badge-secondary'}`}>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            livePreview.kind === 'FULL_PAPER'
+                              ? 'bg-primary/10 text-primary border-primary/20 border'
+                              : 'border border-purple-500/20 bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                          }`}
+                        >
                           {livePreview.kind === 'FULL_PAPER' ? 'FULL PAPER' : 'QUESTION PACK'}
                         </span>
                         {livePreview.kind === 'FULL_PAPER' && (
-                          <span className="badge badge-outline text-[10px]">{livePreview.mode}</span>
+                          <span className="bg-muted text-muted-foreground border-border/60 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium">
+                            {livePreview.mode}
+                          </span>
                         )}
                       </div>
                       {livePreview.kind === 'FULL_PAPER' && (
                         <>
-                          <h3 className="mt-2 text-lg font-black">{livePreview.title}</h3>
+                          <h3 className="text-foreground mt-2 text-base font-bold">
+                            {livePreview.title}
+                          </h3>
                           {livePreview.description && (
-                            <p className="text-base-content/60 mt-1 text-xs">{livePreview.description}</p>
+                            <p className="text-muted-foreground mt-1 text-xs">
+                              {livePreview.description}
+                            </p>
                           )}
                         </>
                       )}
-                      <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-semibold text-base-content/70">
+                      <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-4 text-xs font-medium">
                         {livePreview.kind === 'FULL_PAPER' && (
                           <>
                             <span className="flex items-center gap-1">
-                              <Clock className="size-3.5 text-warning" />
+                              <Clock className="size-3.5 text-amber-500" />
                               {livePreview.duration} min
                             </span>
                             <span className="flex items-center gap-1">
-                              <Layers className="size-3.5 text-info" />
+                              <Layers className="size-3.5 text-blue-500" />
                               {livePreview.sectionsCount} section(s)
                             </span>
                           </>
                         )}
                         <span className="flex items-center gap-1">
-                          <Award className="size-3.5 text-success" />
+                          <Award className="size-3.5 text-emerald-500" />
                           {livePreview.questionsCount} question(s)
                         </span>
                         <span className="flex items-center gap-1">
-                          <Hash className="size-3.5 text-accent" />
+                          <Hash className="text-primary size-3.5" />
                           {livePreview.stats.totalMarks} total marks
                         </span>
                         <span className="flex items-center gap-1">
-                          <CheckCircle2 className="size-3.5 text-info" />
-                          {livePreview.stats.withSolution}/{livePreview.questionsCount} have explanations
+                          <CheckCircle2 className="size-3.5 text-emerald-500" />
+                          {livePreview.stats.withSolution}/{livePreview.questionsCount} explanations
                         </span>
                       </div>
                     </div>
@@ -672,11 +723,20 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                     {/* Section breakdown for full paper */}
                     {livePreview.kind === 'FULL_PAPER' && livePreview.sections.length > 0 && (
                       <div className="space-y-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-base-content/50">Sections</span>
+                        <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                          Sections
+                        </span>
                         {livePreview.sections.map((sec, si) => (
-                          <div key={sec.id} className="bg-base-100 border-border/50 flex items-center justify-between rounded-lg border px-3 py-2">
-                            <span className="text-xs font-semibold">{si + 1}. {sec.title}</span>
-                            <span className="badge badge-ghost badge-xs">{sec.questions.length} Q</span>
+                          <div
+                            key={sec.id}
+                            className="bg-card border-border/60 flex items-center justify-between rounded-lg border px-3 py-2"
+                          >
+                            <span className="text-foreground text-xs font-medium">
+                              {si + 1}. {sec.title}
+                            </span>
+                            <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium">
+                              {sec.questions.length} Q
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -685,11 +745,16 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                     {/* Metadata distribution chips */}
                     {Object.keys(livePreview.stats.subjects).length > 0 && (
                       <div className="space-y-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-base-content/50">Subjects</span>
+                        <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                          Subjects
+                        </span>
                         <div className="flex flex-wrap gap-1.5">
                           {Object.entries(livePreview.stats.subjects).map(([subj, count]) => (
-                            <span key={subj} className="badge badge-neutral badge-sm gap-1">
-                              {subj} <span className="opacity-60">×{count}</span>
+                            <span
+                              key={subj}
+                              className="bg-muted text-foreground border-border/60 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium"
+                            >
+                              {subj} <span className="text-muted-foreground">×{count}</span>
                             </span>
                           ))}
                         </div>
@@ -698,11 +763,16 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
 
                     {Object.keys(livePreview.stats.types).length > 0 && (
                       <div className="space-y-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-base-content/50">Question Types</span>
+                        <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                          Question Types
+                        </span>
                         <div className="flex flex-wrap gap-1.5">
                           {Object.entries(livePreview.stats.types).map(([type, count]) => (
-                            <span key={type} className="badge badge-outline badge-sm gap-1">
-                              {type.replace(/_/g, ' ')} <span className="opacity-60">×{count}</span>
+                            <span
+                              key={type}
+                              className="bg-muted/60 text-muted-foreground border-border/60 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium"
+                            >
+                              {type.replace(/_/g, ' ')} <span className="opacity-70">×{count}</span>
                             </span>
                           ))}
                         </div>
@@ -711,12 +781,21 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
 
                     {Object.keys(livePreview.stats.difficulties).length > 0 && (
                       <div className="space-y-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-base-content/50">Difficulty</span>
+                        <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                          Difficulty
+                        </span>
                         <div className="flex flex-wrap gap-1.5">
                           {Object.entries(livePreview.stats.difficulties).map(([d, count]) => (
-                            <span key={d} className={`badge badge-sm gap-1 ${
-                              d === 'easy' ? 'badge-success' : d === 'medium' ? 'badge-warning' : 'badge-error'
-                            }`}>
+                            <span
+                              key={d}
+                              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${
+                                d === 'easy'
+                                  ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                  : d === 'medium'
+                                    ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                    : 'border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                              }`}
+                            >
                               {d} <span className="opacity-70">×{count}</span>
                             </span>
                           ))}
@@ -726,13 +805,20 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
 
                     {Object.keys(livePreview.stats.tags).length > 0 && (
                       <div className="space-y-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-base-content/50">Tags</span>
+                        <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                          Tags
+                        </span>
                         <div className="flex flex-wrap gap-1.5">
-                          {Object.entries(livePreview.stats.tags).slice(0, 20).map(([tag, count]) => (
-                            <span key={tag} className="badge badge-ghost badge-xs gap-0.5">
-                              #{tag} <span className="opacity-50">×{count}</span>
-                            </span>
-                          ))}
+                          {Object.entries(livePreview.stats.tags)
+                            .slice(0, 20)
+                            .map(([tag, count]) => (
+                              <span
+                                key={tag}
+                                className="bg-muted/50 text-muted-foreground border-border/40 inline-flex items-center gap-0.5 rounded-md border px-2 py-0.5 font-mono text-[10px]"
+                              >
+                                #{tag} <span className="opacity-60">×{count}</span>
+                              </span>
+                            ))}
                         </div>
                       </div>
                     )}
@@ -740,20 +826,35 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                     {/* First question quick preview with math rendering */}
                     {livePreview.allQuestions[0] && (
                       <div className="space-y-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-base-content/50">First Question Preview</span>
+                        <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                          First Question Preview
+                        </span>
                         <div className="bg-card border-border/80 rounded-xl border p-3 shadow-2xs">
                           <div className="prose prose-sm max-w-none text-xs">
                             <MathRenderer content={livePreview.allQuestions[0].body} />
                           </div>
                           {livePreview.allQuestions[0].options && (
-                            <div className="space-y-1 mt-2">
+                            <div className="mt-2 space-y-1">
                               {livePreview.allQuestions[0].options.map((opt, i) => (
-                                <div key={opt.id} className={`flex items-start gap-2 rounded-lg border p-1.5 text-xs ${
-                                  opt.isCorrect ? 'border-success/60 bg-success/10' : 'border-border/60'
-                                }`}>
-                                  <span className="font-bold text-[10px] mt-0.5">{String.fromCharCode(65 + i)}.</span>
-                                  <div className="flex-1"><MathRenderer content={opt.text} /></div>
-                                  {opt.isCorrect && <span className="badge badge-success badge-xs">✓</span>}
+                                <div
+                                  key={opt.id}
+                                  className={`flex items-start gap-2 rounded-lg border p-1.5 text-xs ${
+                                    opt.isCorrect
+                                      ? 'border-emerald-500/40 bg-emerald-500/10 font-medium'
+                                      : 'border-border/60'
+                                  }`}
+                                >
+                                  <span className="text-foreground mt-0.5 text-[10px] font-bold">
+                                    {String.fromCharCode(65 + i)}.
+                                  </span>
+                                  <div className="flex-1">
+                                    <MathRenderer content={opt.text} />
+                                  </div>
+                                  {opt.isCorrect && (
+                                    <span className="py-0.2 inline-flex items-center rounded-full bg-emerald-500 px-1.5 text-[9px] font-bold text-white">
+                                      ✓
+                                    </span>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -766,55 +867,95 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                   /* ══════════════════ QUESTIONS TAB ══════════════════ */
                   <div className="space-y-2">
                     {livePreview.allQuestions.length === 0 ? (
-                      <div className="text-center text-base-content/50 text-xs py-8">No questions parsed yet.</div>
+                      <div className="text-muted-foreground py-8 text-center text-xs">
+                        No questions parsed yet.
+                      </div>
                     ) : (
                       livePreview.allQuestions.map((q, idx) => {
                         const isExpanded = expandedQIdx === idx;
                         const qDiag = livePreview.perQuestion.find((p) => p.idx === idx);
-                        const hasIssues = qDiag && (qDiag.errors.length > 0 || qDiag.warnings.length > 0);
+                        const hasIssues =
+                          qDiag && (qDiag.errors.length > 0 || qDiag.warnings.length > 0);
                         return (
-                          <div key={q.id || idx} className={`border rounded-xl overflow-hidden transition-colors ${
-                            hasIssues ? 'border-warning/60' : 'border-border/60'
-                          }`}>
+                          <div
+                            key={q.id || idx}
+                            className={`overflow-hidden rounded-xl border transition-colors ${
+                              hasIssues
+                                ? 'border-amber-500/40 bg-amber-500/2'
+                                : 'border-border/60 bg-card'
+                            }`}
+                          >
                             {/* Collapsed header — always visible */}
                             <button
                               onClick={() => setExpandedQIdx(isExpanded ? null : idx)}
-                              className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-base-200/40 transition-colors"
+                              className="hover:bg-muted/30 flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors"
                             >
                               {isExpanded ? (
-                                <ChevronDown className="size-3.5 text-base-content/50 shrink-0" />
+                                <ChevronDown className="text-muted-foreground size-3.5 shrink-0" />
                               ) : (
-                                <ChevronRight className="size-3.5 text-base-content/50 shrink-0" />
+                                <ChevronRight className="text-muted-foreground size-3.5 shrink-0" />
                               )}
-                              <span className="text-[11px] font-bold text-primary shrink-0">Q{idx + 1}</span>
-                              <span className="text-xs truncate flex-1 text-base-content/80">
-                                {q.body.substring(0, 80)}{q.body.length > 80 ? '…' : ''}
+                              <span className="text-primary shrink-0 text-[11px] font-bold">
+                                Q{idx + 1}
                               </span>
-                              <div className="flex items-center gap-1 shrink-0">
-                                {q.subject && <span className="badge badge-neutral badge-xs text-[9px]">{q.subject}</span>}
-                                <span className={`badge badge-xs text-[9px] ${
-                                  q.difficulty === 'easy' ? 'badge-success' : q.difficulty === 'medium' ? 'badge-warning' : 'badge-error'
-                                }`}>{q.difficulty}</span>
-                                {hasIssues && <AlertTriangle className="size-3 text-warning" />}
+                              <span className="text-foreground/90 flex-1 truncate text-xs">
+                                {q.body.substring(0, 80)}
+                                {q.body.length > 80 ? '…' : ''}
+                              </span>
+                              <div className="flex shrink-0 items-center gap-1">
+                                {q.subject && (
+                                  <span className="bg-muted text-muted-foreground border-border/60 inline-flex items-center rounded border px-1.5 py-0.5 text-[9px] font-medium">
+                                    {q.subject}
+                                  </span>
+                                )}
+                                <span
+                                  className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[9px] font-medium capitalize ${
+                                    q.difficulty === 'easy'
+                                      ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                      : q.difficulty === 'medium'
+                                        ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                        : 'border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                                  }`}
+                                >
+                                  {q.difficulty}
+                                </span>
+                                {hasIssues && <AlertTriangle className="size-3 text-amber-500" />}
                               </div>
                             </button>
 
                             {/* Expanded detail */}
                             {isExpanded && (
-                              <div className="px-4 pb-3 pt-1 border-t border-border/40 space-y-3 bg-base-100/50">
+                              <div className="border-border/40 bg-muted/10 space-y-3 border-t px-4 pt-1 pb-3">
                                 {/* Metadata row */}
                                 <div className="flex flex-wrap gap-1.5 text-[10px]">
-                                  <span className="badge badge-outline badge-xs">{q.type.replace(/_/g, ' ')}</span>
-                                  {q.topic && <span className="badge badge-ghost badge-xs">{q.topic}</span>}
-                                  <span className="badge badge-ghost badge-xs">{q.marks} marks</span>
-                                  {q.negativeMarks > 0 && <span className="badge badge-error badge-xs">-{q.negativeMarks}</span>}
+                                  <span className="bg-muted text-muted-foreground border-border/60 inline-flex items-center rounded-full border px-2 py-0.5 font-medium">
+                                    {q.type.replace(/_/g, ' ')}
+                                  </span>
+                                  {q.topic && (
+                                    <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-2 py-0.5 font-medium">
+                                      {q.topic}
+                                    </span>
+                                  )}
+                                  <span className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-2 py-0.5 font-medium">
+                                    {q.marks} marks
+                                  </span>
+                                  {q.negativeMarks > 0 && (
+                                    <span className="inline-flex items-center rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 font-medium text-rose-600 dark:text-rose-400">
+                                      -{q.negativeMarks}
+                                    </span>
+                                  )}
                                   {q.tags.map((t) => (
-                                    <span key={t} className="badge badge-ghost badge-xs">#{t}</span>
+                                    <span
+                                      key={t}
+                                      className="bg-muted/60 text-muted-foreground inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[9px]"
+                                    >
+                                      #{t}
+                                    </span>
                                   ))}
                                 </div>
 
                                 {/* Body with math */}
-                                <div className="prose prose-sm max-w-none text-xs">
+                                <div className="prose prose-sm text-foreground max-w-none text-xs">
                                   <MathRenderer content={q.body} />
                                 </div>
 
@@ -822,12 +963,25 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                                 {q.options && (
                                   <div className="space-y-1">
                                     {q.options.map((opt, oi) => (
-                                      <div key={opt.id} className={`flex items-start gap-2 rounded-lg border p-1.5 text-xs ${
-                                        opt.isCorrect ? 'border-success/60 bg-success/10 font-medium' : 'border-border/60 bg-base-100'
-                                      }`}>
-                                        <span className="font-bold text-[10px] mt-0.5">{String.fromCharCode(65 + oi)}.</span>
-                                        <div className="flex-1"><MathRenderer content={opt.text} /></div>
-                                        {opt.isCorrect && <span className="badge badge-success badge-xs font-bold text-success-content">✓</span>}
+                                      <div
+                                        key={opt.id}
+                                        className={`flex items-start gap-2 rounded-lg border p-1.5 text-xs ${
+                                          opt.isCorrect
+                                            ? 'border-emerald-500/40 bg-emerald-500/10 font-medium'
+                                            : 'border-border/60 bg-background'
+                                        }`}
+                                      >
+                                        <span className="text-foreground mt-0.5 text-[10px] font-bold">
+                                          {String.fromCharCode(65 + oi)}.
+                                        </span>
+                                        <div className="flex-1">
+                                          <MathRenderer content={opt.text} />
+                                        </div>
+                                        {opt.isCorrect && (
+                                          <span className="py-0.2 inline-flex items-center rounded-full bg-emerald-500 px-1.5 text-[9px] font-bold text-white">
+                                            ✓
+                                          </span>
+                                        )}
                                       </div>
                                     ))}
                                   </div>
@@ -835,29 +989,38 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
 
                                 {/* Solution */}
                                 {q.solution && (
-                                  <div className="bg-info/10 border-info/30 rounded-lg border p-2.5 text-xs">
-                                    <span className="text-info font-bold text-[11px] block mb-1">Explanation</span>
+                                  <div className="rounded-lg border border-blue-500/25 bg-blue-500/10 p-2.5 text-xs">
+                                    <span className="mb-1 block text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                                      Explanation
+                                    </span>
                                     <MathRenderer content={q.solution} />
                                   </div>
                                 )}
 
                                 {/* Per-question diagnostics inline */}
-                                {qDiag && (qDiag.errors.length > 0 || qDiag.warnings.length > 0) && (
-                                  <div className="space-y-1">
-                                    {qDiag.errors.map((e, ei) => (
-                                      <div key={ei} className="flex items-start gap-1.5 text-xs text-error bg-error/5 rounded-md px-2 py-1">
-                                        <AlertCircle className="size-3 mt-0.5 shrink-0" />
-                                        <span>{e}</span>
-                                      </div>
-                                    ))}
-                                    {qDiag.warnings.map((w, wi) => (
-                                      <div key={wi} className="flex items-start gap-1.5 text-xs text-warning bg-warning/5 rounded-md px-2 py-1">
-                                        <AlertTriangle className="size-3 mt-0.5 shrink-0" />
-                                        <span>{w}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
+                                {qDiag &&
+                                  (qDiag.errors.length > 0 || qDiag.warnings.length > 0) && (
+                                    <div className="space-y-1">
+                                      {qDiag.errors.map((e, ei) => (
+                                        <div
+                                          key={ei}
+                                          className="flex items-start gap-1.5 rounded-md border border-rose-500/20 bg-rose-500/10 px-2 py-1 text-xs text-rose-600 dark:text-rose-400"
+                                        >
+                                          <AlertCircle className="mt-0.5 size-3 shrink-0" />
+                                          <span>{e}</span>
+                                        </div>
+                                      ))}
+                                      {qDiag.warnings.map((w, wi) => (
+                                        <div
+                                          key={wi}
+                                          className="flex items-start gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-xs text-amber-600 dark:text-amber-400"
+                                        >
+                                          <AlertTriangle className="mt-0.5 size-3 shrink-0" />
+                                          <span>{w}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                               </div>
                             )}
                           </div>
@@ -869,25 +1032,31 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                   /* ══════════════════ DIAGNOSTICS TAB ══════════════════ */
                   <div className="space-y-4">
                     {livePreview.errors.length === 0 && livePreview.warnings.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center text-center py-12">
-                        <CheckCircle2 className="size-10 text-success/60" />
-                        <h4 className="mt-2 text-sm font-bold text-success">All Clear</h4>
-                        <p className="text-base-content/50 text-xs mt-1">No errors or warnings detected in your content.</p>
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <CheckCircle2 className="size-10 text-emerald-500/70" />
+                        <h4 className="mt-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                          All Clear
+                        </h4>
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          No errors or warnings detected in your content.
+                        </p>
                       </div>
                     ) : (
                       <>
                         {/* Summary */}
-                        <div className="bg-base-200/50 rounded-xl p-3 flex items-center gap-4">
+                        <div className="bg-muted/30 border-border/60 flex items-center gap-4 rounded-xl border p-3">
                           {livePreview.errors.length > 0 && (
-                            <div className="flex items-center gap-1.5 text-error text-xs font-bold">
+                            <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400">
                               <AlertCircle className="size-4" />
-                              {livePreview.errors.length} Error{livePreview.errors.length > 1 ? 's' : ''}
+                              {livePreview.errors.length} Error
+                              {livePreview.errors.length > 1 ? 's' : ''}
                             </div>
                           )}
                           {livePreview.warnings.length > 0 && (
-                            <div className="flex items-center gap-1.5 text-warning text-xs font-bold">
+                            <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
                               <AlertTriangle className="size-4" />
-                              {livePreview.warnings.length} Warning{livePreview.warnings.length > 1 ? 's' : ''}
+                              {livePreview.warnings.length} Warning
+                              {livePreview.warnings.length > 1 ? 's' : ''}
                             </div>
                           )}
                         </div>
@@ -895,11 +1064,16 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                         {/* Error list */}
                         {livePreview.errors.length > 0 && (
                           <div className="space-y-1.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-error/80">Errors</span>
+                            <span className="text-[11px] font-semibold tracking-wider text-rose-600 uppercase dark:text-rose-400">
+                              Errors
+                            </span>
                             {livePreview.errors.map((e, ei) => (
-                              <div key={ei} className="flex items-start gap-2 text-xs bg-error/5 border border-error/20 rounded-lg px-3 py-2">
-                                <AlertCircle className="size-3.5 text-error mt-0.5 shrink-0" />
-                                <span className="text-base-content/90">{e}</span>
+                              <div
+                                key={ei}
+                                className="flex items-start gap-2 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs text-rose-700 dark:text-rose-300"
+                              >
+                                <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-rose-500" />
+                                <span>{e}</span>
                               </div>
                             ))}
                           </div>
@@ -908,34 +1082,56 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                         {/* Warning list */}
                         {livePreview.warnings.length > 0 && (
                           <div className="space-y-1.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-warning/80">Warnings</span>
+                            <span className="text-[11px] font-semibold tracking-wider text-amber-600 uppercase dark:text-amber-400">
+                              Warnings
+                            </span>
                             {livePreview.warnings.map((w, wi) => (
-                              <div key={wi} className="flex items-start gap-2 text-xs bg-warning/5 border border-warning/20 rounded-lg px-3 py-2">
-                                <AlertTriangle className="size-3.5 text-warning mt-0.5 shrink-0" />
-                                <span className="text-base-content/90">{w}</span>
+                              <div
+                                key={wi}
+                                className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300"
+                              >
+                                <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                                <span>{w}</span>
                               </div>
                             ))}
                           </div>
                         )}
 
                         {/* Per-question breakdown */}
-                        {livePreview.perQuestion.filter((p) => p.errors.length > 0 || p.warnings.length > 0).length > 0 && (
+                        {livePreview.perQuestion.filter(
+                          (p) => p.errors.length > 0 || p.warnings.length > 0,
+                        ).length > 0 && (
                           <div className="space-y-1.5">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-base-content/50">By Question</span>
+                            <span className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
+                              By Question
+                            </span>
                             {livePreview.perQuestion
                               .filter((p) => p.errors.length > 0 || p.warnings.length > 0)
                               .map((p) => (
                                 <button
                                   key={p.idx}
-                                  onClick={() => { setPreviewTab('questions'); setExpandedQIdx(p.idx); }}
-                                  className="w-full flex items-center gap-2 text-left bg-base-100 border border-border/50 rounded-lg px-3 py-2 hover:bg-base-200/60 transition-colors"
+                                  onClick={() => {
+                                    setPreviewTab('questions');
+                                    setExpandedQIdx(p.idx);
+                                  }}
+                                  className="bg-card border-border/60 hover:bg-muted/40 flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors"
                                 >
-                                  <span className="text-xs font-bold text-primary">Q{p.idx + 1}</span>
-                                  <div className="flex gap-1.5 flex-1">
-                                    {p.errors.length > 0 && <span className="badge badge-error badge-xs">{p.errors.length} err</span>}
-                                    {p.warnings.length > 0 && <span className="badge badge-warning badge-xs">{p.warnings.length} warn</span>}
+                                  <span className="text-primary text-xs font-bold">
+                                    Q{p.idx + 1}
+                                  </span>
+                                  <div className="flex flex-1 gap-1.5">
+                                    {p.errors.length > 0 && (
+                                      <span className="inline-flex items-center rounded bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-medium text-rose-600 dark:text-rose-400">
+                                        {p.errors.length} err
+                                      </span>
+                                    )}
+                                    {p.warnings.length > 0 && (
+                                      <span className="inline-flex items-center rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                                        {p.warnings.length} warn
+                                      </span>
+                                    )}
                                   </div>
-                                  <ChevronRight className="size-3 text-base-content/40" />
+                                  <ChevronRight className="text-muted-foreground size-3" />
                                 </button>
                               ))}
                           </div>
@@ -954,20 +1150,22 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
         /* ====================================================================== */
         <div className="space-y-6">
           {/* Metadata Card */}
-          <div className="liquid-glass-emerald grid grid-cols-1 gap-4 rounded-2xl border p-5 shadow-xs sm:grid-cols-2 lg:grid-cols-4">
+          <div className="card grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
             <div className="sm:col-span-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-base-content/70">Paper Title</label>
+              <label className="text-muted-foreground mb-1 block text-[11px] font-semibold tracking-wider uppercase">
+                Paper Title
+              </label>
               <input
                 type="text"
                 value={composerTitle}
                 onChange={(e) => setComposerTitle(e.target.value)}
                 placeholder="e.g. JEE Main Full Physics Mock 2026"
-                className="input input-bordered input-sm mt-1 w-full font-bold"
+                className="border-border/80 bg-background text-foreground placeholder:text-muted-foreground/60 focus:ring-primary/20 focus:border-primary h-8 w-full rounded-md border px-3 text-xs font-semibold transition-colors focus:ring-2 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-base-content/70">
+              <label className="text-muted-foreground mb-1 block text-[11px] font-semibold tracking-wider uppercase">
                 Duration (Minutes)
               </label>
               <input
@@ -976,16 +1174,18 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                 max="360"
                 value={composerDuration}
                 onChange={(e) => setComposerDuration(Number(e.target.value))}
-                className="input input-bordered input-sm mt-1 w-full"
+                className="border-border/80 bg-background text-foreground focus:ring-primary/20 focus:border-primary h-8 w-full rounded-md border px-3 text-xs transition-colors focus:ring-2 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-base-content/70">Assessment Mode</label>
+              <label className="text-muted-foreground mb-1 block text-[11px] font-semibold tracking-wider uppercase">
+                Assessment Mode
+              </label>
               <select
                 value={composerMode}
                 onChange={(e) => setComposerMode(e.target.value as TestMode)}
-                className="select select-bordered select-sm mt-1 w-full"
+                className="border-border/80 bg-background text-foreground focus:ring-primary/20 focus:border-primary h-8 w-full rounded-md border px-2.5 text-xs transition-colors focus:ring-2 focus:outline-none"
               >
                 <option value="EXAM">Strict Exam Mode (Timed)</option>
                 <option value="PRACTICE">Practice Mode (Instant Feedback)</option>
@@ -993,7 +1193,7 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
             </div>
 
             <div className="sm:col-span-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-base-content/70">
+              <label className="text-muted-foreground mb-1 block text-[11px] font-semibold tracking-wider uppercase">
                 Description / Notes
               </label>
               <input
@@ -1001,12 +1201,12 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                 value={composerDescription}
                 onChange={(e) => setComposerDescription(e.target.value)}
                 placeholder="e.g. Revision paper covering kinematics and thermodynamics"
-                className="input input-bordered input-sm mt-1 w-full text-xs"
+                className="border-border/80 bg-background text-foreground placeholder:text-muted-foreground/60 focus:ring-primary/20 focus:border-primary h-8 w-full rounded-md border px-3 text-xs transition-colors focus:ring-2 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-base-content/70">
+              <label className="text-muted-foreground mb-1 block text-[11px] font-semibold tracking-wider uppercase">
                 Marks Per Question
               </label>
               <input
@@ -1015,12 +1215,12 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                 max="20"
                 value={composerDefaultMarks}
                 onChange={(e) => setComposerDefaultMarks(Number(e.target.value))}
-                className="input input-bordered input-sm mt-1 w-full text-xs"
+                className="border-border/80 bg-background text-foreground focus:ring-primary/20 focus:border-primary h-8 w-full rounded-md border px-3 text-xs transition-colors focus:ring-2 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-base-content/70">
+              <label className="text-muted-foreground mb-1 block text-[11px] font-semibold tracking-wider uppercase">
                 Negative Penalty
               </label>
               <input
@@ -1029,13 +1229,13 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                 max="10"
                 value={composerNegativeMarks}
                 onChange={(e) => setComposerNegativeMarks(Number(e.target.value))}
-                className="input input-bordered input-sm mt-1 w-full text-xs"
+                className="border-border/80 bg-background text-foreground focus:ring-primary/20 focus:border-primary h-8 w-full rounded-md border px-3 text-xs transition-colors focus:ring-2 focus:outline-none"
               />
             </div>
           </div>
 
           {/* Question Picker Toolbar */}
-          <div className="liquid-glass-card flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 shadow-xs">
+          <div className="card flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4">
             <div className="flex flex-wrap items-center gap-2">
               {/* Subject Filter */}
               <select
@@ -1044,7 +1244,7 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                   setFilterSubject(e.target.value);
                   setFilterTopic('ALL');
                 }}
-                className="select select-bordered select-xs"
+                className="border-border/80 bg-background text-foreground focus:border-primary h-7 rounded-md border px-2 text-xs focus:outline-none"
               >
                 <option value="ALL">All Subjects</option>
                 {subjectsList.map((s) => (
@@ -1059,7 +1259,7 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                 <select
                   value={filterTopic}
                   onChange={(e) => setFilterTopic(e.target.value)}
-                  className="select select-bordered select-xs"
+                  className="border-border/80 bg-background text-foreground focus:border-primary h-7 rounded-md border px-2 text-xs focus:outline-none"
                 >
                   <option value="ALL">All Topics</option>
                   {topicsList.map((t) => (
@@ -1088,23 +1288,29 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
             </div>
 
             <div className="flex items-center gap-2">
-              <button onClick={selectAllFiltered} className="btn btn-ghost btn-xs border border-border/70">
+              <button
+                onClick={selectAllFiltered}
+                className="btn btn-ghost btn-xs border-border/70 border text-xs"
+              >
                 Select All Filtered
               </button>
-              <button onClick={clearSelection} className="btn btn-ghost btn-xs text-base-content/50">
+              <button
+                onClick={clearSelection}
+                className="btn btn-ghost btn-xs text-muted-foreground text-xs"
+              >
                 Clear
               </button>
               <button
                 onClick={() => handleCreatePaperFromComposer(false)}
                 disabled={selectedQuestionIds.size === 0}
-                className="btn btn-outline btn-sm font-bold"
+                className="btn btn-outline btn-sm h-7 text-xs font-medium"
               >
                 Save Paper
               </button>
               <button
                 onClick={() => handleCreatePaperFromComposer(true)}
                 disabled={selectedQuestionIds.size === 0}
-                className="btn btn-primary btn-sm font-bold shadow-md"
+                className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium shadow-xs"
               >
                 <Play className="size-3.5" />
                 Save & Start Now
@@ -1120,26 +1326,32 @@ During which phase of mitosis do chromosomes align at the equatorial plate?
                 <div
                   key={q.id}
                   onClick={() => toggleSelectQuestion(q.id)}
-                  className={`flex flex-col justify-between rounded-xl p-4 shadow-xs cursor-pointer transition-all ${
-                    isSelected ? 'liquid-glass-emerald border-primary ring-2 ring-primary/40' : 'liquid-glass-card hover:border-emerald-500/40'
+                  className={`flex cursor-pointer flex-col justify-between rounded-xl p-4 shadow-xs transition-all ${
+                    isSelected
+                      ? 'card border-primary ring-primary/40 bg-primary/5 dark:bg-primary/10 ring-1'
+                      : 'card hover:border-primary/40'
                   }`}
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="badge badge-sm badge-neutral">{q.subject}</span>
-                      <span className="text-base-content/50 text-[11px]">{q.topic}</span>
+                      <span className="bg-muted text-muted-foreground border-border/60 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium">
+                        {q.subject}
+                      </span>
+                      <span className="text-muted-foreground text-[11px]">{q.topic}</span>
                     </div>
 
-                    <div className="line-clamp-3 text-xs leading-relaxed">
+                    <div className="text-foreground/90 overflow-visible text-xs leading-relaxed wrap-break-word">
                       <MathRenderer content={q.body} />
                     </div>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between pt-2 border-t border-border/40 text-[11px]">
-                    <span className="capitalize text-base-content/60">{q.difficulty}</span>
+                  <div className="border-border/40 mt-3 flex items-center justify-between border-t pt-2 text-[11px]">
+                    <span className="text-muted-foreground capitalize">{q.difficulty}</span>
                     <span
-                      className={`badge badge-xs font-bold ${
-                        isSelected ? 'badge-primary text-primary-content' : 'badge-ghost'
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        isSelected
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground border-border/60 border'
                       }`}
                     >
                       {isSelected ? '✓ Selected' : '+ Add'}

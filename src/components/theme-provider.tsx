@@ -43,10 +43,7 @@ function applyThemeClassesToDOM(resolved: 'dark' | 'light') {
   root.style.colorScheme = resolved;
 }
 
-export function ThemeProvider({
-  children,
-  ...props
-}: ThemeProviderProps) {
+export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const systemTheme = useSyncExternalStore<'dark' | 'light'>(
     subscribeToSystemTheme,
     getSystemThemeSnapshot,
@@ -60,7 +57,9 @@ export function ThemeProvider({
     // Clear any legacy manual override so the app always follows macOS
     try {
       localStorage.removeItem('vite-ui-theme');
-    } catch {}
+    } catch {
+      // Silently ignore storage errors
+    }
     applyThemeClassesToDOM(resolvedTheme);
   }, [resolvedTheme]);
 
@@ -79,6 +78,7 @@ export function ThemeProvider({
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
 

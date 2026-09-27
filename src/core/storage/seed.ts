@@ -190,8 +190,16 @@ $$E = \\frac{7 \\times 6}{2} = 21$$`,
 
 **Reason (R):** According to the Second Law of Thermodynamics, no heat engine can have an efficiency greater than a reversible engine operating between identical thermal reservoirs.`,
     options: [
-      { id: 'A', text: 'Both (A) and (R) are true and (R) is the correct explanation of (A)', isCorrect: true },
-      { id: 'B', text: 'Both (A) and (R) are true but (R) is not the correct explanation of (A)', isCorrect: false },
+      {
+        id: 'A',
+        text: 'Both (A) and (R) are true and (R) is the correct explanation of (A)',
+        isCorrect: true,
+      },
+      {
+        id: 'B',
+        text: 'Both (A) and (R) are true but (R) is not the correct explanation of (A)',
+        isCorrect: false,
+      },
       { id: 'C', text: '(A) is true but (R) is false', isCorrect: false },
       { id: 'D', text: '(A) is false but (R) is true', isCorrect: false },
       { id: 'E', text: 'Both (A) and (R) are false', isCorrect: false },
@@ -247,7 +255,8 @@ Thus, $\\vec{S}$ points strictly along the $+z$ direction ($+\\hat{k}$), which i
     difficulty: 'medium',
     marks: 4,
     negativeMarks: 1,
-    imageUrl: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop&q=80',
+    imageUrl:
+      'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop&q=80',
     imageAlt: 'Geometric vector transformation diagram',
     tags: ['linear-algebra', 'eigenvalues', 'matrices'],
     body: `Consider a $2 \\times 2$ real symmetric matrix $A = \\begin{pmatrix} 2 & 1 \\\\ 1 & 2 \\end{pmatrix}$ representing a linear transformation on $\\mathbb{R}^2$.
@@ -271,8 +280,10 @@ export const SEED_TESTS: TestDefinition[] = [
   {
     id: 'test-jee-full-mock',
     title: 'Engineering & Physics CBT Practice Exam',
-    description: 'Comprehensive CBT mock covering Kinematics, Optics, Thermodynamics, and Calculus with authentic JEE Main marking scheme (+4, -1).',
-    instructions: '1. Total duration is 60 minutes.\n2. Each question carries 4 marks with a negative marking of 1 mark for incorrect answers in MCQ.\n3. Numerical questions carry 4 marks with 0 negative marking.\n4. You can navigate between sections freely.',
+    description:
+      'Comprehensive CBT mock covering Kinematics, Optics, Thermodynamics, and Calculus with authentic JEE Main marking scheme (+4, -1).',
+    instructions:
+      '1. Total duration is 60 minutes.\n2. Each question carries 4 marks with a negative marking of 1 mark for incorrect answers in MCQ.\n3. Numerical questions carry 4 marks with 0 negative marking.\n4. You can navigate between sections freely.',
     mode: 'EXAM',
     schemaVersion: '2.0',
     version: 1,
@@ -281,7 +292,8 @@ export const SEED_TESTS: TestDefinition[] = [
         id: 'sec_physics',
         title: 'Section A: Physics',
         order: 0,
-        instructions: 'Answer all physics questions. Numerical questions require numeric answers within specified tolerance.',
+        instructions:
+          'Answer all physics questions. Numerical questions require numeric answers within specified tolerance.',
         selection: {
           mode: 'STATIC',
           staticQuestionIds: [
@@ -338,8 +350,10 @@ export const SEED_TESTS: TestDefinition[] = [
   {
     id: 'test-cs-drill',
     title: 'Computer Science & Algorithms Rapid Practice',
-    description: 'Instant-feedback practice drill covering Algorithms, OS, and Data Structures. Immediate solution checking enabled.',
-    instructions: 'Practice mode: you can check your answer immediately after each question, view hints and full step-by-step derivations.',
+    description:
+      'Instant-feedback practice drill covering Algorithms, OS, and Data Structures. Immediate solution checking enabled.',
+    instructions:
+      'Practice mode: you can check your answer immediately after each question, view hints and full step-by-step derivations.',
     mode: 'PRACTICE',
     schemaVersion: '2.0',
     version: 1,
@@ -350,11 +364,7 @@ export const SEED_TESTS: TestDefinition[] = [
         order: 0,
         selection: {
           mode: 'STATIC',
-          staticQuestionIds: [
-            { id: 'cs-algo-002' },
-            { id: 'cs-os-006' },
-            { id: 'cs-ds-007' },
-          ],
+          staticQuestionIds: [{ id: 'cs-algo-002' }, { id: 'cs-os-006' }, { id: 'cs-ds-007' }],
         },
       },
     ],
@@ -393,24 +403,28 @@ export async function initializeDatabaseSeed(): Promise<void> {
   const count = await db.questions.count();
   if (count === 0) {
     console.log('[takemock] Seeding initial Question Bank and Tests...');
-    await db.transaction('rw', [db.questions, db.questionVersions, db.testDefinitions], async () => {
-      // 1. Seed questions
-      for (const q of SEED_QUESTIONS) {
-        await db.questions.put(q);
-        await db.questionVersions.put({
-          id: `${q.id}_v${q.version || 1}`,
-          questionId: q.id,
-          version: q.version || 1,
-          data: q,
-          createdAt: new Date().toISOString(),
-        });
-      }
+    await db.transaction(
+      'rw',
+      [db.questions, db.questionVersions, db.testDefinitions],
+      async () => {
+        // 1. Seed questions
+        for (const q of SEED_QUESTIONS) {
+          await db.questions.put(q);
+          await db.questionVersions.put({
+            id: `${q.id}_v${q.version || 1}`,
+            questionId: q.id,
+            version: q.version || 1,
+            data: q,
+            createdAt: new Date().toISOString(),
+          });
+        }
 
-      // 2. Seed test definitions
-      for (const t of SEED_TESTS) {
-        await db.testDefinitions.put(t);
-      }
-    });
+        // 2. Seed test definitions
+        for (const t of SEED_TESTS) {
+          await db.testDefinitions.put(t);
+        }
+      },
+    );
     console.log('[takemock] Seed completed successfully.');
   }
 }

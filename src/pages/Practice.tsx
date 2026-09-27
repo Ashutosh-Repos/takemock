@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import {
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   Compass,
+  Copy,
   RotateCcw,
   Search,
   Zap,
@@ -13,13 +15,17 @@ import { QuestionDetailModal } from '@/components/shared/QuestionDetailModal';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import { MacContextMenuPortal } from '@/components/ui/context-menu';
+import { useMacContextMenu } from '@/hooks/useMacContextMenu';
 import { assessmentRepository } from '@/core/storage/repository';
+import { showNativeAlert, writeToClipboard } from '@/core/native/tauriBridge';
 import type { QuestionModel } from '@/types/question';
 import type { TestDefinition } from '@/types/test';
 
 export function Practice() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { contextMenuState, openContextMenu, closeContextMenu } = useMacContextMenu();
 
   // Loading & Paging
   const [loading, setLoading] = useState(true);
@@ -103,7 +109,16 @@ export function Practice() {
         setLoading(false);
       }
     },
-    [page, pageSize, selectedSubject, selectedTopic, selectedDifficulty, selectedType, selectedTag, search]
+    [
+      page,
+      pageSize,
+      selectedSubject,
+      selectedTopic,
+      selectedDifficulty,
+      selectedType,
+      selectedTag,
+      search,
+    ],
   );
 
   useEffect(() => {
@@ -120,10 +135,18 @@ export function Practice() {
 
   useEffect(() => {
     loadQuestions(1);
-  }, [selectedSubject, selectedTopic, selectedDifficulty, selectedType, selectedTag, search]);
+  }, [
+    selectedSubject,
+    selectedTopic,
+    selectedDifficulty,
+    selectedType,
+    selectedTag,
+    search,
+    loadQuestions,
+  ]);
 
   // Launch Drill
-  const handleLaunchDrill = async () => {
+  const handleLaunchDrill = useCallback(async () => {
     setLaunchingDrill(true);
     try {
       const activeQuestions = await assessmentRepository.getQuestions({
@@ -135,7 +158,10 @@ export function Practice() {
       });
 
       if (activeQuestions.length === 0) {
-        alert('No questions match your current filters.');
+        await showNativeAlert('No questions match your current filters.', {
+          title: 'Drill Filter',
+          kind: 'info',
+        });
         return;
       }
 
@@ -170,7 +196,9 @@ export function Practice() {
         ],
         timing: {
           mode: drillTimed ? 'GLOBAL' : 'NONE',
-          totalDurationSeconds: drillTimed ? Math.round(selectedSubset.length * paceMinutes * 60) : 0,
+          totalDurationSeconds: drillTimed
+            ? Math.round(selectedSubset.length * paceMinutes * 60)
+            : 0,
           allowPause: true,
           autoSubmitOnExpiry: drillTimed,
         },
@@ -200,11 +228,25 @@ export function Practice() {
       const attempt = await assessmentRepository.startAttempt(drillDef.id);
       navigate(`/runner/${attempt.id}`);
     } catch (err: any) {
-      alert(`Could not launch drill: ${err.message || 'Unknown error'}`);
+      await showNativeAlert(`Could not launch drill: ${err.message || 'Unknown error'}`, {
+        title: 'Launch Error',
+        kind: 'error',
+      });
     } finally {
       setLaunchingDrill(false);
     }
-  };
+  }, [
+    selectedSubject,
+    selectedTopic,
+    selectedDifficulty,
+    selectedType,
+    search,
+    selectedTag,
+    drillCount,
+    drillTimed,
+    paceMinutes,
+    navigate,
+  ]);
 
   // Dynamic drill max based on available questions
   const availableQuestions = totalCount;
@@ -219,62 +261,74 @@ export function Practice() {
     }
   }, [availableQuestions, drillCount]);
 
-  return (
-    <div className="mx-auto max-w-6xl w-full px-6 py-6 pb-20 space-y-6">
-      {/* Standard Header */}
-      <div className="flex flex-col justify-between gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Drills</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {totalCount} question{totalCount !== 1 ? 's' : ''} available across topics. Configure and practice below.
-          </p>
-        </div>
+  const handleQuestionContextMenu = (e: React.MouseEvent, q: QuestionModel, idx: number) => {
+    openContextMenu(e, [
+      {
+        id: 'inspect-question',
+        label: 'Inspect Question & Explanation',
+        icon: BookOpen,
+        shortcut: '↵',
+        onClick: () => setModalIndex(idx),
+      },
+      {
+        id: 'copy-prompt',
+        label: 'Copy Question Text',
+        icon: Copy,
+        shortcut: '⌘C',
+        onClick: () => {
+          writeToClipboard(q.body);
+        },
+      },
+      { type: 'divider' },
+      {
+        id: 'launch-filtered-drill',
+        label: `Launch Drill (${Math.min(effectiveDrillCount, totalCount)} Qs)`,
+        icon: Zap,
+        onClick: handleLaunchDrill,
+      },
+    ]);
+  };
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleLaunchDrill}
-            disabled={totalCount === 0 || launchingDrill}
-            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium gap-1.5 shadow-xs"
-          >
-            {launchingDrill ? (
-              <span className="loading-spinner" />
-            ) : (
-              <Zap className="size-3.5 fill-current" />
-            )}
-            <span>Launch Drill ({Math.min(effectiveDrillCount, totalCount)})</span>
-          </button>
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-5 px-6 py-5 pb-20 lg:px-8">
+      {/* Standard Header */}
+      <div className="border-border/60 flex flex-col justify-between gap-3 border-b pb-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-foreground text-xl font-bold tracking-tight">Drills</h1>
+          <p className="text-muted-foreground mt-0.5 text-xs">
+            {totalCount} question{totalCount !== 1 ? 's' : ''} available across topics. Configure
+            and practice below.
+          </p>
         </div>
       </div>
 
-      {/* Drill Configuration Toolbar Card */}
-      <div className="card flex flex-wrap items-center justify-between gap-4 p-3.5 sm:p-4">
+      {/* Drill Configuration Inspector Card */}
+      <div className="card border-border/70 flex flex-wrap items-center justify-between gap-3 p-3 sm:px-4 sm:py-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-foreground whitespace-nowrap">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               Questions:
             </span>
-            <span className="badge font-mono text-xs font-semibold tabular-nums text-primary border-primary/30">
+            <span className="text-foreground bg-muted/60 border-border/50 rounded-md border px-2 py-0.5 font-mono text-xs font-semibold">
               {effectiveDrillCount} Qs
             </span>
           </div>
-          <div className="w-36 sm:w-48">
+
+          <div className="w-32 sm:w-44">
             <Slider
               value={effectiveDrillCount}
               min={1}
               max={maxDrillQuestions}
               step={maxDrillQuestions > 10 ? 5 : 1}
-              size="regular"
+              size="sm"
               disabled={totalCount === 0}
-              showValueTooltip
-              formatValue={(val) => `${val} Questions`}
               onValueChange={setDrillCount}
+              label="Question Count"
             />
           </div>
-        </div>
 
-        <div className="hidden sm:block h-5 w-px bg-border/60" />
+          <div className="bg-border/60 mx-1 hidden h-4 w-px sm:block" />
 
-        <div className="flex flex-wrap items-center gap-3">
           <Switch
             checked={drillTimed}
             onCheckedChange={setDrillTimed}
@@ -283,12 +337,13 @@ export function Practice() {
           />
 
           {drillTimed && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
               <span className="text-[11px] font-medium">Pace:</span>
               <select
                 value={paceMinutes}
                 onChange={(e) => setPaceMinutes(parseFloat(e.target.value))}
-                className="h-6 text-xs rounded border border-border bg-input px-1.5 text-foreground focus:outline-none focus:border-primary"
+                aria-label="Target pace per question"
+                className="border-border bg-input text-foreground focus:border-primary h-6.5 rounded-md border px-2 text-[11.5px] focus:outline-none"
               >
                 <option value={1}>1.0 m/Q (Speed)</option>
                 <option value={1.5}>1.5 m/Q (Standard)</option>
@@ -297,32 +352,34 @@ export function Practice() {
               </select>
             </div>
           )}
-
-          <button
-            onClick={handleLaunchDrill}
-            disabled={totalCount === 0 || launchingDrill}
-            className="btn btn-primary btn-sm h-7 px-3 text-xs font-medium gap-1.5 shadow-xs"
-          >
-            {launchingDrill ? (
-              <span className="loading-spinner" />
-            ) : (
-              <Zap className="size-3.5 fill-current" />
-            )}
-            <span>Launch ({Math.min(effectiveDrillCount, totalCount)})</span>
-          </button>
         </div>
+
+        <button
+          id="practice-launch-drill-btn"
+          onClick={handleLaunchDrill}
+          disabled={totalCount === 0 || launchingDrill}
+          className="btn btn-primary btn-sm h-7 gap-1.5 rounded-md px-3 text-xs font-medium shadow-xs"
+        >
+          {launchingDrill ? (
+            <span className="loading-spinner size-3.5" />
+          ) : (
+            <Zap className="size-3.5 fill-current" />
+          )}
+          <span>Launch Drill ({Math.min(effectiveDrillCount, totalCount)})</span>
+        </button>
       </div>
 
       {/* Adaptive Facets Filtering Bar */}
       <div className="card space-y-3.5 p-4 sm:p-4.5">
         {/* Row 1: Search & Dropdowns */}
         <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <div className="macos-search-field flex-1 min-w-[200px]">
+          <div className="macos-search-field min-w-50 flex-1">
             <Search className="size-3.5" />
             <input
               ref={searchInputRef}
               type="search"
               placeholder="Search question text or tags..."
+              aria-label="Search question text or tags"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full text-xs"
@@ -347,7 +404,8 @@ export function Practice() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="h-8 text-xs rounded-md border border-border bg-input px-2.5 text-foreground focus:outline-none focus:border-primary"
+              aria-label="Filter by question type"
+              className="border-border bg-input text-foreground focus:border-primary h-8 rounded-md border px-2.5 text-xs focus:outline-none"
             >
               <option value="ALL">All Question Types</option>
               <option value="single_choice">Single Choice (MCQ)</option>
@@ -371,7 +429,7 @@ export function Practice() {
                   setSelectedType('ALL');
                   setSearch('');
                 }}
-                className="btn btn-ghost btn-xs h-8 px-2.5 text-xs font-medium rounded-md text-muted-foreground hover:text-destructive gap-1.5 border border-border transition-all"
+                className="btn btn-ghost btn-xs text-muted-foreground hover:text-destructive border-border h-8 gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-all"
               >
                 <RotateCcw className="size-3" />
                 Reset
@@ -382,8 +440,8 @@ export function Practice() {
 
         {/* Row 2: Subjects Chips */}
         {subjects.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/60">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mr-1">
+          <div className="border-border/60 flex flex-wrap items-center gap-1.5 border-t pt-2">
+            <span className="text-muted-foreground mr-1 font-mono text-[11px] tracking-wider uppercase">
               Subjects:
             </span>
             <button
@@ -391,10 +449,10 @@ export function Practice() {
                 setSelectedSubject('ALL');
                 setSelectedTopic('ALL');
               }}
-              className={`text-xs px-2.5 py-1 rounded-md transition-all cursor-pointer font-medium border ${
+              className={`cursor-pointer rounded-md border px-2.5 py-1 text-xs font-medium transition-all ${
                 selectedSubject === 'ALL'
                   ? 'bg-primary text-primary-foreground border-primary shadow-xs'
-                  : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+                  : 'bg-card/80 hover:bg-card text-foreground/80 hover:text-foreground border-border/80 shadow-2xs'
               }`}
             >
               All Subjects
@@ -406,10 +464,10 @@ export function Practice() {
                   setSelectedSubject(s);
                   setSelectedTopic('ALL');
                 }}
-                className={`text-xs px-2.5 py-1 rounded-md transition-all cursor-pointer font-medium border ${
+                className={`cursor-pointer rounded-md border px-2.5 py-1 text-xs font-medium transition-all ${
                   selectedSubject === s
                     ? 'bg-primary text-primary-foreground border-primary shadow-xs'
-                    : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+                    : 'bg-card/80 hover:bg-card text-foreground/80 hover:text-foreground border-border/80 shadow-2xs'
                 }`}
               >
                 {s}
@@ -420,16 +478,16 @@ export function Practice() {
 
         {/* Row 3: Topics Chips (for active subject) */}
         {topics.length > 0 && selectedSubject !== 'ALL' && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/60">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mr-1">
+          <div className="border-border/60 flex flex-wrap items-center gap-1.5 border-t pt-2">
+            <span className="text-muted-foreground mr-1 font-mono text-[11px] tracking-wider uppercase">
               Topics ({selectedSubject}):
             </span>
             <button
               onClick={() => setSelectedTopic('ALL')}
-              className={`text-xs px-2.5 py-1 rounded-md transition-all cursor-pointer font-medium border ${
+              className={`cursor-pointer rounded-md border px-2.5 py-1 text-xs font-medium transition-all ${
                 selectedTopic === 'ALL'
                   ? 'bg-secondary text-secondary-foreground border-border font-semibold shadow-xs'
-                  : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+                  : 'bg-card/80 hover:bg-card text-foreground/80 hover:text-foreground border-border/80 shadow-2xs'
               }`}
             >
               All Topics
@@ -438,10 +496,10 @@ export function Practice() {
               <button
                 key={t}
                 onClick={() => setSelectedTopic(t)}
-                className={`text-xs px-2.5 py-1 rounded-md transition-all cursor-pointer font-medium border ${
+                className={`cursor-pointer rounded-md border px-2.5 py-1 text-xs font-medium transition-all ${
                   selectedTopic === t
                     ? 'bg-secondary text-secondary-foreground border-border font-semibold shadow-xs'
-                    : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border'
+                    : 'bg-card/80 hover:bg-card text-foreground/80 hover:text-foreground border-border/80 shadow-2xs'
                 }`}
               >
                 {t}
@@ -452,18 +510,18 @@ export function Practice() {
 
         {/* Row 4: Tags Chips */}
         {tags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/60">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mr-1">
+          <div className="border-border/60 flex flex-wrap items-center gap-1.5 border-t pt-2">
+            <span className="text-muted-foreground mr-1 font-mono text-[11px] tracking-wider uppercase">
               Tags:
             </span>
             {(showAllTags ? tags : tags.slice(0, 10)).map((t) => (
               <button
                 key={t}
                 onClick={() => setSelectedTag(selectedTag === t ? 'ALL' : t)}
-                className={`text-xs font-mono px-2 py-0.5 rounded-md transition-all cursor-pointer border ${
+                className={`cursor-pointer rounded-md border px-2 py-0.5 font-mono text-xs transition-all ${
                   selectedTag === t
                     ? 'bg-primary/15 text-primary border-primary/30 font-medium'
-                    : 'bg-muted/40 hover:bg-muted text-muted-foreground border-border'
+                    : 'bg-card/80 hover:bg-card text-muted-foreground hover:text-foreground border-border/80'
                 }`}
               >
                 #{t}
@@ -472,7 +530,7 @@ export function Practice() {
             {tags.length > 10 && (
               <button
                 onClick={() => setShowAllTags(!showAllTags)}
-                className="text-xs text-primary hover:underline ml-1 font-mono cursor-pointer"
+                className="text-primary ml-1 cursor-pointer font-mono text-xs hover:underline"
               >
                 {showAllTags ? 'Show less' : `+${tags.length - 10} more`}
               </button>
@@ -489,13 +547,13 @@ export function Practice() {
       ) : questions.length === 0 ? (
         <div className="border-border/60 bg-card flex flex-col items-center justify-center rounded-lg border p-10 text-center shadow-xs">
           <Compass className="text-muted-foreground/40 size-10" />
-          <h3 className="mt-3 text-sm font-semibold text-foreground">No Questions Match Filters</h3>
+          <h3 className="text-foreground mt-3 text-sm font-semibold">No Questions Match Filters</h3>
           <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-xs">
             Reset filter selections or import new questions in the Builder.
           </p>
           <button
             onClick={() => navigate('/builder')}
-            className="btn btn-primary btn-sm h-8 px-3 text-xs font-medium mt-4 gap-1.5 shadow-xs"
+            className="btn btn-primary btn-sm mt-4 h-8 gap-1.5 px-3 text-xs font-medium shadow-xs"
           >
             <Zap className="size-3.5" />
             Ingest Questions
@@ -503,11 +561,14 @@ export function Practice() {
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm text-muted-foreground font-mono tabular-nums">
+          <div className="text-muted-foreground flex items-center justify-between font-mono text-sm tabular-nums">
             <span>
-              Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, totalCount)} of {totalCount}
+              Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, totalCount)} of{' '}
+              {totalCount}
             </span>
-            <span>Page {page} of {totalPages}</span>
+            <span>
+              Page {page} of {totalPages}
+            </span>
           </div>
 
           <div className="space-y-3">
@@ -517,6 +578,7 @@ export function Practice() {
                 <div
                   key={q.id}
                   onClick={() => setModalIndex(idx)}
+                  onContextMenu={(e) => handleQuestionContextMenu(e, q, idx)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
@@ -526,39 +588,41 @@ export function Practice() {
                   role="button"
                   tabIndex={0}
                   aria-label={`Question ${questionGlobalNum} in ${q.subject}. Click to view solution.`}
-                  className="card cursor-pointer p-4 sm:p-5 space-y-3 focus-visible:outline-2 focus-visible:outline-primary transition-all duration-150"
+                  className="card focus-visible:outline-primary cursor-pointer space-y-3 p-4 transition-all duration-150 focus-visible:outline-2"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2.5">
+                  <div className="border-border/40 flex flex-wrap items-center justify-between gap-2 border-b pb-2.5">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="badge font-mono font-semibold text-xs">
+                      <span className="bg-secondary/80 text-foreground border-border/60 inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[11px] font-medium">
                         {q.subject}
                       </span>
                       {q.topic && (
-                        <span className="badge badge-ghost font-mono text-xs text-muted-foreground">
+                        <span className="text-muted-foreground bg-secondary/40 border-border/40 inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[11px]">
                           {q.topic}
                         </span>
                       )}
                       <span
-                        className={`badge font-mono capitalize text-xs font-semibold ${
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[11px] font-medium capitalize ${
                           q.difficulty === 'easy'
-                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                             : q.difficulty === 'medium'
-                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                            : 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400'
+                              ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                              : 'border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400'
                         }`}
                       >
                         {q.difficulty}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground tabular-nums">
-                      <span>+{q.marks || 1} mark{q.marks !== 1 ? 's' : ''}</span>
-                      <span className="font-bold text-foreground">Q{questionGlobalNum}</span>
+                    <div className="text-muted-foreground flex items-center gap-2 font-mono text-xs tabular-nums">
+                      <span>
+                        +{q.marks || 1} mark{q.marks !== 1 ? 's' : ''}
+                      </span>
+                      <span className="text-foreground font-bold">Q{questionGlobalNum}</span>
                     </div>
                   </div>
 
-                  {/* Question Prompt Snippet */}
-                  <div className="text-[14px] sm:text-[15px] leading-relaxed line-clamp-3 selectable-content text-foreground font-normal">
+                  {/* Question Prompt Snippet - Fully responsive with zero text clipping */}
+                  <div className="selectable-content text-foreground overflow-visible text-[13px] leading-relaxed font-normal wrap-break-word">
                     <MathRenderer content={q.body} />
                   </div>
 
@@ -566,7 +630,10 @@ export function Practice() {
                   {q.tags && q.tags.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                       {q.tags.map((t) => (
-                        <span key={t} className="text-xs font-mono text-muted-foreground px-2 py-0.5 rounded-md bg-muted border border-border">
+                        <span
+                          key={t}
+                          className="text-muted-foreground bg-secondary/50 border-border/50 rounded-full border px-2 py-0.5 font-mono text-[11px]"
+                        >
                           #{t}
                         </span>
                       ))}
@@ -574,18 +641,18 @@ export function Practice() {
                   )}
 
                   {/* Card Action Hint */}
-                  <div className="flex items-center justify-between border-t border-border/60 pt-2.5 text-xs">
-                    <span className="text-muted-foreground text-xs">
-                      Click to review question & solution
+                  <div className="border-border/40 flex items-center justify-between border-t pt-2.5 text-xs">
+                    <span className="text-muted-foreground text-[11px]">
+                      Click to review question & explanation
                     </span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setModalIndex(idx);
                       }}
-                      className="text-primary hover:underline text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                      className="text-primary flex cursor-pointer items-center gap-1 text-xs font-semibold transition-colors hover:underline"
                     >
-                      View Solution
+                      <span>View Solution</span>
                       <ChevronRight className="size-3.5" />
                     </button>
                   </div>
@@ -615,7 +682,7 @@ export function Practice() {
                 <ChevronLeft className="size-3.5" />
                 Previous
               </button>
-              <span className="text-xs font-mono tabular-nums px-2 text-muted-foreground">
+              <span className="text-muted-foreground px-2 font-mono text-xs tabular-nums">
                 {page} / {totalPages}
               </span>
               <button
@@ -630,6 +697,8 @@ export function Practice() {
           )}
         </div>
       )}
+      {/* Native macOS Contextual Menu Portal */}
+      <MacContextMenuPortal state={contextMenuState} onClose={closeContextMenu} />
     </div>
   );
 }

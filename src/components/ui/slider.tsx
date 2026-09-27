@@ -51,11 +51,9 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
       id,
       name,
     },
-    ref
+    ref,
   ) => {
-    const [currentVal, setCurrentVal] = React.useState<number>(
-      value ?? defaultValue ?? min
-    );
+    const [currentVal, setCurrentVal] = React.useState<number>(value ?? defaultValue ?? min);
     const [isHovered, setIsHovered] = React.useState(false);
     const [isDragging, setIsDragging] = React.useState(false);
 
@@ -87,7 +85,10 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
     // Calculate ticks if enabled
     const tickList = React.useMemo(() => {
       if (!tickMarks) return null;
-      const count = typeof tickMarks === 'number' ? tickMarks : Math.min(Math.floor((max - min) / step) + 1, 21);
+      const count =
+        typeof tickMarks === 'number'
+          ? tickMarks
+          : Math.min(Math.floor((max - min) / step) + 1, 21);
       if (count <= 1) return null;
       return Array.from({ length: count }, (_, i) => i);
     }, [tickMarks, min, max, step]);
@@ -101,21 +102,21 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           size === 'sm' && 'macos-slider-sm',
           variant === 'success' && 'macos-slider-success',
           disabled && 'is-disabled',
-          className
+          className,
         )}
       >
         {label && (
-          <div className="flex items-center justify-between text-xs font-medium text-foreground">
+          <div className="text-foreground flex items-center justify-between text-xs font-medium">
             <span>{label}</span>
-            <span className="font-mono text-muted-foreground tabular-nums text-[11px]">
+            <span className="text-muted-foreground font-mono text-[11px] tabular-nums">
               {displayValue}
             </span>
           </div>
         )}
 
-        <div className="flex items-center gap-2 w-full">
+        <div className="flex w-full items-center gap-2">
           {startIcon && (
-            <span className="shrink-0 text-muted-foreground select-none pointer-events-none">
+            <span className="text-muted-foreground pointer-events-none shrink-0 select-none">
               {startIcon}
             </span>
           )}
@@ -145,9 +146,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                 <BaseSlider.Indicator className="macos-slider-indicator" />
               </BaseSlider.Track>
 
-              <BaseSlider.Thumb
-                className={cn('macos-slider-thumb', isDragging && 'is-dragging')}
-              >
+              <BaseSlider.Thumb className={cn('macos-slider-thumb', isDragging && 'is-dragging')}>
                 {showValueTooltip && (isHovered || isDragging) && (
                   <div className="macos-slider-tooltip animate-in fade-in zoom-in-95 duration-100">
                     {displayValue}
@@ -158,7 +157,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           </BaseSlider.Root>
 
           {endIcon && (
-            <span className="shrink-0 text-muted-foreground select-none pointer-events-none">
+            <span className="text-muted-foreground pointer-events-none shrink-0 select-none">
               {endIcon}
             </span>
           )}
@@ -180,7 +179,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Slider.displayName = 'Slider';

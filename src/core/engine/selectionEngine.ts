@@ -52,12 +52,12 @@ export class SelectionConstraintError extends Error {
     sectionId: string,
     constraint: SelectionConstraint,
     requestedCount: number,
-    availableCount: number
+    availableCount: number,
   ) {
     super(
       `SelectionConstraintError: Section "${sectionId}" requires ${requestedCount} questions matching (${JSON.stringify(
-        constraint
-      )}), but only ${availableCount} matching candidate questions were found in the question bank.`
+        constraint,
+      )}), but only ${availableCount} matching candidate questions were found in the question bank.`,
     );
     this.name = 'SelectionConstraintError';
     this.sectionId = sectionId;
@@ -112,7 +112,10 @@ export interface SectionValidationReport {
  * Evaluates whether a question matches a given selection constraint.
  */
 export function matchesConstraint(q: QuestionModel, constraint: SelectionConstraint): boolean {
-  if (constraint.subject && q.subject.trim().toLowerCase() !== constraint.subject.trim().toLowerCase()) {
+  if (
+    constraint.subject &&
+    q.subject.trim().toLowerCase() !== constraint.subject.trim().toLowerCase()
+  ) {
     return false;
   }
   if (constraint.topic && q.topic.trim().toLowerCase() !== constraint.topic.trim().toLowerCase()) {
@@ -143,7 +146,7 @@ export function validateSectionConstraints(
     excludeQuestionIds?: Set<string>;
     includeOnlyQuestionIds?: Set<string>;
     alreadySelectedIds?: Set<string>;
-  }
+  },
 ): SectionValidationReport {
   const config = section.selection;
   const alreadySelected = options?.alreadySelectedIds || new Set<string>();
@@ -189,7 +192,8 @@ export function validateSectionConstraints(
     const matched = allQuestions.filter((q) => {
       if (usedInSim.has(q.id)) return false;
       if (options?.excludeQuestionIds?.has(q.id)) return false;
-      if (options?.includeOnlyQuestionIds && !options.includeOnlyQuestionIds.has(q.id)) return false;
+      if (options?.includeOnlyQuestionIds && !options.includeOnlyQuestionIds.has(q.id))
+        return false;
       return matchesConstraint(q, c);
     });
 
@@ -229,7 +233,7 @@ export function validateSectionConstraints(
 export function selectQuestionsForSection(
   section: TestSectionDefinition,
   allQuestions: QuestionModel[],
-  context: SelectionContext
+  context: SelectionContext,
 ): QuestionModel[] {
   const config = section.selection;
   const globalSelected = context.globalSelectedIds || new Set<string>();
@@ -279,12 +283,18 @@ export function selectQuestionsForSection(
       const candidates = allQuestions.filter((q) => {
         if (globalSelected.has(q.id)) return false;
         if (context.excludeQuestionIds?.has(q.id)) return false;
-        if (context.includeOnlyQuestionIds && !context.includeOnlyQuestionIds.has(q.id)) return false;
+        if (context.includeOnlyQuestionIds && !context.includeOnlyQuestionIds.has(q.id))
+          return false;
         return matchesConstraint(q, constraint);
       });
 
       if (candidates.length < constraint.count) {
-        throw new SelectionConstraintError(section.id, constraint, constraint.count, candidates.length);
+        throw new SelectionConstraintError(
+          section.id,
+          constraint,
+          constraint.count,
+          candidates.length,
+        );
       }
 
       // Partition candidates into atomic selection units
@@ -399,7 +409,7 @@ export function selectQuestionsForEntireTest(
   options?: {
     excludeQuestionIds?: Set<string>;
     includeOnlyQuestionIds?: Set<string>;
-  }
+  },
 ): {
   sectionQuestions: Record<string, QuestionModel[]>;
   seed: number;

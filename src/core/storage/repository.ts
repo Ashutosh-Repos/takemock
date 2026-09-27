@@ -21,10 +21,7 @@ import {
 import { detectContentFormat } from '../parser/llmSanitizer';
 import { parseJsonQuestions, type JsonParseResult } from '../parser/jsonConverter';
 import { parseMarkdownQuestions, type ParseResult } from '../parser/markdownParser';
-import {
-  parseFullTestJson,
-  parseFullTestMarkdown,
-} from '../parser/testSerializer';
+import { parseFullTestJson, parseFullTestMarkdown } from '../parser/testSerializer';
 import { db } from './db';
 
 export interface QuestionFilters {
@@ -60,23 +57,40 @@ export const assessmentRepository = {
 
     if (!filters) return collection.toArray();
 
-    return collection.filter((q) => {
-      if (filters.subject && filters.subject !== 'ALL' && q.subject.toLowerCase() !== filters.subject.toLowerCase()) return false;
-      if (filters.topic && filters.topic !== 'ALL' && q.topic.toLowerCase() !== filters.topic.toLowerCase()) return false;
-      if (filters.difficulty && filters.difficulty !== 'ALL' && q.difficulty !== filters.difficulty) return false;
-      if (filters.type && filters.type !== 'ALL' && q.type !== filters.type) return false;
-      if (filters.search && filters.search.trim()) {
-        const query = filters.search.toLowerCase().trim();
-        const matchesQuery =
-          q.id.toLowerCase().includes(query) ||
-          q.body.toLowerCase().includes(query) ||
-          q.subject.toLowerCase().includes(query) ||
-          q.topic.toLowerCase().includes(query) ||
-          q.tags?.some((t) => t.toLowerCase().includes(query));
-        if (!matchesQuery) return false;
-      }
-      return true;
-    }).toArray();
+    return collection
+      .filter((q) => {
+        if (
+          filters.subject &&
+          filters.subject !== 'ALL' &&
+          q.subject.toLowerCase() !== filters.subject.toLowerCase()
+        )
+          return false;
+        if (
+          filters.topic &&
+          filters.topic !== 'ALL' &&
+          q.topic.toLowerCase() !== filters.topic.toLowerCase()
+        )
+          return false;
+        if (
+          filters.difficulty &&
+          filters.difficulty !== 'ALL' &&
+          q.difficulty !== filters.difficulty
+        )
+          return false;
+        if (filters.type && filters.type !== 'ALL' && q.type !== filters.type) return false;
+        if (filters.search && filters.search.trim()) {
+          const query = filters.search.toLowerCase().trim();
+          const matchesQuery =
+            q.id.toLowerCase().includes(query) ||
+            q.body.toLowerCase().includes(query) ||
+            q.subject.toLowerCase().includes(query) ||
+            q.topic.toLowerCase().includes(query) ||
+            q.tags?.some((t) => t.toLowerCase().includes(query));
+          if (!matchesQuery) return false;
+        }
+        return true;
+      })
+      .toArray();
   },
 
   /**
@@ -101,23 +115,40 @@ export const assessmentRepository = {
       collection = db.questions.where('type').equals(filters.type);
     }
 
-    const filtered = await collection.filter((q) => {
-      if (filters?.subject && filters.subject !== 'ALL' && q.subject.toLowerCase() !== filters.subject.toLowerCase()) return false;
-      if (filters?.topic && filters.topic !== 'ALL' && q.topic.toLowerCase() !== filters.topic.toLowerCase()) return false;
-      if (filters?.difficulty && filters.difficulty !== 'ALL' && q.difficulty !== filters.difficulty) return false;
-      if (filters?.type && filters.type !== 'ALL' && q.type !== filters.type) return false;
-      if (filters?.search && filters.search.trim()) {
-        const query = filters.search.toLowerCase().trim();
-        const matches =
-          q.id.toLowerCase().includes(query) ||
-          q.body.toLowerCase().includes(query) ||
-          q.subject.toLowerCase().includes(query) ||
-          q.topic.toLowerCase().includes(query) ||
-          q.tags?.some((t) => t.toLowerCase().includes(query));
-        if (!matches) return false;
-      }
-      return true;
-    }).toArray();
+    const filtered = await collection
+      .filter((q) => {
+        if (
+          filters?.subject &&
+          filters.subject !== 'ALL' &&
+          q.subject.toLowerCase() !== filters.subject.toLowerCase()
+        )
+          return false;
+        if (
+          filters?.topic &&
+          filters.topic !== 'ALL' &&
+          q.topic.toLowerCase() !== filters.topic.toLowerCase()
+        )
+          return false;
+        if (
+          filters?.difficulty &&
+          filters.difficulty !== 'ALL' &&
+          q.difficulty !== filters.difficulty
+        )
+          return false;
+        if (filters?.type && filters.type !== 'ALL' && q.type !== filters.type) return false;
+        if (filters?.search && filters.search.trim()) {
+          const query = filters.search.toLowerCase().trim();
+          const matches =
+            q.id.toLowerCase().includes(query) ||
+            q.body.toLowerCase().includes(query) ||
+            q.subject.toLowerCase().includes(query) ||
+            q.topic.toLowerCase().includes(query) ||
+            q.tags?.some((t) => t.toLowerCase().includes(query));
+          if (!matches) return false;
+        }
+        return true;
+      })
+      .toArray();
 
     const totalCount = filtered.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
@@ -192,7 +223,9 @@ export const assessmentRepository = {
    * Saves or updates a question.
    * Invariant 6: Content modification increments version and records immutable snapshot in questionVersions.
    */
-  async saveQuestion(question: QuestionModel): Promise<{ question: QuestionModel; diagnostics: ValidationDiagnostic[] }> {
+  async saveQuestion(
+    question: QuestionModel,
+  ): Promise<{ question: QuestionModel; diagnostics: ValidationDiagnostic[] }> {
     const diagnostics = questionRegistry.validate(question);
     const hasErrors = diagnostics.some((d) => d.level === 'ERROR');
     if (hasErrors) {
@@ -366,7 +399,7 @@ export const assessmentRepository = {
     options?: {
       excludeQuestionIds?: Set<string>;
       includeOnlyQuestionIds?: Set<string>;
-    }
+    },
   ): Promise<TestSnapshot> {
     const allQuestions = await db.questions.toArray();
     const seed = explicitSeed ?? (test.randomization.seed || Math.floor(Date.now() % 1000000));
@@ -418,8 +451,8 @@ export const assessmentRepository = {
     const title = options.topic
       ? `${options.subject || 'All Subjects'} - ${options.topic} Drill`
       : options.subject && options.subject !== 'ALL'
-      ? `${options.subject} Speed Drill`
-      : 'General Knowledge Quick Drill';
+        ? `${options.subject} Speed Drill`
+        : 'General Knowledge Quick Drill';
 
     const testDef: TestDefinition = {
       id: `drill_${Date.now()}`,
@@ -518,7 +551,9 @@ export const assessmentRepository = {
       const alreadySelected = new Set<string>();
 
       for (const sec of testDef.sections) {
-        const report = validateSectionConstraints(sec, allQuestions, { alreadySelectedIds: alreadySelected });
+        const report = validateSectionConstraints(sec, allQuestions, {
+          alreadySelectedIds: alreadySelected,
+        });
         totalReq += report.totalRequested;
         totalAvail += report.totalAvailable;
         if (!report.isSatisfiable) {
@@ -531,7 +566,8 @@ export const assessmentRepository = {
         }
       }
 
-      const percentage = totalReq > 0 ? Math.min(100, Math.round((totalAvail / totalReq) * 100)) : 100;
+      const percentage =
+        totalReq > 0 ? Math.min(100, Math.round((totalAvail / totalReq) * 100)) : 100;
 
       return {
         preset,
@@ -562,7 +598,9 @@ export const assessmentRepository = {
     }
 
     if (incorrectIds.size === 0) {
-      throw new Error('No incorrect questions found in your past attempts! Take an exam first or use Quick Drill.');
+      throw new Error(
+        'No incorrect questions found in your past attempts! Take an exam first or use Quick Drill.',
+      );
     }
 
     const selectedIds = Array.from(incorrectIds).slice(0, maxCount);
@@ -702,7 +740,10 @@ export const assessmentRepository = {
   /**
    * Appends a domain audit event to the attempt.
    */
-  async recordEvent(attemptId: string, event: Omit<AttemptEvent, 'id' | 'timestamp'>): Promise<void> {
+  async recordEvent(
+    attemptId: string,
+    event: Omit<AttemptEvent, 'id' | 'timestamp'>,
+  ): Promise<void> {
     const att = await db.attempts.get(attemptId);
     if (!att) return;
 
@@ -726,7 +767,11 @@ export const assessmentRepository = {
       throw new Error(`Attempt with ID "${attemptId}" not found`);
     }
 
-    if (attempt.status === 'SUBMITTED' || attempt.status === 'SCORED' || attempt.status === 'AUTO_SUBMITTED') {
+    if (
+      attempt.status === 'SUBMITTED' ||
+      attempt.status === 'SCORED' ||
+      attempt.status === 'AUTO_SUBMITTED'
+    ) {
       return attempt; // Idempotent return
     }
 
@@ -777,7 +822,7 @@ export const assessmentRepository = {
   }> {
     const attempts = await db.attempts.where('testId').equals(testId).toArray();
     const completed = attempts.filter(
-      (a) => (a.status === 'SCORED' || a.status === 'AUTO_SUBMITTED') && !!a.scoreResult
+      (a) => (a.status === 'SCORED' || a.status === 'AUTO_SUBMITTED') && !!a.scoreResult,
     );
     if (completed.length === 0) {
       return { attemptsCount: 0 };
@@ -785,7 +830,7 @@ export const assessmentRepository = {
     completed.sort(
       (a, b) =>
         new Date(b.completedAt || b.startedAt).getTime() -
-        new Date(a.completedAt || a.startedAt).getTime()
+        new Date(a.completedAt || a.startedAt).getTime(),
     );
     const latestScore = completed[0].scoreResult?.percentage;
     const bestScore = Math.max(...completed.map((c) => c.scoreResult?.percentage || 0));
@@ -813,7 +858,7 @@ export const assessmentRepository = {
 
     // Sort chronological ascending to track progress
     const sortedAttempts = [...attempts].sort(
-      (a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime()
+      (a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime(),
     );
 
     const questionHistory = new Map<string, { lastStatus: string; isTimeSink: boolean }>();
@@ -882,7 +927,7 @@ export const assessmentRepository = {
       .sort(
         (a, b) =>
           new Date(b.completedAt || b.startedAt).getTime() -
-          new Date(a.completedAt || a.startedAt).getTime()
+          new Date(a.completedAt || a.startedAt).getTime(),
       );
 
     let totalQuestionsAttempted = 0;
@@ -914,7 +959,9 @@ export const assessmentRepository = {
       const questionScores = att.scoreResult?.questionScores || {};
 
       // Retrieve all questions from snapshot
-      const questionsInAttempt = (att.snapshot?.sections || []).flatMap((sec) => sec.questions || []);
+      const questionsInAttempt = (att.snapshot?.sections || []).flatMap(
+        (sec) => sec.questions || [],
+      );
 
       for (const q of questionsInAttempt) {
         const qScore = questionScores[q.id];
@@ -988,14 +1035,12 @@ export const assessmentRepository = {
             (
               completed.reduce((sum, a) => sum + (a.scoreResult?.percentage || 0), 0) /
               completed.length
-            ).toFixed(1)
+            ).toFixed(1),
           )
         : 0;
 
     const averageTimePerQuestionSeconds =
-      totalQuestionsAttempted > 0
-        ? Math.round(totalTimeSpentSeconds / totalQuestionsAttempted)
-        : 0;
+      totalQuestionsAttempted > 0 ? Math.round(totalTimeSpentSeconds / totalQuestionsAttempted) : 0;
 
     // Convert subject Map to structured sorted array
     const subjectBreakdown = Array.from(subjectMap.entries()).map(([subj, data]) => {
@@ -1004,8 +1049,7 @@ export const assessmentRepository = {
 
       const topics = Array.from(data.topicMap.entries()).map(([top, tData]) => {
         const tAttempted = tData.correct + tData.incorrect;
-        const tAcc =
-          tAttempted > 0 ? Number(((tData.correct / tAttempted) * 100).toFixed(1)) : 0;
+        const tAcc = tAttempted > 0 ? Number(((tData.correct / tAttempted) * 100).toFixed(1)) : 0;
         return {
           topic: top,
           total: tData.total,
@@ -1097,7 +1141,7 @@ export const assessmentRepository = {
    */
   async ingestFromText(
     rawText: string,
-    forcedFormat?: 'AUTO' | 'FULL_PAPER' | 'QUESTION_PACK'
+    forcedFormat?: 'AUTO' | 'FULL_PAPER' | 'QUESTION_PACK',
   ): Promise<{
     formatDetected: 'FULL_PAPER' | 'QUESTION_PACK';
     paperCreated?: TestDefinition;
@@ -1132,7 +1176,9 @@ export const assessmentRepository = {
       const testDef: TestDefinition = {
         id: `paper_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         title: parsed.title || 'Imported Examination Paper',
-        description: parsed.description || `Imported paper with ${parsed.allQuestions.length} questions across ${parsed.sections.length} section(s).`,
+        description:
+          parsed.description ||
+          `Imported paper with ${parsed.allQuestions.length} questions across ${parsed.sections.length} section(s).`,
         instructions: parsed.instructions,
         mode: parsed.mode || 'EXAM',
         schemaVersion: '2.0',
@@ -1220,7 +1266,7 @@ export const assessmentRepository = {
       negativeMarks?: number;
       instructions?: string;
       tags?: string[];
-    }
+    },
   ): Promise<TestDefinition> {
     if (questions.length === 0) {
       throw new Error('Cannot create a paper with 0 questions.');

@@ -6,10 +6,12 @@ import { RouterProvider } from 'react-router';
 import { router } from '@/routes';
 import { initializeDatabaseSeed } from '@/core/storage/seed';
 
-// Bootstrap database with starter questions and test blueprints
-initializeDatabaseSeed().catch((err) => {
-  console.error('[takemock] Failed to initialize seed data:', err);
-});
+// Bootstrap database with starter questions only in local development; production is a clean slate
+if (import.meta.env.DEV) {
+  initializeDatabaseSeed().catch((err) => {
+    console.error('[takemock] Failed to initialize seed data:', err);
+  });
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

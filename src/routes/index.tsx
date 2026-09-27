@@ -73,8 +73,8 @@ export const router = createBrowserRouter([
             path: '*',
             Component: () => (
               <div className="flex min-h-screen flex-col items-center justify-center p-8 text-center">
-                <h2 className="text-3xl font-bold">404 - Page Not Found</h2>
-                <p className="text-base-content/60 mt-2">The requested view does not exist.</p>
+                <h2 className="text-foreground text-3xl font-bold">404 - Page Not Found</h2>
+                <p className="text-muted-foreground mt-2">The requested view does not exist.</p>
               </div>
             ),
           },

@@ -5,7 +5,8 @@
 
 @theme inline {
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif;
-  --font-heading: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro', system-ui, sans-serif;
+  --font-heading:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro', system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --color-background: var(--background);
@@ -46,23 +47,23 @@
   --foreground: light-dark(#1d1d1f, #f5f5f7);
 
   /* macOS System Surface Materials */
-  --card: light-dark(#ffffff, rgba(255, 255, 255, 0.055));
+  --card: light-dark(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.055));
   --card-foreground: light-dark(#1d1d1f, #f5f5f7);
-  --popover: light-dark(rgba(255, 255, 255, 0.95), rgba(40, 40, 44, 0.95));
+  --popover: light-dark(rgba(255, 255, 255, 0.96), rgba(40, 40, 44, 0.95));
   --popover-foreground: light-dark(#1d1d1f, #f5f5f7);
 
   /* macOS Native Accent & Semantic Colors */
   --primary: light-dark(#007aff, #0a84ff);
   --primary-foreground: #ffffff;
-  --secondary: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
+  --secondary: light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.08));
   --secondary-foreground: light-dark(#1d1d1f, #f5f5f7);
-  --muted: light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.06));
-  --muted-foreground: light-dark(#6e6e73, #98989d);
-  --accent: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
+  --muted: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.06));
+  --muted-foreground: light-dark(#555558, #98989d);
+  --accent: light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.08));
   --accent-foreground: light-dark(#1d1d1f, #f5f5f7);
   --destructive: light-dark(#ff3b30, #ff453a);
   --destructive-foreground: #ffffff;
-  --border: light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.1));
+  --border: light-dark(rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.1));
   --input: light-dark(#ffffff, rgba(0, 0, 0, 0.25));
   --ring: light-dark(#007aff, #0a84ff);
   --radius: 10px;
@@ -97,20 +98,20 @@
 [data-theme='light'] {
   color-scheme: light;
   --foreground: #1d1d1f;
-  --card: #ffffff;
+  --card: rgba(255, 255, 255, 0.85);
   --card-foreground: #1d1d1f;
-  --popover: rgba(255, 255, 255, 0.98);
+  --popover: rgba(255, 255, 255, 0.96);
   --popover-foreground: #1d1d1f;
   --primary: #007aff;
   --primary-foreground: #ffffff;
-  --secondary: rgba(0, 0, 0, 0.05);
+  --secondary: rgba(0, 0, 0, 0.06);
   --secondary-foreground: #1d1d1f;
-  --muted: rgba(0, 0, 0, 0.04);
-  --muted-foreground: #6e6e73;
-  --accent: rgba(0, 0, 0, 0.05);
+  --muted: rgba(0, 0, 0, 0.05);
+  --muted-foreground: #555558;
+  --accent: rgba(0, 0, 0, 0.06);
   --accent-foreground: #1d1d1f;
   --destructive: #ff3b30;
-  --border: rgba(0, 0, 0, 0.08);
+  --border: rgba(0, 0, 0, 0.12);
   --input: #ffffff;
   --ring: #007aff;
   --radius: 10px;
@@ -118,12 +119,14 @@
 
 /* Base Body Styles */
 html,
-body {
+body,
+#root {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  background-color: light-dark(rgba(246, 246, 248, 0.78), rgba(28, 28, 30, 0.78));
+  background: transparent !important;
+  background-color: transparent !important;
   color: var(--foreground);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', system-ui, sans-serif;
   font-size: 13px;
@@ -174,37 +177,39 @@ a {
    Standard push buttons, segmented controls, text fields, tables, scrollbars
    ========================================================================== */
 
-/* Standard Push Buttons */
+/* Standard Push Buttons - Native macOS Desktop */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 14px;
+  gap: 5px;
+  height: 28px;
+  padding: 0 12px;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 450;
   line-height: 1;
   white-space: nowrap;
   border-radius: 6px;
-  border: 1px solid light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.15));
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.14));
   background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.1));
   color: var(--foreground);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  box-shadow: light-dark(0 0.5px 1.5px rgba(0, 0, 0, 0.08), 0 0.5px 1px rgba(0, 0, 0, 0.2));
   cursor: default;
   user-select: none;
-  transition: background-color 0.1s ease, border-color 0.1s ease;
+  transition:
+    background-color 0.1s ease,
+    border-color 0.1s ease;
   outline: none;
 }
 
 .btn:hover:not(:disabled) {
-  background-color: light-dark(#f6f6f7, rgba(255, 255, 255, 0.16));
+  background-color: light-dark(#f5f5f7, rgba(255, 255, 255, 0.15));
+  border-color: light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.2));
 }
 
 .btn:active:not(:disabled) {
-  background-color: light-dark(#ececed, rgba(255, 255, 255, 0.22));
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
+  background-color: light-dark(#e8e8ed, rgba(255, 255, 255, 0.2));
 }
 
 .btn:focus-visible {
@@ -213,26 +218,26 @@ a {
 }
 
 .btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 /* Primary Push Button */
 .btn-primary {
-  background-color: AccentColor;
+  background-color: var(--primary);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 0.5px 1.5px rgba(0, 122, 255, 0.25);
 }
 
 .btn-primary:hover:not(:disabled) {
-  filter: brightness(1.06);
-  background-color: AccentColor;
+  filter: brightness(1.05);
+  background-color: var(--primary);
 }
 
 .btn-primary:active:not(:disabled) {
-  filter: brightness(0.92);
-  background-color: AccentColor;
+  filter: brightness(0.94);
+  background-color: var(--primary);
 }
 
 /* Ghost / Borderless Button */
@@ -347,7 +352,10 @@ a {
   cursor: default;
   user-select: none;
   flex-shrink: 0;
-  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
 }
 
 .macos-toolbar-btn:hover {
@@ -360,23 +368,26 @@ a {
   background-color: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.16));
 }
 
-/* Text & Search Fields - use :where() to allow utility classes (like pl-8) to override padding cleanly */
+/* Text & Search Fields - Native macOS desktop sizing and borders */
 :where(input[type='text'], input[type='search'], input[type='number'], textarea, .input) {
   font-family: inherit;
-  font-size: 13px;
-  height: 32px;
-  padding: 0 10px;
+  font-size: 12.5px;
+  height: 28px;
+  padding: 0 9px;
   border-radius: 6px;
-  border: 1px solid light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.15));
-  background-color: light-dark(#ffffff, rgba(0, 0, 0, 0.25));
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.14));
+  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.08));
   color: inherit;
   outline: none;
-  transition: border-color 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: light-dark(inset 0 0.5px 1px rgba(0, 0, 0, 0.03), none);
+  transition:
+    border-color 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
 :where(input[type='text'], input[type='search'], input[type='number'], textarea, .input):focus {
-  border-color: AccentColor;
-  box-shadow: 0 0 0 2px light-dark(rgba(0, 122, 255, 0.35), rgba(0, 122, 255, 0.45));
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px light-dark(rgba(0, 122, 255, 0.3), rgba(10, 132, 255, 0.4));
 }
 
 /* Native Search Input Styling */
@@ -384,17 +395,22 @@ a {
   position: relative;
   display: inline-flex;
   align-items: center;
-  width: 100%;
+  max-width: 100%;
 }
 
 .macos-search-field input {
-  height: 30px;
-  border-radius: 7px;
+  width: 100%;
+  height: 28px;
+  border-radius: 6px;
   padding-left: 28px !important;
-  padding-right: 10px;
-  font-size: 13px;
+  padding-right: 9px;
+  font-size: 12.5px;
   background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
-  border: 1px solid light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.1));
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+.macos-search-field input:focus {
+  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.12));
 }
 
 .macos-search-field svg {
@@ -412,39 +428,73 @@ a {
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
-  padding: 3px;
-  border-radius: 9px;
-  background-color: light-dark(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.38));
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid light-dark(rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.14));
-  box-shadow: inset 0 1px 2px light-dark(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.3));
+  padding: 2px;
+  border-radius: 7px;
+  background-color: light-dark(rgba(0, 0, 0, 0.07), rgba(255, 255, 255, 0.08));
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.08));
   user-select: none;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+
+.macos-segmented::-webkit-scrollbar {
+  display: none;
 }
 
 .macos-segmented-toolbar {
-  background: light-dark(rgba(255, 255, 255, 0.6), rgba(0, 0, 0, 0.38));
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.15));
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.08);
+  background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.08));
 }
 
 .macos-segmented-sm {
-  padding: 2.5px;
-  border-radius: 7px;
+  padding: 2px;
+  border-radius: 6px;
 }
 
 .macos-segmented-sm .macos-segment-item {
-  padding: 3px 11px;
-  font-size: 12px;
+  padding: 0 8px;
+  height: 20px;
+  font-size: 11.5px;
   border-radius: 5px;
 }
 
 .macos-segmented-lg .macos-segment-item {
-  padding: 6px 18px;
-  font-size: 14px;
-  border-radius: 8px;
+  padding: 0 16px;
+  height: 28px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+/* Equal width segments */
+.macos-segmented-equal .macos-segment-item {
+  flex: 1 1 0%;
+}
+
+/* Icon-only segmented controls (e.g. List / Grid toggle, macOS Finder view switcher) */
+.macos-segmented-icon-only .macos-segment-item {
+  padding: 0;
+  width: 28px;
+  min-width: 28px;
+  height: 24px;
+  justify-content: center;
+}
+
+.macos-segmented-sm.macos-segmented-icon-only .macos-segment-item {
+  padding: 0;
+  width: 26px;
+  min-width: 26px;
+  height: 20px;
+  justify-content: center;
+}
+
+.macos-segmented-lg.macos-segmented-icon-only .macos-segment-item {
+  padding: 0;
+  width: 34px;
+  min-width: 34px;
+  height: 28px;
+  justify-content: center;
 }
 
 .macos-segment-item {
@@ -452,55 +502,46 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 4px 13px;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 6px;
-  color: light-dark(#636366, rgba(255, 255, 255, 0.7));
-  cursor: pointer;
+  gap: 5px;
+  height: 24px;
+  padding: 0 11px;
+  font-size: 12.5px;
+  font-weight: 450;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-radius: 5px;
+  color: light-dark(#555558, #98989d);
+  cursor: default;
   outline: none;
   border: none;
   background: transparent;
-  transition: color 0.14s ease;
+  transition: color 0.12s ease;
   z-index: 1;
 }
 
 .macos-segment-item:hover:not(.active):not([data-active]):not([data-disabled]) {
-  color: light-dark(#1d1d1f, #ffffff);
+  color: light-dark(#1d1d1f, #f5f5f7);
 }
 
 .macos-segment-item[data-disabled] {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
 .macos-segment-item.active,
 .macos-segment-item[data-active] {
   color: light-dark(#000000, #ffffff);
-  font-weight: 600;
+  font-weight: 550;
 }
 
-.macos-segment-item.active:not(:has(.macos-segment-pill)),
-.macos-segment-item[data-active]:not(:has(.macos-segment-pill)) {
-  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.28));
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.25));
-}
-
-/* Animated sliding pill inside SegmentedControl button */
+/* Authentic macOS Native Active Segment Pill (Clean, flat, refined - NO harsh white shines, NO dark muddy shadows) */
 .macos-segment-pill {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.28));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.18),
-    0 0.5px 1.5px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.25));
+  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.18));
+  box-shadow: light-dark(0 1px 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.25));
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.1));
   pointer-events: none;
   z-index: 0;
 }
@@ -508,52 +549,47 @@ a {
 /* Sliding active pill indicator inside Base UI Tabs.List */
 .macos-tabs-indicator {
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  border-radius: 7px;
-  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.25));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.28),
-    0 1px 2px rgba(0, 0, 0, 0.16),
-    inset 0 1px 1px rgba(255, 255, 255, 0.35);
-  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.22));
+  top: 2px;
+  bottom: 2px;
+  border-radius: 5px;
+  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.18));
+  box-shadow: light-dark(0 1px 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.25));
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.1));
   pointer-events: none;
   z-index: 0;
   will-change: left, width;
-  transition: left 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition:
+    left 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Fallback static pill when no animated motion indicator is used */
-.macos-segment-item.active:not(:has(.macos-segment-pill)),
-.macos-segment-item[data-active]:not(:has(.macos-tabs-indicator)) {
-  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.25));
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.28),
-    0 1px 2px rgba(0, 0, 0, 0.16),
-    inset 0 1px 1px rgba(255, 255, 255, 0.35);
+/* When an animated pill is present, the segment button remains transparent so the sliding pill animates with zero jitter */
+.macos-segment-item:has(.macos-segment-pill) {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
 }
 
-/* Native vertical divider between unselected segments */
-.macos-segmented .macos-segment-item:not(.active):not([data-active]):not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: -0.5px;
-  top: 22%;
-  height: 56%;
+/* Fallback static pill ONLY when NEITHER motion pill NOR Base UI indicator exists */
+.macos-segmented:not(:has(.macos-tabs-indicator)):not(:has(.macos-segment-pill))
+  > .macos-segment-item.active,
+.macos-segmented:not(:has(.macos-tabs-indicator)):not(:has(.macos-segment-pill))
+  > .macos-segment-item[data-active] {
+  background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.18));
+  box-shadow: light-dark(0 1px 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.25));
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.1));
+}
+
+/* Clean macOS segment divider */
+.macos-segment-divider {
+  display: inline-block;
   width: 1px;
-  background-color: light-dark(rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.14));
+  height: 11px;
+  background-color: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.12));
+  flex-shrink: 0;
+  margin: 0 -0.5px;
   pointer-events: none;
-  transition: opacity 0.12s ease;
-}
-
-/* Hide divider adjacent to any active segment (class-based or attribute-based) */
-.macos-segmented .macos-segment-item.active::after,
-.macos-segmented .macos-segment-item[data-active]::after,
-.macos-segmented .macos-segment-item:has(+ .macos-segment-item.active)::after,
-.macos-segmented .macos-segment-item:has(+ .macos-segment-item[data-active])::after {
-  opacity: 0;
+  z-index: 0;
 }
 
 /* ==========================================================================
@@ -571,9 +607,10 @@ a {
   user-select: none;
   outline: none;
   border-radius: 9999px;
-  transition: background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
-              border-color 0.2s ease,
-              box-shadow 0.2s ease;
+  transition:
+    background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   background-color: light-dark(rgba(0, 0, 0, 0.16), rgba(255, 255, 255, 0.22));
   border: 1px solid light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.12));
 }
@@ -593,8 +630,9 @@ a {
 
 /* Switch active/checked state */
 .macos-switch-root[data-checked],
+.macos-switch-root[aria-checked='true'],
 .macos-switch-root.is-checked {
-  background-color: AccentColor;
+  background-color: var(--primary);
   border-color: transparent;
 }
 
@@ -619,11 +657,14 @@ a {
   display: block;
   border-radius: 9999px;
   background: #ffffff;
-  box-shadow: 0 1px 2.5px rgba(0, 0, 0, 0.22), 0 0 1px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 1px 2.5px rgba(0, 0, 0, 0.22),
+    0 0 1px rgba(0, 0, 0, 0.18);
   pointer-events: none;
   transform: translateX(0);
-  transition: transform 0.18s cubic-bezier(0.25, 1, 0.5, 1),
-              width 0.12s ease;
+  transition:
+    transform 0.18s cubic-bezier(0.25, 1, 0.5, 1),
+    width 0.12s ease;
 }
 
 /* Regular Switch Thumb (travel distance: (38 - 2 border - 4 padding) - 16 = 16px) */
@@ -633,7 +674,9 @@ a {
 }
 
 .macos-switch-regular[data-checked] .macos-switch-thumb,
-.macos-switch-regular.is-checked .macos-switch-thumb {
+.macos-switch-regular[aria-checked='true'] .macos-switch-thumb,
+.macos-switch-regular.is-checked .macos-switch-thumb,
+.macos-switch-regular .macos-switch-thumb[data-checked] {
   transform: translateX(16px);
 }
 
@@ -644,7 +687,9 @@ a {
 }
 
 .macos-switch-mini[data-checked] .macos-switch-thumb,
-.macos-switch-mini.is-checked .macos-switch-thumb {
+.macos-switch-mini[aria-checked='true'] .macos-switch-thumb,
+.macos-switch-mini.is-checked .macos-switch-thumb,
+.macos-switch-mini .macos-switch-thumb[data-checked] {
   transform: translateX(10px);
 }
 
@@ -700,8 +745,7 @@ a {
   width: 100%;
   height: 5px;
   border-radius: 9999px;
-  background-color: light-dark(rgba(0, 0, 0, 0.14), rgba(255, 255, 255, 0.18));
-  box-shadow: inset 0 1px 1.5px rgba(0, 0, 0, 0.2);
+  background-color: light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.15));
   overflow: hidden;
 }
 
@@ -725,26 +769,29 @@ a {
 .macos-slider-thumb {
   position: absolute;
   top: 50%;
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   border-radius: 9999px;
-  background-color: #ffffff;
-  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.35));
-  box-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.24), 0 0 1px rgba(0, 0, 0, 0.2);
+  background-color: light-dark(#ffffff, #f2f2f5);
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.16), rgba(255, 255, 255, 0.25));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
   transform: translate(-50%, -50%);
   outline: none;
   cursor: grab;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
 .macos-slider-sm .macos-slider-thumb {
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
 }
 
 .macos-slider-thumb:focus-visible {
-  box-shadow: 0 0 0 2.5px light-dark(rgba(0, 122, 255, 0.45), rgba(0, 122, 255, 0.6)),
-              0 1.5px 3px rgba(0, 0, 0, 0.25);
+  box-shadow:
+    0 0 0 2.5px light-dark(rgba(0, 122, 255, 0.45), rgba(0, 122, 255, 0.6)),
+    0 1.5px 3px rgba(0, 0, 0, 0.25);
 }
 
 /* Transient Interactive Glass Highlight on active dragging/press (HIG: controls in content layer) */
@@ -753,7 +800,9 @@ a {
 .macos-slider-control:active .macos-slider-thumb {
   cursor: grabbing;
   transform: translate(-50%, -50%) scale(1.08);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.32), 0 0 0 2px rgba(0, 122, 255, 0.35);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.32),
+    0 0 0 2px rgba(0, 122, 255, 0.35);
 }
 
 /* Tick Marks */
@@ -849,35 +898,36 @@ input[type='checkbox'],
 /* Native Selects */
 select,
 .select {
-  height: 32px;
-  padding: 0 24px 0 10px;
-  font-size: 13px;
+  height: 28px;
+  padding: 0 22px 0 8px;
+  font-size: 12.5px;
   font-family: inherit;
   border-radius: 6px;
-  border: 1px solid var(--border);
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.14));
   background-color: light-dark(#ffffff, rgba(255, 255, 255, 0.08));
   color: var(--foreground);
+  box-shadow: light-dark(0 0.5px 1px rgba(0, 0, 0, 0.05), none);
   cursor: default;
   outline: none;
 }
 
 select:focus,
 .select:focus {
-  border-color: AccentColor;
-  box-shadow: 0 0 0 2px light-dark(rgba(0, 122, 255, 0.35), rgba(0, 122, 255, 0.45));
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px light-dark(rgba(0, 122, 255, 0.3), rgba(10, 132, 255, 0.4));
 }
 
 /* macOS Status Pills & Badges */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 8px;
-  font-size: 12px;
+  padding: 2px 7px;
+  font-size: 11px;
   font-weight: 500;
-  border-radius: 5px;
+  border-radius: 4px;
   background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
   color: var(--foreground);
-  border: 1px solid var(--border);
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.1));
 }
 
 /* Join group utility */
@@ -906,24 +956,25 @@ select:focus,
   background-color: var(--card);
   border: 0.5px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: light-dark(
-    0 1px 2.5px rgba(0, 0, 0, 0.04),
-    0 1px 3px rgba(0, 0, 0, 0.35)
-  );
+  box-shadow: light-dark(0 1px 3px rgba(0, 0, 0, 0.05), 0 0.5px 1.5px rgba(0, 0, 0, 0.2));
   color: var(--card-foreground);
-  transition: background-color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 :is(.dark, [data-theme='dark']) :is(.card, .macos-card, .liquid-glass-card) {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.3);
 }
 
 /* Interactive Card / List Row Hover */
 .card.cursor-pointer:hover,
 .card[role='button']:hover,
 .liquid-glass-card.cursor-pointer:hover {
-  background-color: light-dark(rgba(0, 0, 0, 0.02), rgba(255, 255, 255, 0.08));
-  border-color: light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.18));
+  background-color: light-dark(rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.08));
+  border-color: light-dark(rgba(0, 0, 0, 0.18), rgba(255, 255, 255, 0.18));
+  box-shadow: light-dark(0 2px 6px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.35));
 }
 
 .liquid-glass-pill,
@@ -936,11 +987,9 @@ select:focus,
 
 .liquid-glass-header,
 .macos-toolbar {
-  background-color: light-dark(rgba(246, 246, 247, 0.72), rgba(30, 30, 33, 0.72));
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-bottom: 0.5px solid light-dark(rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.12));
-  box-shadow: 0 1px 2px light-dark(rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.25));
+  background-color: light-dark(rgba(248, 248, 250, 0.82), rgba(22, 22, 26, 0.12));
+  border-bottom: 0.5px solid light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.08));
+  box-shadow: light-dark(0 0.5px 1px rgba(0, 0, 0, 0.03), 0 0.5px 1px rgba(0, 0, 0, 0.12));
   color: var(--foreground);
 }
 
@@ -953,6 +1002,168 @@ select:focus,
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--card-foreground);
+}
+
+/* ==========================================================================
+   AUTHENTIC MACOS PRIMARY SIDEBAR
+   Full-height master navigation pane with native translucency & selection
+   ========================================================================== */
+.macos-sidebar {
+  background-color: light-dark(rgba(244, 244, 247, 0.75), rgba(18, 18, 22, 0.1));
+  border-right: 0.5px solid light-dark(rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.08));
+  user-select: none;
+}
+
+.macos-content-pane {
+  background-color: light-dark(rgba(255, 255, 255, 0.45), rgba(15, 15, 18, 0.14));
+}
+
+.macos-sidebar-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  padding: 10px 14px 4px 14px;
+}
+
+.macos-sidebar-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  padding: 0 10px;
+  margin: 1px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 450;
+  color: var(--foreground);
+  cursor: default;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+  text-decoration: none;
+}
+
+.macos-sidebar-item:hover:not(.active) {
+  background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.08));
+}
+
+.macos-sidebar-item:active:not(.active) {
+  background-color: light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.12));
+}
+
+.macos-sidebar-item.active {
+  background-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.macos-sidebar-item.active svg {
+  color: #ffffff !important;
+}
+
+.macos-sidebar-item.active .macos-sidebar-badge {
+  background-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.macos-sidebar-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 500;
+  background-color: light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.12));
+  color: var(--muted-foreground);
+}
+
+/* ==========================================================================
+   AUTHENTIC MACOS CONTEXTUAL MENU
+   Right-click context menu with Liquid Glass blur, key cues, and system layout
+   ========================================================================== */
+.macos-context-menu {
+  min-width: 190px;
+  max-width: 280px;
+  padding: 5px;
+  border-radius: 8px;
+  background-color: light-dark(rgba(248, 248, 250, 0.88), rgba(38, 38, 42, 0.88));
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 0.5px solid light-dark(rgba(0, 0, 0, 0.14), rgba(255, 255, 255, 0.16));
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.22),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+  user-select: none;
+  z-index: 99999;
+  outline: none;
+  animation: macos-menu-in 0.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes macos-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.macos-context-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--foreground);
+  cursor: default;
+  outline: none;
+  transition:
+    background-color 0.08s ease,
+    color 0.08s ease;
+}
+
+.macos-context-menu-item:hover,
+.macos-context-menu-item:focus-visible {
+  background-color: var(--primary);
+  color: #ffffff;
+}
+
+.macos-context-menu-item:hover svg,
+.macos-context-menu-item:focus-visible svg {
+  color: #ffffff !important;
+}
+
+.macos-context-menu-item:hover .macos-shortcut-hint,
+.macos-context-menu-item:focus-visible .macos-shortcut-hint {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.macos-context-menu-item.destructive {
+  color: var(--destructive);
+}
+
+.macos-context-menu-item.destructive:hover,
+.macos-context-menu-item.destructive:focus-visible {
+  background-color: var(--destructive);
+  color: #ffffff;
+}
+
+.macos-context-menu-divider {
+  height: 1px;
+  margin: 4px 6px;
+  background-color: light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.1));
 }
 
 /* macOS Control Center Badges and Pills */

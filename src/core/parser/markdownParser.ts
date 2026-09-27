@@ -4,7 +4,12 @@
  */
 
 import YAML from 'yaml';
-import type { QuestionModel, QuestionOption, QuestionType, ValidationDiagnostic } from '@/types/question';
+import type {
+  QuestionModel,
+  QuestionOption,
+  QuestionType,
+  ValidationDiagnostic,
+} from '@/types/question';
 import { questionRegistry } from '../engine/registry';
 import { sanitizeLlmMarkdown } from './llmSanitizer';
 
@@ -116,7 +121,10 @@ export function splitQuestionBlocks(rawText: string): string[] {
  * 2. Option bullets using asterisks (* [x]) or pluses (+ [x])
  * 3. Parameters placed in the body (e.g. correctValue: 45, allowPartialCredit: true)
  */
-export function parseSingleQuestionBlock(block: string, blockIndex: number = 0): {
+export function parseSingleQuestionBlock(
+  block: string,
+  blockIndex: number = 0,
+): {
   question?: QuestionModel;
   diagnostics: ValidationDiagnostic[];
 } {
@@ -237,7 +245,10 @@ export function parseSingleQuestionBlock(block: string, blockIndex: number = 0):
             const k = m[1];
             let v: any = m[2].trim();
             if (v.startsWith('[') && v.endsWith(']')) {
-              v = v.slice(1, -1).split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
+              v = v
+                .slice(1, -1)
+                .split(',')
+                .map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
             } else if (!isNaN(Number(v)) && v !== '') {
               v = Number(v);
             } else if (v.toLowerCase() === 'true') v = true;
@@ -353,7 +364,8 @@ export function parseSingleQuestionBlock(block: string, blockIndex: number = 0):
       resolvedType = 'numerical';
     } else if (options.length > 0) {
       const correctCount = options.filter((o) => o.isCorrect).length;
-      resolvedType = correctCount > 1 || rawMetadata.allowPartialCredit ? 'multiple_choice' : 'single_choice';
+      resolvedType =
+        correctCount > 1 || rawMetadata.allowPartialCredit ? 'multiple_choice' : 'single_choice';
     } else {
       resolvedType = 'single_choice';
     }
@@ -365,7 +377,10 @@ export function parseSingleQuestionBlock(block: string, blockIndex: number = 0):
     const answerBlockRegex = /:::answer\s*([\s\S]*?)\s*:::/i;
     const answerMatch = remainingText.match(answerBlockRegex);
     if (answerMatch) {
-      const pairs = answerMatch[1].split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+      const pairs = answerMatch[1]
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean);
       matches = pairs
         .map((p) => {
           const parts = p.split(/->|=>|:/);
@@ -379,7 +394,8 @@ export function parseSingleQuestionBlock(block: string, blockIndex: number = 0):
   const question: QuestionModel = {
     schemaVersion: String(rawMetadata.schemaVersion || '2.0'),
     id: String(
-      rawMetadata.id || `q_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}_${blockIndex + 1}`
+      rawMetadata.id ||
+        `q_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}_${blockIndex + 1}`,
     ),
     version: Number(rawMetadata.version) || 1,
     type: resolvedType,
@@ -392,21 +408,34 @@ export function parseSingleQuestionBlock(block: string, blockIndex: number = 0):
     tags: Array.isArray(rawMetadata.tags)
       ? rawMetadata.tags.map(String)
       : typeof rawMetadata.tags === 'string'
-      ? rawMetadata.tags.split(',').map((s: string) => s.trim()).filter(Boolean)
-      : [],
+        ? rawMetadata.tags
+            .split(',')
+            .map((s: string) => s.trim())
+            .filter(Boolean)
+        : [],
     source: rawMetadata.source,
     sourceYear: rawMetadata.sourceYear ? Number(rawMetadata.sourceYear) : undefined,
     exam: rawMetadata.exam,
-    estimatedTimeSeconds: rawMetadata.estimatedTimeSeconds ? Number(rawMetadata.estimatedTimeSeconds) : undefined,
+    estimatedTimeSeconds: rawMetadata.estimatedTimeSeconds
+      ? Number(rawMetadata.estimatedTimeSeconds)
+      : undefined,
     questionGroupId: rawMetadata.questionGroupId,
     allowPartialCredit: Boolean(rawMetadata.allowPartialCredit),
-    toleranceAbsolute: rawMetadata.toleranceAbsolute !== undefined ? Number(rawMetadata.toleranceAbsolute) : 0,
-    toleranceRelative: rawMetadata.toleranceRelative !== undefined ? Number(rawMetadata.toleranceRelative) : undefined,
+    toleranceAbsolute:
+      rawMetadata.toleranceAbsolute !== undefined ? Number(rawMetadata.toleranceAbsolute) : 0,
+    toleranceRelative:
+      rawMetadata.toleranceRelative !== undefined
+        ? Number(rawMetadata.toleranceRelative)
+        : undefined,
     unit: rawMetadata.unit !== undefined ? String(rawMetadata.unit) : undefined,
     correctCode: rawMetadata.correctCode,
-    correctValue: rawMetadata.correctValue !== undefined ? Number(rawMetadata.correctValue) : undefined,
-    acceptedAnswers: Array.isArray(rawMetadata.acceptedAnswers) ? rawMetadata.acceptedAnswers.map(String) : undefined,
-    caseSensitive: rawMetadata.caseSensitive !== undefined ? Boolean(rawMetadata.caseSensitive) : undefined,
+    correctValue:
+      rawMetadata.correctValue !== undefined ? Number(rawMetadata.correctValue) : undefined,
+    acceptedAnswers: Array.isArray(rawMetadata.acceptedAnswers)
+      ? rawMetadata.acceptedAnswers.map(String)
+      : undefined,
+    caseSensitive:
+      rawMetadata.caseSensitive !== undefined ? Boolean(rawMetadata.caseSensitive) : undefined,
     body: cleanedBody,
     options: options.length > 0 ? options : undefined,
     solution,
