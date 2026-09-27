@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ashutosh-repos.github.io/takemock/sitemap.xml

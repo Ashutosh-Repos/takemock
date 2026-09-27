@@ -1,3 +1,6 @@
+#[cfg(target_os = "macos")]
+mod macos_icon;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -15,6 +18,7 @@ pub fn run() {
 
       #[cfg(target_os = "macos")]
       {
+        macos_icon::start_dock_icon_sync();
         use tauri::Manager;
         use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 
@@ -45,7 +49,7 @@ pub fn run() {
           .about(Some(tauri::menu::AboutMetadata {
             name: Some("TakeMock".into()),
             version: Some("0.1.0".into()),
-            authors: Some(vec!["TakeMock Team".into()]),
+            authors: Some(vec!["Ashutosh".into()]),
             comments: Some("High-Performance Local-First Exam Suite".into()),
             ..Default::default()
           }))
