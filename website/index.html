@@ -429,7 +429,7 @@
             <span class="window-dot dot-max"></span>
           </div>
           <span style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-tertiary);">Building TakeMock locally from source</span>
-          <button class="btn-copy" onclick="copyTerminalCode()">Copy</button>
+          <button class="btn-copy" onclick="copyTerminalCode(this)">Copy</button>
         </div>
         <div class="terminal-body" id="dev-terminal-snippet">
           <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">git clone https://github.com/Ashutosh-Repos/takemock.git</span></div>
@@ -490,7 +490,7 @@
         <div class="checksum-box">
           <span style="font-weight: 700; color: var(--text-tertiary);">SHA-256</span>
           <span id="sha-text">1dc61f3616cf5f843f36d28a8efb3f283ee21092ce755a5b905ec162655e6519</span>
-          <button class="btn-copy" onclick="copyChecksum()">Copy</button>
+          <button class="btn-copy" onclick="copyChecksum(this)">Copy</button>
         </div>
       </div>
 
@@ -530,7 +530,7 @@
             Alternatively, run this in Terminal:
             <br>
             <code class="gatekeeper-code" id="gatekeeper-cmd">xattr -cr /Applications/TakeMock.app</code>
-            <button class="btn-copy" style="margin-left: 8px; vertical-align: middle;" onclick="copyGatekeeperCmd()">Copy</button>
+            <button class="btn-copy" style="margin-left: 8px; vertical-align: middle;" onclick="copyGatekeeperCmd(this)">Copy</button>
           </div>
         </div>
       </div>
@@ -702,26 +702,39 @@
       });
     }
 
-    // Copy utilities
-    function copyChecksum() {
+    // Copy utilities with inline visual feedback
+    function copyChecksum(btn) {
       const text = document.getElementById('sha-text').textContent.trim();
       navigator.clipboard.writeText(text).then(() => {
-        alert("SHA-256 Checksum copied to clipboard!");
+        showCopied(btn);
       });
     }
 
-    function copyTerminalCode() {
+    function copyTerminalCode(btn) {
       const code = `git clone https://github.com/Ashutosh-Repos/takemock.git\ncd takemock && pnpm install\npnpm tauri dev`;
       navigator.clipboard.writeText(code).then(() => {
-        alert("Build commands copied to clipboard!");
+        showCopied(btn);
       });
     }
 
-    function copyGatekeeperCmd() {
+    function copyGatekeeperCmd(btn) {
       const cmd = document.getElementById('gatekeeper-cmd').textContent.trim();
       navigator.clipboard.writeText(cmd).then(() => {
-        alert("Gatekeeper command copied to clipboard!");
+        showCopied(btn);
       });
+    }
+
+    function showCopied(btn) {
+      if (!btn) return;
+      const original = btn.textContent;
+      btn.textContent = "Copied!";
+      btn.style.color = "#10b981";
+      btn.style.borderColor = "#10b981";
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.style.color = "";
+        btn.style.borderColor = "";
+      }, 2000);
     }
   </script>
 </body>
