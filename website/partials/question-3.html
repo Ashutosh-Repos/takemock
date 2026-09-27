@@ -1,0 +1,42 @@
+<div class="question-nav-header">
+  <span class="q-badge" id="demo-subject-badge">Section 3: Mathematics • Definite Integrals (+4, -1)</span>
+  <span class="q-timer">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span id="demo-timer">02:39:12</span>
+  </span>
+</div>
+
+<div class="q-content" id="demo-question-text">
+  Evaluate the definite improper integral using standard Gaussian polar integration:
+</div>
+
+<div class="q-formula" id="demo-formula">
+  I = \int_{-\infty}^{\infty} e^{-x^2} \, dx
+</div>
+
+<div class="options-list" id="demo-options">
+  <div class="option-item" onclick="selectDemoOption(this, 1)">
+    <span class="option-circle">A</span>
+    <span>\( I = \sqrt{\pi} \) via polar transform \( I^2 = \int_0^{2\pi} d\theta \int_0^\infty e^{-r^2} r \, dr \)</span>
+  </div>
+  <div class="option-item" onclick="selectDemoOption(this, 2)">
+    <span class="option-circle">B</span>
+    <span>\( I = \pi / 2 \)</span>
+  </div>
+  <div class="option-item" onclick="selectDemoOption(this, 3)">
+    <span class="option-circle">C</span>
+    <span>The integral diverges for real limits</span>
+  </div>
+  <div class="option-item" onclick="selectDemoOption(this, 4)">
+    <span class="option-circle">D</span>
+    <span>\( I = 2\sqrt{\pi} \)</span>
+  </div>
+</div>
+
+<div class="cbt-action-row">
+  <button class="btn-subtle" onclick="saveAndNextDemo()">Save & Next</button>
+  <button class="btn-subtle mark-btn" onclick="markForReviewDemo()">Mark for Review</button>
+  <button class="btn-subtle" onclick="clearDemoResponse()">Clear Response</button>
+  <button class="btn-subtle sol-btn" hx-get="partials/solution-3.html" hx-target="#solution-box" hx-swap="innerHTML">Derivation & Solution</button>
+</div>
+<div id="solution-box"></div>

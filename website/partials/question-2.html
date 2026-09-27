@@ -1,0 +1,42 @@
+<div class="question-nav-header">
+  <span class="q-badge" id="demo-subject-badge">Section 2: Chemistry • Chemical Kinetics (+4, -1)</span>
+  <span class="q-timer">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span id="demo-timer">02:48:05</span>
+  </span>
+</div>
+
+<div class="q-content" id="demo-question-text">
+  For a first-order gas phase decomposition reaction \( A(g) \to 2B(g) + C(g) \), the initial pressure is \( P_0 \) and total pressure at time \( t \) is \( P_t \). The rate constant \( k \) is:
+</div>
+
+<div class="q-formula" id="demo-formula">
+  k = \frac{2.303}{t} \log_{10}\left(\frac{2 P_0}{3 P_0 - P_t}\right)
+</div>
+
+<div class="options-list" id="demo-options">
+  <div class="option-item" onclick="selectDemoOption(this, 1)">
+    <span class="option-circle">A</span>
+    <span>Half-life \( t_{1/2} = \frac{\ln 2}{k} \) is independent of initial partial pressure</span>
+  </div>
+  <div class="option-item" onclick="selectDemoOption(this, 2)">
+    <span class="option-circle">B</span>
+    <span>Half-life is directly proportional to initial concentration</span>
+  </div>
+  <div class="option-item" onclick="selectDemoOption(this, 3)">
+    <span class="option-circle">C</span>
+    <span>The unit of rate constant is \( \text{mol}\cdot\text{L}^{-1}\cdot\text{s}^{-1} \)</span>
+  </div>
+  <div class="option-item" onclick="selectDemoOption(this, 4)">
+    <span class="option-circle">D</span>
+    <span>The reaction rate remains constant as time progresses</span>
+  </div>
+</div>
+
+<div class="cbt-action-row">
+  <button class="btn-subtle" onclick="saveAndNextDemo()">Save & Next</button>
+  <button class="btn-subtle mark-btn" onclick="markForReviewDemo()">Mark for Review</button>
+  <button class="btn-subtle" onclick="clearDemoResponse()">Clear Response</button>
+  <button class="btn-subtle sol-btn" hx-get="partials/solution-2.html" hx-target="#solution-box" hx-swap="innerHTML">Derivation & Solution</button>
+</div>
+<div id="solution-box"></div>

@@ -1,12 +1,11 @@
 <p align="center">
-  <img src="website/assets/icons/icon-light.png" alt="TakeMock Logo" width="128" height="128" style="border-radius: 28px; box-shadow: 0 8px 30px rgba(0,0,0,0.25);" />
+  <img src="website/assets/icons/icon-light.png" alt="TakeMock Icon" width="96" height="96" style="border-radius: 22px;" />
 </p>
 
 <h1 align="center">TakeMock</h1>
 
 <p align="center">
-  <strong>A focused, high-performance, local-first mock examination suite for macOS.</strong><br>
-  Built with Tauri v2, Rust & React 19. Complete NTA CBT simulation, KaTeX equation rendering, zero cloud latency, and native macOS aesthetics.
+  Offline desktop mock test simulator for macOS.
 </p>
 
 <p align="center">
@@ -20,98 +19,90 @@
 </p>
 
 <p align="center">
-  <a href="#-quick-download">Download .dmg</a> •
-  <a href="https://ashutosh-repos.github.io/takemock/">Official Website</a> •
-  <a href="#-features">Features</a> •
-  <a href="#-architecture">Architecture</a> •
-  <a href="#-development-setup">Development</a> •
-  <a href="#-gatekeeper-notice">Gatekeeper Notice</a>
+  <a href="#download">Download</a> •
+  <a href="https://ashutosh-repos.github.io/takemock/">Website</a> •
+  <a href="#features">Features</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#gatekeeper-on-macos">Gatekeeper Notice</a> •
+  <a href="#development-setup">Development</a>
 </p>
 
 ---
 
-## 🎯 Why TakeMock?
+TakeMock replicates the computer-based test (CBT) interface used in Indian national entrance exams such as JEE and NEET. It renders equations using KaTeX, records responses in local IndexedDB storage, and runs completely offline.
 
-Most existing exam preparation platforms are web portals burdened with ads, network lag, intrusive tracking, and unreliable formula rendering. When taking a high-stakes competitive examination (JEE Advanced, NEET, GATE, Olympiads), candidates need **uncompromising speed, zero distraction, and realistic exam conditions**.
+## Why TakeMock
 
-**TakeMock** brings the authentic Computer-Based Test (CBT) engine directly to your desktop as a native macOS application:
-- **100% Local-First & Offline**: All questions, exams, sessions, and analytics live exclusively in your local IndexedDB. No accounts, no subscriptions, zero servers, zero telemetry.
-- **Native macOS Experience**: Features adaptive UnderWindowBackground vibrancy, native Cocoa AppKit menus, and dynamic macOS 26 Tahoe icon switching (Light, Dark, Clear, Tinted).
-- **Sub-millisecond Question Flipping**: Written in modern React 19 + TypeScript on Tauri v2 with instant hotkeys.
-- **LaTeX Math Formula Rendering**: Full KaTeX mathematical notation with zero blurry pixelation on Retina screens.
+Web-based test portals often suffer from laggy question navigation, ads, and broken formula images. During timed preparation, students need an accurate simulation of exam conditions without interruptions or reliance on internet connectivity.
+
+TakeMock addresses this as a standalone macOS desktop application:
+
+- **Local-first data**: Questions, test sessions, and mistake logs are stored in IndexedDB on your Mac. No accounts, telemetry, or server round-trips.
+- **Accurate CBT engine**: Implements the official 5-color question palette, negative marking rules, and section switching mechanics used by NTA.
+- **Sharp typography**: Mathematical and chemical notation rendered through KaTeX directly to vector paths on Retina displays.
+- **macOS integration**: Native Cocoa menu bar, window vibrancy, and dock icon synchronization that respects Light and Dark modes.
 
 ---
 
-## 📥 Quick Download
+## Download
 
-| Platform | Architecture | Installer | Size | SHA-256 Checksum |
+| Target | Architecture | Package | Size | SHA-256 Checksum |
 |---|---|---|---|---|
-| macOS 10.15 to macOS 26+ | **Apple Silicon (aarch64)** | [**TakeMock_0.1.0_aarch64.dmg**](https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg) | `9.2 MB` | `1dc61f3616cf5f843f36d28a8efb3f283ee21092ce755a5b905ec162655e6519` |
+| macOS 10.15+ | Apple Silicon (`aarch64`) | [TakeMock_0.1.0_aarch64.dmg](https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg) | 9.2 MB | `1dc61f3616cf5f843f36d28a8efb3f283ee21092ce755a5b905ec162655e6519` |
 
-> [!TIP]
-> Visit the [Official TakeMock Website](https://ashutosh-repos.github.io/takemock/) for an interactive simulator and detailed documentation.
-
----
-
-## ✨ Features
-
-### 1. Authentic Computer-Based Test (CBT) Engine
-- **Standard 5-State Question Palette**:
-  - 🟢 **Answered**: Marked green with recorded selection.
-  - 🔴 **Not Answered**: Visited but left unanswered.
-  - 🟣 **Marked for Review**: Flushed for later inspection.
-  - 🟣🟢 **Answered & Marked for Review**: Evaluated according to standard exam grading protocols.
-  - ⚪ **Not Visited**: Unseen questions.
-- **Multi-Section Exams**: Seamlessly switch between sections (Physics, Chemistry, Mathematics, etc.) with independent timers and scoring schemes.
-- **Negative Marking Support**: Configurable marking criteria (+4 / -1, +3 / -1, or custom).
-
-### 2. Rich KaTeX Mathematical Formula Rendering
-- Mathematical formulas, chemical equations, integrals, matrices, fractions, and symbols rendered directly using KaTeX and Markdown.
-- High-contrast, sharp vector rendering optimized for high-density Retina displays.
-
-### 3. Mistake Vault & Performance Analytics
-- Automatically captures incorrect answers, skipped questions, and time spent per question.
-- Visual subject accuracy graphs, score breakdown, and mistake analysis.
-- Question bookmarking and targeted re-drill modes.
-
-### 4. Visual Paper Builder & Question Pack Ecosystem
-- Create custom mock exams in minutes using the built-in Paper Builder.
-- Export and import modular question packs using clean, open JSON schemas.
-
-### 5. Native macOS Desktop Integration
-- **Adaptive Vibrancy**: Translucent `UnderWindowBackground` vibrancy following system active states.
-- **macOS Tahoe / Sequoia Icon Switching**:
-  - `Default`: Crisp Light stopwatch icon.
-  - `Dark`: Deep Navy Dark stopwatch icon.
-  - `Clear`: System Liquid Glass translucency automatically applied over the default icon.
-  - `Tinted`: System accent color applied automatically.
-- **Keyboard Shortcuts**:
-  - <kbd>Cmd+1</kbd> / <kbd>Cmd+2</kbd>: Section / Page Navigation
-  - <kbd>Cmd+B</kbd>: Toggle Sidebar
-  - <kbd>Arrow Keys</kbd>: Next / Previous question
-  - <kbd>Cmd+N</kbd>: New Paper
+You can also view all builds on the [Releases page](https://github.com/Ashutosh-Repos/takemock/releases).
 
 ---
 
-## 🏗️ Architecture
+## Features
 
-TakeMock uses a lean, modern desktop architecture combining Rust and modern Web technologies:
+### Computer-Based Test Engine
+- **5-State Question Palette**:
+  - Green: Answered
+  - Red: Not answered
+  - Purple: Marked for review
+  - Purple with green badge: Answered and marked for review (included in evaluation)
+  - Grey: Not visited
+- **Multi-section timing**: Configurable section switches with independent timers for Physics, Chemistry, and Mathematics.
+- **Configurable scoring**: Custom positive and negative marking schemes (such as +4 / -1 or +3 / -1).
+
+### KaTeX Formula Rendering
+- Full LaTeX math expressions, matrices, integrals, and chemical reaction notations.
+- Rendered locally without loading remote images.
+
+### Analytics and Mistake Vault
+- Automatic logging of incorrect and unattempted questions per session.
+- Per-subject accuracy metrics, time-per-question distribution, and question bookmarking.
+
+### Paper Builder and JSON Packs
+- Create tests locally with the built-in paper editor.
+- Import and export question sets using standard JSON files.
+
+### macOS Integration
+- Window vibrancy via `NSVisualEffectView`.
+- Native Cocoa application menus with standard shortcuts (`Cmd+,` for Settings, `Cmd+1`/`Cmd+2` for navigation, arrow keys for questions).
+- Dynamic dock icon appearance: defaults to light icon, automatically switches to dark icon when macOS switches to dark appearance.
+
+---
+
+## Architecture
+
+TakeMock uses Tauri v2 with a Rust backend and a React 19 frontend:
 
 ```text
-TakeMock Architecture
 ┌────────────────────────────────────────────────────────┐
 │                      macOS AppKit                      │
 │     (Window Vibrancy, Native Menus, Dock Icon Sync)     │
 └───────────────────────────▲────────────────────────────┘
-                            │ (objc2 Cocoa FFI)
+                            │ (objc2 FFI)
 ┌───────────────────────────┴────────────────────────────┐
 │                    Tauri v2 (Rust)                     │
-│    (Core Runtime, Event Loops, Binary Packaging)      │
+│      (Core Runtime, Event Loops, Window Config)        │
 └───────────────────────────▲────────────────────────────┘
-                            │ (High-Speed IPC)
+                            │ (Local IPC)
 ┌───────────────────────────┴────────────────────────────┐
 │                React 19 + TypeScript                   │
-│        (Base UI, Tailwind CSS, KaTeX Typesetting)      │
+│      (Tailwind CSS, Base UI, KaTeX Typesetting)        │
 └───────────────────────────▲────────────────────────────┘
                             │
 ┌───────────────────────────┴────────────────────────────┐
@@ -120,63 +111,67 @@ TakeMock Architecture
 └────────────────────────────────────────────────────────┘
 ```
 
+- **Tauri v2**: Wraps macOS WKWebView without shipping Chromium, keeping disk usage under 10 MB.
+- **Rust backend**: Handles AppKit calls for icon updates and window properties.
+- **Frontend**: Written in React 19 and TypeScript, using Tailwind CSS and Base UI primitives.
+- **Storage**: IndexedDB inside the webview stores papers, logs, and answers locally.
+
 ---
 
-## 🛡️ macOS Gatekeeper Notice
+## Gatekeeper on macOS
 
-Because TakeMock is an open-source community release distributed independently without an Apple Developer Paid Subscription ($99/year), macOS may display an *"App cannot be opened because it is from an unidentified developer"* warning on first launch.
+TakeMock is distributed as independent open-source software without an Apple Developer ID certificate. On first launch, macOS Gatekeeper may show a warning: *"TakeMock cannot be opened because it is from an unidentified developer."*
 
-### How to Open:
-1. Drag `TakeMock.app` to your `/Applications` folder.
-2. **Right-click (or Control-click)** `TakeMock.app` in `/Applications` and select **Open**.
-3. Click **Open** in the dialog.
+### How to open:
+1. Drag `TakeMock.app` to `/Applications`.
+2. Right-click (or Control-click) `TakeMock.app` and choose **Open**.
+3. Click **Open** in the confirmation dialog.
 
-Alternatively, remove the quarantine attribute via Terminal:
+Alternatively, clear the quarantine attribute in Terminal:
 ```bash
 xattr -cr /Applications/TakeMock.app
 ```
 
 ---
 
-## 💻 Development Setup
+## Development Setup
 
 ### Prerequisites
-- macOS 10.15+ (Apple Silicon recommended)
-- [Node.js](https://nodejs.org/) (v20+)
-- [pnpm](https://pnpm.io/) (v9+)
-- [Rust](https://rustup.rs/) (v1.77+)
+- macOS 10.15 or later
+- Node.js 20+
+- pnpm 9+
+- Rust 1.77+
 - Xcode Command Line Tools (`xcode-select --install`)
 
-### 1. Clone & Install
+### Install dependencies
 ```bash
 git clone https://github.com/Ashutosh-Repos/takemock.git
 cd takemock
 pnpm install
 ```
 
-### 2. Start Development Server
+### Run locally
 ```bash
-# Starts Vite dev server + Tauri macOS native window with instant HMR
 pnpm tauri dev
 ```
 
-### 3. Build Production DMG
+### Build DMG
 ```bash
 pnpm tauri build
 ```
-The compiled application and `.dmg` will be placed in:
+Output bundles:
 - `src-tauri/target/release/bundle/macos/TakeMock.app`
 - `src-tauri/target/release/bundle/dmg/TakeMock_0.1.0_aarch64.dmg`
 
 ---
 
-## 📦 Question Pack JSON Specification
+## Question Pack Format
 
-TakeMock supports importing question packs in standard JSON:
+Question packs are plain JSON files. You can import or export them directly:
 
 ```json
 {
-  "title": "Sample JEE Advanced Drill",
+  "title": "JEE Advanced Physics Drill",
   "subject": "Physics",
   "durationMinutes": 60,
   "sections": [
@@ -186,11 +181,11 @@ TakeMock supports importing question packs in standard JSON:
       "questions": [
         {
           "id": "q1",
-          "text": "A particle moves under potential $V(r) = -k/r$. The total energy is:",
+          "text": "A particle moves under a central potential $V(r) = -k/r$. The total orbital energy $E$ satisfies:",
           "options": [
-            { "id": "opt1", "text": "$E < 0$ forms an elliptical orbit" },
-            { "id": "opt2", "text": "$E = 0$ is a circular orbit" },
-            { "id": "opt3", "text": "$E > 0$ gives closed periodic orbit" },
+            { "id": "opt1", "text": "$E < 0$ forms a bound elliptical orbit" },
+            { "id": "opt2", "text": "$E = 0$ results in a circular orbit" },
+            { "id": "opt3", "text": "$E > 0$ gives a closed periodic trajectory" },
             { "id": "opt4", "text": "Angular momentum is not conserved" }
           ],
           "correctOptionId": "opt1",
@@ -204,36 +199,35 @@ TakeMock supports importing question packs in standard JSON:
 
 ---
 
-## 🗺️ Project Structure
+## Project Structure
 
 ```text
 takemock/
-├── src/                    # Frontend React 19 Application
-│   ├── components/         # Shared UI, CBT Palettes, MathRenderer, Modals
-│   ├── core/               # Exam Engine, Timer, Scoring, Question Importers
-│   ├── pages/              # Library, ActiveExam, Practice, MistakeVault, Builder
-│   ├── index.css           # Global Tailwind & Design System tokens
-│   └── main.tsx            # React application root
-├── src-tauri/              # Rust Native Backend
-│   ├── icons/              # Multi-resolution PNGs, ICNS, and source icons
+├── src/                    # Frontend application
+│   ├── components/         # Question palette, KaTeX renderer, modal dialogs
+│   ├── core/               # Exam state, timer, scoring, and import logic
+│   ├── pages/              # Library, ActiveExam, Analytics, PaperBuilder
+│   ├── index.css           # Design tokens and Tailwind base
+│   └── main.tsx            # Application entry
+├── src-tauri/              # Rust backend
+│   ├── icons/              # Application icon assets (PNG and ICNS)
 │   ├── src/
-│   │   ├── lib.rs          # Window Vibrancy, Menus, Setup Hooks
-│   │   ├── macos_icon.rs   # Native AppKit Cocoa Icon Appearance Sync
-│   │   └── main.rs         # Tauri Entry Point
-│   ├── Info.plist          # Custom macOS bundle metadata
-│   └── tauri.conf.json     # Tauri v2 bundle configuration
-├── website/                # Standalone Official Landing Page (HTML/CSS/HTMX)
-├── .github/workflows/      # Automated CI/CD Release Pipeline
-└── package.json            # Scripts & Dependencies
+│   │   ├── lib.rs          # Window vibrancy and menu setup
+│   │   ├── macos_icon.rs   # AppKit icon appearance observer
+│   │   └── main.rs         # Tauri runtime entry
+│   ├── Info.plist          # macOS bundle property list
+│   └── tauri.conf.json     # Build and window configuration
+├── website/                # Standalone landing page (HTML, CSS, HTMX)
+├── .github/workflows/      # Release and GitHub Pages deployment actions
+└── package.json            # Scripts and dependencies
 ```
 
 ---
 
-## 📄 License
+## License
 
-TakeMock is open-source software licensed under the [MIT License](LICENSE).
+MIT License. See [LICENSE](LICENSE) for details.
 
-## 👤 Author
+## Author
 
-Crafted by **Ashutosh** ([@Ashutosh-Repos](https://github.com/Ashutosh-Repos)).
-Contributions, bug reports, and feature suggestions are welcome!
+Ashutosh ([@Ashutosh-Repos](https://github.com/Ashutosh-Repos)).
