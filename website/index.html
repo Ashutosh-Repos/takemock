@@ -7,7 +7,7 @@
   <!-- Primary Meta Tags -->
   <title>TakeMock — Offline CBT Mock Test Simulator for macOS</title>
   <meta name="title" content="TakeMock — Offline CBT Mock Test Simulator for macOS">
-  <meta name="description" content="Offline computer-based mock test simulator for macOS. Replicates NTA CBT exam conditions (JEE, NEET, GATE) with KaTeX equation rendering, local IndexedDB storage, and zero network dependencies.">
+  <meta name="description" content="Offline computer-based test simulator for macOS. Practice JEE and NEET mocks in an authentic NTA test environment with KaTeX equations and local IndexedDB storage.">
   <meta name="keywords" content="TakeMock, macOS CBT simulator, JEE mock test offline, NEET CBT app, NTA exam engine Mac, Tauri desktop test player">
   <meta name="author" content="Ashutosh">
   <meta name="robots" content="index, follow">
@@ -17,32 +17,32 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://ashutosh-repos.github.io/takemock/">
   <meta property="og:title" content="TakeMock — Offline CBT Mock Test Simulator for macOS">
-  <meta property="og:description" content="Offline mock examination desktop app for macOS. Replicates NTA CBT test conditions with KaTeX formula rendering and local IndexedDB persistence.">
+  <meta property="og:description" content="Offline computer-based test simulator for macOS. Practice JEE and NEET mocks with KaTeX vector equations and zero network dependencies.">
   <meta property="og:image" content="https://ashutosh-repos.github.io/takemock/assets/images/og-image.jpg">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content="https://ashutosh-repos.github.io/takemock/">
   <meta property="twitter:title" content="TakeMock — Offline CBT Mock Test Simulator for macOS">
-  <meta property="twitter:description" content="Offline mock examination desktop app for macOS. Replicates NTA CBT test conditions with KaTeX formula rendering and local IndexedDB persistence.">
+  <meta property="twitter:description" content="Offline computer-based test simulator for macOS. Practice JEE and NEET mocks with KaTeX vector equations and zero network dependencies.">
   <meta property="twitter:image" content="https://ashutosh-repos.github.io/takemock/assets/images/og-image.jpg">
 
   <!-- Favicons -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/icons/favicon-64.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
-  <meta name="theme-color" content="#0a0c10">
+  <meta name="theme-color" content="#0a0d14">
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css">
 
-  <!-- HTMX (Lightweight HTML-over-the-wire for serverless partial swaps) -->
+  <!-- HTMX for partial updates -->
   <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
 
-  <!-- KaTeX for formula rendering -->
+  <!-- KaTeX for math typesetting (Loaded directly for reliable synchronous availability) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
   <!-- Structured Data (JSON-LD) -->
   <script type="application/ld+json">
@@ -67,361 +67,327 @@
   </script>
 </head>
 <body>
-  <div class="ambient-glow"></div>
+  <!-- Accessibility Skip Link -->
+  <a href="#simulator" class="skip-link">Skip to CBT Simulator</a>
+
+  <div class="ambient-glow" aria-hidden="true"></div>
 
   <!-- Header -->
-  <header class="site-header">
+  <header class="site-header" role="banner">
     <div class="container nav-wrap">
-      <a href="#top" class="brand">
-        <img src="assets/icons/favicon-64.png" alt="TakeMock Icon" class="brand-icon">
+      <a href="#top" class="brand" aria-label="TakeMock home">
+        <img src="assets/icons/favicon-64.png" alt="" class="brand-icon" aria-hidden="true">
         <span>TakeMock</span>
       </a>
 
-      <nav>
+      <nav aria-label="Primary navigation">
         <ul class="nav-links">
           <li><a href="#simulator">Simulator</a></li>
-          <li><a href="#features">Capabilities</a></li>
-          <li><a href="#developer">Developer</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#developer">Question Packs</a></li>
           <li><a href="#download">Download</a></li>
-          <li><a href="https://github.com/Ashutosh-Repos/takemock" target="_blank" rel="noopener">GitHub</a></li>
         </ul>
       </nav>
 
       <div class="nav-actions">
-        <button id="theme-toggle" class="btn-theme-toggle" aria-label="Toggle dark/light theme" title="Toggle Theme">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        <button type="button" id="theme-toggle" class="btn-theme-toggle" aria-label="Toggle dark and light theme" title="Toggle theme">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
         </button>
-        <a href="https://github.com/Ashutosh-Repos/takemock" target="_blank" rel="noopener" class="btn-nav-github">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        <a href="https://github.com/Ashutosh-Repos/takemock" target="_blank" rel="noopener" class="btn-nav-github" aria-label="View source repository on GitHub">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
           <span>GitHub</span>
         </a>
-        <a href="#download" class="btn-nav-download">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Download</span>
-        </a>
+        <a href="#download" class="btn-nav-download">Download</a>
       </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero" id="top">
-    <div class="container">
-      <div class="badge-pill">
-        <span class="badge-dot"></span>
-        <span>TakeMock 0.1.0 • macOS Apple Silicon</span>
+  <main id="main">
+    <!-- Hero Section -->
+    <section class="hero" id="top" aria-labelledby="hero-heading">
+      <div class="container">
+        <div class="badge-pill">
+          <span class="badge-dot" aria-hidden="true"></span>
+          <span>TakeMock v0.1.0 • macOS Apple Silicon</span>
+        </div>
+
+        <h1 class="hero-title" id="hero-heading">
+          Offline mock test simulator<br>
+          <span class="hero-title-accent">for macOS.</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          Replicates the National Testing Agency examination interface for JEE and NEET. Local-first IndexedDB storage, KaTeX vector equations, and zero network dependencies.
+        </p>
+
+        <div class="hero-actions">
+          <a href="https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg" class="btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Download .dmg (Apple Silicon)</span>
+          </a>
+
+          <a href="https://github.com/Ashutosh-Repos/takemock" target="_blank" rel="noopener" class="btn-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            <span>View Source</span>
+          </a>
+        </div>
+
+        <div class="hero-meta">
+          <span>macOS 10.15+ (Apple Silicon)</span>
+          <span class="meta-divider">•</span>
+          <span>9.2 MB DMG</span>
+          <span class="meta-divider">•</span>
+          <span>100% Offline & Open Source</span>
+        </div>
+
+        <!-- Interactive CBT Simulator Showcase (HTMX-Powered) -->
+        <div class="showcase-wrapper" id="simulator">
+          <div class="macos-window">
+            <div class="window-header">
+              <div class="window-controls" aria-hidden="true">
+                <span class="window-dot dot-close"></span>
+                <span class="window-dot dot-min"></span>
+                <span class="window-dot dot-max"></span>
+              </div>
+              <div class="window-title">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>TakeMock — JEE Advanced Paper 1 (Physics / Chemistry / Mathematics)</span>
+              </div>
+            </div>
+
+            <div class="window-body">
+              <!-- Question Pane (Target for HTMX Swaps) -->
+              <div class="question-pane" id="demo-question-pane">
+                <div class="question-nav-header">
+                  <span class="q-badge" id="demo-subject-badge">Section 1: Physics • Single Correct (+4, -1)</span>
+                  <span class="q-timer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span id="demo-timer">02:54:19</span>
+                  </span>
+                </div>
+
+                <div class="q-content" id="demo-question-text">
+                  A particle of mass $m$ moves in an attractive central force field $V(r) = -\frac{k}{r}$. The effective radial potential and total orbital energy are:
+                </div>
+
+                <div class="q-formula" id="demo-formula" data-tex="E = \frac{1}{2} m \dot{r}^2 + \frac{L^2}{2 m r^2} - \frac{k}{r}">
+                  $$E = \frac{1}{2} m \dot{r}^2 + \frac{L^2}{2 m r^2} - \frac{k}{r}$$
+                </div>
+
+                <div class="options-list" id="demo-options" role="radiogroup" aria-label="Question 1 options">
+                  <button type="button" class="option-item" role="radio" aria-checked="false" tabindex="0" onclick="selectDemoOption(this, 1)">
+                    <span class="option-circle">A</span>
+                    <span class="option-text">$E < 0$ results in a bound elliptical Keplerian orbit</span>
+                  </button>
+                  <button type="button" class="option-item" role="radio" aria-checked="false" tabindex="-1" onclick="selectDemoOption(this, 2)">
+                    <span class="option-circle">B</span>
+                    <span class="option-text">$E = 0$ results in a circular stable orbit</span>
+                  </button>
+                  <button type="button" class="option-item" role="radio" aria-checked="false" tabindex="-1" onclick="selectDemoOption(this, 3)">
+                    <span class="option-circle">C</span>
+                    <span class="option-text">$E > 0$ gives a closed periodic trajectory</span>
+                  </button>
+                  <button type="button" class="option-item" role="radio" aria-checked="false" tabindex="-1" onclick="selectDemoOption(this, 4)">
+                    <span class="option-circle">D</span>
+                    <span class="option-text">Orbital angular momentum $L$ is not conserved</span>
+                  </button>
+                </div>
+
+                <div class="cbt-action-row">
+                  <button type="button" class="btn-subtle" onclick="saveAndNextDemo()">Save & Next</button>
+                  <button type="button" class="btn-subtle mark-btn" onclick="markForReviewDemo()">Mark for Review</button>
+                  <button type="button" class="btn-subtle" onclick="clearDemoResponse()">Clear Response</button>
+                  <button type="button" class="btn-subtle sol-btn" hx-get="partials/solution-1.html" hx-target="#solution-box" hx-swap="innerHTML">Derivation & Solution</button>
+                </div>
+                <div id="solution-box" aria-live="polite"></div>
+              </div>
+
+              <!-- Question Palette Side Pane -->
+              <div class="palette-pane">
+                <div class="palette-title">Question Palette (Physics)</div>
+                <div class="palette-grid" id="demo-palette" role="group" aria-label="Question palette navigation">
+                  <button type="button" class="palette-btn answered active" hx-get="partials/question-1.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 1)" aria-label="Question 1, Answered">1</button>
+                  <button type="button" class="palette-btn marked" hx-get="partials/question-2.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 2)" aria-label="Question 2, Marked for Review">2</button>
+                  <button type="button" class="palette-btn unanswered" hx-get="partials/question-3.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 3)" aria-label="Question 3, Not Answered">3</button>
+                  <button type="button" class="palette-btn not-visited" hx-get="partials/question-1.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 4)" aria-label="Question 4, Not Visited">4</button>
+                  <button type="button" class="palette-btn not-visited" hx-get="partials/question-2.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 5)" aria-label="Question 5, Not Visited">5</button>
+                  <button type="button" class="palette-btn not-visited" hx-get="partials/question-3.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 6)" aria-label="Question 6, Not Visited">6</button>
+                  <button type="button" class="palette-btn not-visited" hx-get="partials/question-1.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 7)" aria-label="Question 7, Not Visited">7</button>
+                  <button type="button" class="palette-btn not-visited" hx-get="partials/question-2.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 8)" aria-label="Question 8, Not Visited">8</button>
+                  <button type="button" class="palette-btn not-visited" hx-get="partials/question-3.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 9)" aria-label="Question 9, Not Visited">9</button>
+                  <button type="button" class="palette-btn not-visited" hx-get="partials/question-1.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 10)" aria-label="Question 10, Not Visited">10</button>
+                </div>
+
+                <div class="legend-list" role="region" aria-label="Palette status legend">
+                  <button type="button" class="legend-item" hx-get="partials/palette-state-answered.html" hx-target="#palette-rule-detail" hx-swap="innerHTML" aria-label="View scoring rule for Answered questions"><span class="legend-dot" style="background: #16a34a;" aria-hidden="true"></span><span>Answered (1)</span></button>
+                  <button type="button" class="legend-item" hx-get="partials/palette-state-unanswered.html" hx-target="#palette-rule-detail" hx-swap="innerHTML" aria-label="View scoring rule for Unanswered questions"><span class="legend-dot" style="background: #dc2626;" aria-hidden="true"></span><span>Not Answered (1)</span></button>
+                  <button type="button" class="legend-item" hx-get="partials/palette-state-review.html" hx-target="#palette-rule-detail" hx-swap="innerHTML" aria-label="View scoring rule for Marked for Review questions"><span class="legend-dot" style="background: #9333ea;" aria-hidden="true"></span><span>Marked for Review (1)</span></button>
+                  <button type="button" class="legend-item" hx-get="partials/palette-state-review-ans.html" hx-target="#palette-rule-detail" hx-swap="innerHTML" aria-label="View scoring rule for Answered and Marked questions"><span class="legend-dot" style="background: #9333ea; border: 2px solid #22c55e;" aria-hidden="true"></span><span>Answered & Marked</span></button>
+                  <button type="button" class="legend-item" hx-get="partials/palette-state-not-visited.html" hx-target="#palette-rule-detail" hx-swap="innerHTML" aria-label="View scoring rule for Not Visited questions"><span class="legend-dot" style="background: var(--border-medium);" aria-hidden="true"></span><span>Not Visited (7)</span></button>
+                </div>
+                <div id="palette-rule-detail" aria-live="polite"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <h1 class="hero-title">
-        Desktop mock test simulator<br>
-        <span class="text-gradient">for macOS.</span>
-      </h1>
+    <!-- Core Capabilities (3 Columns, Zero Redundancy) -->
+    <section class="features" id="features" aria-labelledby="features-heading">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Core Capabilities</div>
+          <h2 class="section-title" id="features-heading">Built for focused exam preparation.</h2>
+          <p class="section-description">
+            No distracting web portals, network timeouts, or cloud latency during timed drills.
+          </p>
+        </div>
 
-      <p class="hero-subtitle">
-        TakeMock replicates the Computer-Based Test (CBT) interface used in Indian entrance examinations (JEE, NEET, GATE). Sub-millisecond question flipping, official 5-color palette, and KaTeX math without browser lag or internet dependencies.
-      </p>
+        <div class="pillars-grid">
+          <div class="pillar-card">
+            <div class="pillar-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <h3 class="pillar-title">Authentic NTA Engine</h3>
+            <p class="pillar-text">
+              Matches the official 5-color palette (Answered, Unanswered, Marked for Review, Answered & Marked). Evaluates marked-for-review answers per NTA exam guidelines with per-section countdown timers and negative marking (+4 / -1).
+            </p>
+          </div>
 
-      <div class="hero-actions">
-        <a href="https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg" class="btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Download .dmg (Apple Silicon)</span>
-        </a>
+          <div class="pillar-card">
+            <div class="pillar-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <h3 class="pillar-title">Vector Formula Typesetting</h3>
+            <p class="pillar-text">
+              KaTeX renders integrals, matrices, fractions, and chemical formulas as crisp vector curves on Retina displays. Formulas never degrade into blurry low-resolution JPEG images.
+            </p>
+          </div>
 
-        <a href="https://github.com/Ashutosh-Repos/takemock" target="_blank" rel="noopener" class="btn-secondary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-          <span>View on GitHub</span>
-        </a>
+          <div class="pillar-card">
+            <div class="pillar-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3 class="pillar-title">100% Local & Private</h3>
+            <p class="pillar-text">
+              All mock papers, attempts, answers, and the Mistake Vault stay on your Mac in IndexedDB. No accounts, telemetry, or remote servers. Runs entirely unplugged.
+            </p>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <div class="hero-meta">
-        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> macOS 10.15+ (Apple Silicon)</span>
-        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 9.2 MB DMG</span>
-        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 100% Offline & Open Source</span>
-      </div>
+    <!-- Developer & Question Packs Section -->
+    <section class="developer" id="developer" aria-labelledby="developer-heading">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-label">Question Packs & Source</div>
+          <h2 class="section-title" id="developer-heading">Standard JSON, open format.</h2>
+          <p class="section-description">
+            Import custom tests or export your question banks using clean, portable JSON files.
+          </p>
+        </div>
 
-      <!-- Interactive CBT Simulator Showcase (HTMX-Powered) -->
-      <div class="showcase-wrapper" id="simulator">
-        <div class="macos-window">
-          <div class="window-header">
-            <div class="window-controls">
+        <div class="terminal-card">
+          <div class="terminal-header">
+            <div class="window-controls" aria-hidden="true">
               <span class="window-dot dot-close"></span>
               <span class="window-dot dot-min"></span>
               <span class="window-dot dot-max"></span>
             </div>
-            <div class="window-title">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span>TakeMock — JEE Advanced Paper 1 (Physics / Chemistry / Mathematics)</span>
+            <div class="terminal-tabs" role="tablist" aria-label="Code view tabs">
+              <button type="button" class="tab-btn active" role="tab" aria-selected="true" hx-get="partials/tab-schema.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">Question Pack JSON</button>
+              <button type="button" class="tab-btn" role="tab" aria-selected="false" hx-get="partials/tab-build.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">Build from Source</button>
+              <button type="button" class="tab-btn" role="tab" aria-selected="false" hx-get="partials/tab-install.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">CLI Install</button>
             </div>
+            <button type="button" class="btn-copy" onclick="copyTerminalCode(this)" aria-label="Copy code to clipboard">Copy</button>
           </div>
-
-          <div class="window-body">
-            <!-- Question Pane (Target for HTMX Swaps) -->
-            <div class="question-pane" id="demo-question-pane">
-              <div class="question-nav-header">
-                <span class="q-badge" id="demo-subject-badge">Section 1: Physics • Single Correct (+4, -1)</span>
-                <span class="q-timer">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  <span id="demo-timer">02:54:19</span>
-                </span>
-              </div>
-
-              <div class="q-content" id="demo-question-text">
-                A particle of mass \( m \) moves in an attractive central force field \( V(r) = -\frac{k}{r} \). The effective radial potential and total orbital energy are:
-              </div>
-
-              <div class="q-formula" id="demo-formula">
-                E = \frac{1}{2} m \dot{r}^2 + \frac{L^2}{2 m r^2} - \frac{k}{r}
-              </div>
-
-              <div class="options-list" id="demo-options">
-                <div class="option-item" onclick="selectDemoOption(this, 1)">
-                  <span class="option-circle">A</span>
-                  <span>\( E < 0 \) results in a bound elliptical Keplerian orbit</span>
-                </div>
-                <div class="option-item" onclick="selectDemoOption(this, 2)">
-                  <span class="option-circle">B</span>
-                  <span>\( E = 0 \) results in a circular stable orbit</span>
-                </div>
-                <div class="option-item" onclick="selectDemoOption(this, 3)">
-                  <span class="option-circle">C</span>
-                  <span>\( E > 0 \) gives a closed periodic trajectory</span>
-                </div>
-                <div class="option-item" onclick="selectDemoOption(this, 4)">
-                  <span class="option-circle">D</span>
-                  <span>Orbital angular momentum \( L \) is not conserved</span>
-                </div>
-              </div>
-
-              <div class="cbt-action-row">
-                <button class="btn-subtle" onclick="saveAndNextDemo()">Save & Next</button>
-                <button class="btn-subtle mark-btn" onclick="markForReviewDemo()">Mark for Review</button>
-                <button class="btn-subtle" onclick="clearDemoResponse()">Clear Response</button>
-                <button class="btn-subtle sol-btn" hx-get="partials/solution-1.html" hx-target="#solution-box" hx-swap="innerHTML">Derivation & Solution</button>
-              </div>
-              <div id="solution-box"></div>
-            </div>
-
-            <!-- Question Palette Side Pane -->
-            <div class="palette-pane">
-              <div class="palette-title">Question Palette (Physics)</div>
-              <div class="palette-grid" id="demo-palette">
-                <button class="palette-btn answered active" hx-get="partials/question-1.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 1)">1</button>
-                <button class="palette-btn marked" hx-get="partials/question-2.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 2)">2</button>
-                <button class="palette-btn unanswered" hx-get="partials/question-3.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 3)">3</button>
-                <button class="palette-btn not-visited" hx-get="partials/question-1.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 4)">4</button>
-                <button class="palette-btn not-visited" hx-get="partials/question-2.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 5)">5</button>
-                <button class="palette-btn not-visited" hx-get="partials/question-3.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 6)">6</button>
-                <button class="palette-btn not-visited" hx-get="partials/question-1.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 7)">7</button>
-                <button class="palette-btn not-visited" hx-get="partials/question-2.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 8)">8</button>
-                <button class="palette-btn not-visited" hx-get="partials/question-3.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 9)">9</button>
-                <button class="palette-btn not-visited" hx-get="partials/question-1.html" hx-target="#demo-question-pane" hx-swap="innerHTML" onclick="setActivePalette(this, 10)">10</button>
-              </div>
-
-              <div class="legend-list">
-                <div class="legend-item" hx-get="partials/palette-state-answered.html" hx-target="#palette-rule-detail" hx-swap="innerHTML" title="Click to view NTA scoring rule"><span class="legend-dot" style="background: #16a34a;"></span><span>Answered (1)</span></div>
-                <div class="legend-item" hx-get="partials/palette-state-unanswered.html" hx-target="#palette-rule-detail" hx-swap="innerHTML" title="Click to view NTA scoring rule"><span class="legend-dot" style="background: #dc2626;"></span><span>Not Answered (1)</span></div>
-                <div class="legend-item" hx-get="partials/palette-state-review.html" hx-target="#palette-rule-detail" hx-swap="innerHTML" title="Click to view NTA scoring rule"><span class="legend-dot" style="background: #9333ea;"></span><span>Marked for Review (1)</span></div>
-                <div class="legend-item" hx-get="partials/palette-state-review-ans.html" hx-target="#palette-rule-detail" hx-swap="innerHTML" title="Click to view NTA scoring rule"><span class="legend-dot" style="background: #9333ea; border: 2px solid #22c55e;"></span><span>Answered & Marked</span></div>
-                <div class="legend-item" hx-get="partials/palette-state-not-visited.html" hx-target="#palette-rule-detail" hx-swap="innerHTML" title="Click to view NTA scoring rule"><span class="legend-dot" style="background: var(--border-medium);"></span><span>Not Visited (7)</span></div>
-              </div>
-              <div id="palette-rule-detail"></div>
-            </div>
+          <div class="terminal-body" id="dev-terminal-body" role="tabpanel">
+            <div class="terminal-line"><span class="terminal-comment">// Question Pack JSON structure</span></div>
+            <div class="terminal-line">{</div>
+            <div class="terminal-line">&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"title"</span>: <span style="color: #10b981;">"JEE Advanced Sample Paper"</span>,</div>
+            <div class="terminal-line">&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"subject"</span>: <span style="color: #10b981;">"Physics"</span>,</div>
+            <div class="terminal-line">&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"durationMinutes"</span>: 180,</div>
+            <div class="terminal-line">&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"sections"</span>: [{</div>
+            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"name"</span>: <span style="color: #10b981;">"Section 1 (Single Correct)"</span>,</div>
+            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"markingScheme"</span>: { <span style="color: var(--accent-cyan);">"correct"</span>: 4, <span style="color: var(--accent-cyan);">"incorrect"</span>: -1 },</div>
+            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"questions"</span>: [{</div>
+            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"id"</span>: <span style="color: #10b981;">"q1"</span>,</div>
+            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"text"</span>: <span style="color: #10b981;">"Central potential $V(r) = -k/r$ satisfies..."</span>,</div>
+            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--accent-cyan);">"correctOptionId"</span>: <span style="color: #10b981;">"opt1"</span></div>
+            <div class="terminal-line">&nbsp;&nbsp;&nbsp;&nbsp;}]</div>
+            <div class="terminal-line">&nbsp;&nbsp;}]</div>
+            <div class="terminal-line">}</div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Capabilities Section (Consolidated, Zero Redundancy) -->
-  <section class="features" id="features">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-label">Capabilities</div>
-        <h2 class="section-title">Built around actual test conditions.</h2>
-        <p class="section-description">
-          TakeMock replicates the NTA test screen used in JEE and NEET. It removes browser latency, runs completely offline, and saves answers in local IndexedDB.
-        </p>
-      </div>
-
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <!-- Download Section (Unified, High Density) -->
+    <section class="download" id="download" aria-labelledby="download-heading">
+      <div class="container">
+        <div class="download-box">
+          <div class="badge-pill">
+            <span>Production Release v0.1.0</span>
           </div>
-          <h3 class="feature-title">Official CBT Mechanics</h3>
-          <p class="feature-text">
-            5-state palette: Answered, Not Answered, Marked for Review, Answered & Marked, and Not Visited. Correctly evaluates answered-and-marked questions per NTA rules with per-section timers (+4 / -1 or custom scoring).
+          <h2 class="download-title" id="download-heading">Get TakeMock for macOS</h2>
+          <p class="download-desc">
+            Native Apple Silicon DMG. Zero configuration required.
           </p>
-        </div>
 
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <div class="download-actions">
+            <a href="https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg" class="btn-download-big">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Download TakeMock (Apple Silicon)</span>
+              <span class="btn-badge">9.2 MB</span>
+            </a>
+
+            <a href="https://github.com/Ashutosh-Repos/takemock/releases" target="_blank" rel="noopener" class="btn-secondary">
+              <span>All Releases</span>
+            </a>
           </div>
-          <h3 class="feature-title">KaTeX Equation Typesetting</h3>
-          <p class="feature-text">
-            Renders LaTeX math formulas, matrices, integrals, and chemical reactions directly to vector paths on Retina displays. No blurry equation images or network font loading.
-          </p>
-        </div>
 
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <div class="download-meta-inline">
+            <span><strong>macOS 10.15+</strong> (Apple Silicon)</span>
+            <span class="meta-divider">•</span>
+            <span><strong>SHA-256:</strong> <code id="sha-text">1dc61f3616cf5f843f36d28a8efb3f283ee21092ce755a5b905ec162655e6519</code></span>
+            <button type="button" class="btn-copy-inline" onclick="copyChecksum(this)" aria-label="Copy SHA-256 checksum">Copy</button>
           </div>
-          <h3 class="feature-title">Mistake Vault</h3>
-          <p class="feature-text">
-            Automatically logs incorrect and skipped questions across test sessions. Review accuracy distributions, time spent per problem, and bookmark questions for targeted re-drilling.
-          </p>
-        </div>
 
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          </div>
-          <h3 class="feature-title">Local-First & Portable Data</h3>
-          <p class="feature-text">
-            All test data stays in your Mac's IndexedDB without cloud accounts or telemetry. Build mock tests with the visual editor or import/export standard JSON question packs.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Developer & Packaging Section (Unified Terminal Box with HTMX Tabs) -->
-  <section class="developer" id="developer">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-label">Developer & Packaging</div>
-        <h2 class="section-title">Tauri v2 + Rust + React 19</h2>
-        <p class="section-description">
-          Self-contained desktop application under 10 MB. Uses macOS WKWebView and Cocoa AppKit interop without shipping Chromium.
-        </p>
-      </div>
-
-      <div class="terminal-card">
-        <div class="terminal-header">
-          <div class="window-controls">
-            <span class="window-dot dot-close"></span>
-            <span class="window-dot dot-min"></span>
-            <span class="window-dot dot-max"></span>
-          </div>
-          <div class="terminal-tabs">
-            <button class="tab-btn active" hx-get="partials/tab-build.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">Build from Source</button>
-            <button class="tab-btn" hx-get="partials/tab-install.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">Install via DMG</button>
-            <button class="tab-btn" hx-get="partials/tab-schema.html" hx-target="#dev-terminal-body" hx-swap="innerHTML" onclick="setActiveTab(this)">Question Pack Schema</button>
-          </div>
-          <button class="btn-copy" onclick="copyTerminalCode(this)">Copy</button>
-        </div>
-        <div class="terminal-body" id="dev-terminal-body">
-          <div class="terminal-line"><span class="terminal-comment"># Clone source repository and install Node dependencies</span></div>
-          <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">git clone https://github.com/Ashutosh-Repos/takemock.git</span></div>
-          <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">cd takemock && pnpm install</span></div>
-          <div class="terminal-line"><span class="terminal-comment"># Start local development window with instant hot reload</span></div>
-          <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">pnpm tauri dev</span></div>
-          <div class="terminal-line"><span class="terminal-comment"># Build production DMG bundle</span></div>
-          <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">pnpm tauri build</span></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Download Section -->
-  <section class="download" id="download">
-    <div class="container">
-      <div class="download-box">
-        <div class="badge-pill" style="margin-bottom: 16px;">
-          <span>Release 0.1.0</span>
-        </div>
-        <h2 class="download-title">Download TakeMock for macOS</h2>
-        <p class="download-desc">
-          Packaged as a standalone DMG installer for Apple Silicon Macs.
-        </p>
-
-        <div class="download-actions">
-          <a href="https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg" class="btn-download-big">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span>Download .dmg (Apple Silicon)</span>
-          </a>
-
-          <a href="https://github.com/Ashutosh-Repos/takemock/releases" target="_blank" rel="noopener" class="btn-secondary" style="padding: 16px 24px;">
-            <span>All Releases</span>
-          </a>
-        </div>
-
-        <!-- Release Metadata Table -->
-        <div class="release-meta-table">
-          <div>
-            <div class="meta-label">Version</div>
-            <div class="meta-value">0.1.0</div>
-          </div>
-          <div>
-            <div class="meta-label">Architecture</div>
-            <div class="meta-value">Apple Silicon (aarch64)</div>
-          </div>
-          <div>
-            <div class="meta-label">Compatibility</div>
-            <div class="meta-value">macOS 10.15+</div>
-          </div>
-          <div>
-            <div class="meta-label">File Size</div>
-            <div class="meta-value">9.2 MB</div>
-          </div>
-        </div>
-
-        <!-- Checksum Box -->
-        <div class="checksum-box">
-          <span style="font-weight: 700; color: var(--text-tertiary);">SHA-256</span>
-          <span id="sha-text">1dc61f3616cf5f843f36d28a8efb3f283ee21092ce755a5b905ec162655e6519</span>
-          <button class="btn-copy" onclick="copyChecksum(this)">Copy</button>
-        </div>
-      </div>
-
-      <!-- macOS Gatekeeper Notice -->
-      <div class="gatekeeper-callout">
-        <div class="gatekeeper-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <div>
-          <div class="gatekeeper-title">Gatekeeper Notice for First Launch</div>
-          <div class="gatekeeper-text">
-            TakeMock is distributed as open-source software without an Apple Developer ID certificate. On first launch, macOS Gatekeeper may show an <em>"unidentified developer"</em> prompt.
-            <br><br>
-            <strong>How to open:</strong> Right-click (or Control-click) <code>TakeMock.app</code> in your Applications folder and select <strong>Open</strong>, then click <strong>Open</strong> in the dialog.
-            <br>
-            Alternatively, clear the quarantine attribute via Terminal:
-            <br>
-            <code class="gatekeeper-code" id="gatekeeper-cmd">xattr -cr /Applications/TakeMock.app</code>
-            <button class="btn-copy" style="margin-left: 8px; vertical-align: middle;" onclick="copyGatekeeperCmd(this)">Copy</button>
+          <div class="gatekeeper-inline">
+            <span class="gatekeeper-badge">Gatekeeper Note</span>
+            <span>Unsigned open-source software on macOS: right-click TakeMock.app in /Applications and select <strong>Open</strong>, or run:</span>
+            <code id="gatekeeper-cmd">xattr -cr /Applications/TakeMock.app</code>
+            <button type="button" class="btn-copy-inline" onclick="copyGatekeeperCmd(this)" aria-label="Copy Gatekeeper command">Copy</button>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
   <!-- Footer -->
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-top">
-        <div class="footer-brand">
-          <img src="assets/icons/favicon-32.png" alt="TakeMock" style="border-radius: 6px;">
-          <span>TakeMock</span>
-        </div>
-
-        <ul class="footer-links">
-          <li><a href="https://github.com/Ashutosh-Repos/takemock" target="_blank" rel="noopener">GitHub</a></li>
-          <li><a href="https://github.com/Ashutosh-Repos/takemock/releases" target="_blank" rel="noopener">Releases</a></li>
-          <li><a href="https://github.com/Ashutosh-Repos/takemock/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
-          <li><a href="https://github.com/Ashutosh-Repos/takemock/issues" target="_blank" rel="noopener">Issues</a></li>
-        </ul>
+  <footer class="site-footer" role="contentinfo">
+    <div class="container footer-wrap">
+      <div class="footer-brand">
+        <img src="assets/icons/favicon-32.png" alt="" class="footer-brand-icon" aria-hidden="true">
+        <span>TakeMock</span>
       </div>
 
-      <div class="footer-bottom">
-        <div>MIT License • Ashutosh (<a href="https://github.com/Ashutosh-Repos" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">@Ashutosh-Repos</a>)</div>
-        <div>Built with Tauri v2, Rust & React 19 for macOS.</div>
+      <ul class="footer-links" aria-label="Footer links">
+        <li><a href="https://github.com/Ashutosh-Repos/takemock" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="https://github.com/Ashutosh-Repos/takemock/releases" target="_blank" rel="noopener">Releases</a></li>
+        <li><a href="https://github.com/Ashutosh-Repos/takemock/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+        <li><a href="https://github.com/Ashutosh-Repos/takemock/issues" target="_blank" rel="noopener">Issues</a></li>
+      </ul>
+
+      <div class="footer-copy">
+        MIT License • Ashutosh (<a href="https://github.com/Ashutosh-Repos" target="_blank" rel="noopener">@Ashutosh-Repos</a>)
       </div>
     </div>
   </footer>
 
-  <!-- Scripts -->
+  <!-- Client-side Logic -->
   <script>
     // Theme toggle
     const themeToggleBtn = document.getElementById('theme-toggle');
@@ -438,40 +404,95 @@
       localStorage.setItem('takemock-theme', newTheme);
     });
 
-    // KaTeX formula render helper
+    // KaTeX formula renderer with guaranteed fallback
     function renderAllMath(root = document.body) {
       if (window.renderMathInElement) {
-        renderMathInElement(root, {
-          delimiters: [
-            {left: '$$', right: '$$', display: true},
-            {left: '\\[', right: '\\]', display: true},
-            {left: '\\(', right: '\\)', display: false},
-            {left: '$', right: '$', display: false}
-          ],
-          throwOnError: false
+        try {
+          window.renderMathInElement(root, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false },
+              { left: '\\(', right: '\\)', display: false },
+              { left: '\\[', right: '\\]', display: true }
+            ],
+            throwOnError: false,
+            ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+          });
+        } catch (e) {
+          console.error("KaTeX auto-render error:", e);
+        }
+      }
+
+      // Direct fallback for [data-tex] elements
+      if (window.katex && root.querySelectorAll) {
+        const formulas = root.querySelectorAll('[data-tex]');
+        formulas.forEach(el => {
+          const tex = el.getAttribute('data-tex');
+          if (tex && !el.querySelector('.katex')) {
+            try {
+              katex.render(tex, el, { displayMode: true, throwOnError: false });
+            } catch (err) {}
+          }
         });
       }
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
+    // Execute on initial DOM and on full load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => renderAllMath());
+    } else {
       renderAllMath();
-    });
+    }
+    window.addEventListener('load', () => renderAllMath());
 
     // Re-render math whenever HTMX swaps in new content
     document.body.addEventListener('htmx:afterSwap', (evt) => {
       renderAllMath(evt.detail.target);
+      initRadioKeyboard();
     });
 
-    // CBT Option selection
+    // Option selection with accessible ARIA management & keyboard support
     let selectedOptionIndex = null;
     let currentPaletteIndex = 1;
     const paletteStates = { 1: 'answered', 2: 'marked', 3: 'unanswered', 4: 'not-visited', 5: 'not-visited' };
 
     function selectDemoOption(el, idx) {
-      document.querySelectorAll('#demo-options .option-item').forEach(item => item.classList.remove('selected'));
+      const options = document.querySelectorAll('#demo-options .option-item');
+      options.forEach(item => {
+        item.classList.remove('selected');
+        item.setAttribute('aria-checked', 'false');
+        item.setAttribute('tabindex', '-1');
+      });
       el.classList.add('selected');
+      el.setAttribute('aria-checked', 'true');
+      el.setAttribute('tabindex', '0');
       selectedOptionIndex = idx;
     }
+
+    // Keyboard navigation (Arrow keys) inside radio group
+    function initRadioKeyboard() {
+      const options = Array.from(document.querySelectorAll('#demo-options .option-item'));
+      options.forEach((opt, idx) => {
+        opt.addEventListener('keydown', (e) => {
+          let nextIdx = null;
+          if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            nextIdx = (idx + 1) % options.length;
+          } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            nextIdx = (idx - 1 + options.length) % options.length;
+          } else if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            selectDemoOption(opt, idx + 1);
+          }
+          if (nextIdx !== null) {
+            options[nextIdx].focus();
+            selectDemoOption(options[nextIdx], nextIdx + 1);
+          }
+        });
+      });
+    }
+    initRadioKeyboard();
 
     function saveAndNextDemo() {
       if (selectedOptionIndex !== null) {
@@ -486,7 +507,12 @@
     }
 
     function clearDemoResponse() {
-      document.querySelectorAll('#demo-options .option-item').forEach(item => item.classList.remove('selected'));
+      const options = document.querySelectorAll('#demo-options .option-item');
+      options.forEach((item, idx) => {
+        item.classList.remove('selected');
+        item.setAttribute('aria-checked', 'false');
+        item.setAttribute('tabindex', idx === 0 ? '0' : '-1');
+      });
       selectedOptionIndex = null;
       paletteStates[currentPaletteIndex] = 'unanswered';
       updatePaletteUI();
@@ -510,37 +536,37 @@
       const paletteBtns = document.querySelectorAll('#demo-palette .palette-btn');
       paletteBtns.forEach((btn, idx) => {
         const num = idx + 1;
-        btn.className = `palette-btn ${paletteStates[num] || 'not-visited'}`;
+        const state = paletteStates[num] || 'not-visited';
+        btn.className = `palette-btn ${state}`;
         if (num === currentPaletteIndex) btn.classList.add('active');
+        btn.setAttribute('aria-label', `Question ${num}, ${state.replace('-', ' ')}`);
       });
     }
 
     // Terminal Tabs helper
     function setActiveTab(btn) {
-      document.querySelectorAll('.terminal-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.terminal-tabs .tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
       btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
     }
 
-    // Inline copy visual feedback
+    // Inline copy feedback
     function copyChecksum(btn) {
       const text = document.getElementById('sha-text').textContent.trim();
-      navigator.clipboard.writeText(text).then(() => {
-        showCopied(btn);
-      });
+      navigator.clipboard.writeText(text).then(() => showCopied(btn));
     }
 
     function copyTerminalCode(btn) {
       const code = document.getElementById('dev-terminal-body').innerText.replace(/^\$\s*/gm, '').trim();
-      navigator.clipboard.writeText(code).then(() => {
-        showCopied(btn);
-      });
+      navigator.clipboard.writeText(code).then(() => showCopied(btn));
     }
 
     function copyGatekeeperCmd(btn) {
       const cmd = document.getElementById('gatekeeper-cmd').textContent.trim();
-      navigator.clipboard.writeText(cmd).then(() => {
-        showCopied(btn);
-      });
+      navigator.clipboard.writeText(cmd).then(() => showCopied(btn));
     }
 
     function showCopied(btn) {

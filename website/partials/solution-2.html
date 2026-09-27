@@ -1,13 +1,13 @@
 <div class="solution-card">
   <div class="solution-header">
     <span class="solution-tag">Derivation Analysis</span>
-    <button class="btn-close-sol" onclick="this.closest('.solution-card').remove()">Dismiss</button>
+    <button type="button" class="btn-close-sol" onclick="this.closest('.solution-card').remove()" aria-label="Dismiss solution">Dismiss</button>
   </div>
   <p class="solution-text">
-    The differential rate equation for a first-order reaction is \( -\frac{d[A]}{dt} = k[A] \).
+    The differential rate equation for a first-order reaction is $-\frac{d[A]}{dt} = k[A]$.
   </p>
   <p class="solution-text">
-    Integrating with limits from \( t=0 \) to \( t \) yields \( [A]_t = [A]_0 e^{-kt} \). At half-life \( t_{1/2} \), \( [A]_t = \frac{1}{2}[A]_0 \), giving \( t_{1/2} = \frac{\ln 2}{k} \approx \frac{0.693}{k} \). This expression contains no concentration term, making half-life independent of initial concentration or initial partial pressure.
+    Integrating from $t=0$ to $t$ gives $[A]_t = [A]_0 e^{-kt}$. At half-life $t_{1/2}$, $[A]_t = \frac{1}{2}[A]_0$, yielding $t_{1/2} = \frac{\ln 2}{k} \approx \frac{0.693}{k}$. This is completely independent of initial concentration or pressure.
   </p>
   <div class="solution-verdict">Correct Option: <strong>A</strong></div>
 </div>
