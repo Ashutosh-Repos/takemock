@@ -56,7 +56,7 @@ fn get_icon_mode() -> IconMode {
 
 #[cfg(target_os = "macos")]
 fn apply_dock_icon(mode: IconMode) {
-  unsafe {
+  let _ = std::panic::catch_unwind(|| unsafe {
     use objc2::{class, msg_send, runtime::AnyObject};
 
     let ns_app: *mut AnyObject = msg_send![class!(NSApplication), sharedApplication];
@@ -69,7 +69,7 @@ fn apply_dock_icon(mode: IconMode) {
         let icon_bytes: &[u8] = include_bytes!("../icons/icon.png");
         let ns_data: *mut AnyObject = msg_send![
           class!(NSData),
-          dataWithBytes: icon_bytes.as_ptr()
+          dataWithBytes: icon_bytes.as_ptr() as *const std::ffi::c_void,
           length: icon_bytes.len()
         ];
         if !ns_data.is_null() {
@@ -98,5 +98,5 @@ fn apply_dock_icon(mode: IconMode) {
         eprintln!("[TakeMock] Restored default bundle icon for macOS (handles Default, Clear, Tinted)");
       }
     }
-  }
+  });
 }

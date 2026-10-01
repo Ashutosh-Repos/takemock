@@ -10,6 +10,11 @@ import {
   XCircle,
 } from 'lucide-react';
 import { MathRenderer } from '@/components/shared/MathRenderer';
+import {
+  formatCandidateResponse,
+  formatQuestionType,
+  isOptionSelectedByCandidate,
+} from '@/core/engine/questionPresentation';
 import type { QuestionModel } from '@/types/question';
 import type { QuestionScore } from '@/types/scoring';
 
@@ -130,7 +135,7 @@ export function QuestionDetailModal({
               </span>
             )}
             <span className="text-muted-foreground font-mono text-[10px] uppercase">
-              {currentQuestion.type.replace('_', ' ')}
+              {formatQuestionType(currentQuestion.type)}
             </span>
             {currentScore?.status && (
               <span
@@ -305,23 +310,13 @@ export function QuestionDetailModal({
                 {currentQuestion.options.map((opt, i) => {
                   const letter = String.fromCharCode(65 + i);
 
-                  // Check if candidate selected this option
-                  const isSelected = (() => {
-                    if (activeResponse === undefined || activeResponse === null) return false;
-                    if (Array.isArray(activeResponse)) {
-                      return activeResponse.some(
-                        (item) =>
-                          item === opt.id ||
-                          String(item).toUpperCase() === letter.toUpperCase() ||
-                          String(item).toUpperCase() === opt.text.trim().toUpperCase(),
-                      );
-                    }
-                    return (
-                      activeResponse === opt.id ||
-                      String(activeResponse).toUpperCase() === letter.toUpperCase() ||
-                      String(activeResponse).toUpperCase() === opt.text.trim().toUpperCase()
-                    );
-                  })();
+                  // Check if candidate selected this option (robust ID, letter, and index matching)
+                  const isSelected = isOptionSelectedByCandidate(
+                    currentQuestion,
+                    opt,
+                    i,
+                    activeResponse,
+                  );
 
                   return (
                     <div
@@ -472,7 +467,7 @@ export function QuestionDetailModal({
                         Your Response
                       </span>
                       <span className="text-foreground font-mono text-sm font-semibold">
-                        Option ({String(activeResponse)})
+                        {formatCandidateResponse(currentQuestion, activeResponse).label}
                       </span>
                     </div>
                   </div>

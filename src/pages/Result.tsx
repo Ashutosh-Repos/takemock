@@ -21,6 +21,11 @@ import {
 import { MathRenderer } from '@/components/shared/MathRenderer';
 import { QuestionDetailModal } from '@/components/shared/QuestionDetailModal';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import {
+  cleanQuestionBody,
+  formatCandidateResponse,
+  formatQuestionType,
+} from '@/core/engine/questionPresentation';
 import { formatTimeSeconds } from '@/core/engine/timingEngine';
 import { assessmentRepository } from '@/core/storage/repository';
 import { showNativeAlert } from '@/core/native/tauriBridge';
@@ -373,7 +378,7 @@ export function Result() {
                     </span>
                     <span className="text-foreground/80 text-xs font-semibold">{sectionTitle}</span>
                     <span className="bg-muted/60 text-muted-foreground border-border/60 inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px]">
-                      {question.type}
+                      {formatQuestionType(question.type)}
                     </span>
                   </div>
 
@@ -389,7 +394,7 @@ export function Result() {
 
                 {/* Question Body with KaTeX - Fully responsive with zero text clipping */}
                 <div className="selectable-content text-foreground/90 overflow-visible text-xs leading-relaxed wrap-break-word">
-                  <MathRenderer content={question.body} />
+                  <MathRenderer content={cleanQuestionBody(question.body)} />
                 </div>
 
                 {/* Candidate Response Summary & Card Action */}
@@ -399,9 +404,7 @@ export function Result() {
                       <span className="font-mono text-xs">
                         Attempted:{' '}
                         <span className="text-foreground font-semibold">
-                          {typeof score.candidateResponse === 'object'
-                            ? JSON.stringify(score.candidateResponse)
-                            : String(score.candidateResponse)}
+                          {formatCandidateResponse(question, score.candidateResponse).label}
                         </span>
                       </span>
                     ) : (

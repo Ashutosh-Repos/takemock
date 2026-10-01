@@ -106,14 +106,34 @@ export const SingleChoiceHandler: QuestionTypeHandler<string> = {
 
   normalize(q: QuestionModel): QuestionModel {
     const base = normalizeBase(q);
+    const options = (base.options || []).map((opt, idx) => ({
+      id: opt.id || `opt_${idx}`,
+      text: opt.text.trim(),
+      isCorrect: Boolean(opt.isCorrect),
+      explanation: opt.explanation?.trim(),
+    }));
+
+    // If no option was flagged isCorrect, but correctCode exists (e.g. "B" or "opt_1" or "2")
+    if (!options.some((o) => o.isCorrect) && base.correctCode) {
+      const code = String(base.correctCode).trim().toUpperCase();
+      let matchIdx = -1;
+      if (/^[A-Z]$/.test(code)) {
+        matchIdx = code.charCodeAt(0) - 65;
+      } else if (/^\d+$/.test(code)) {
+        const num = parseInt(code, 10);
+        matchIdx = num >= 1 && num <= options.length ? num - 1 : num;
+      }
+      if (matchIdx >= 0 && matchIdx < options.length) {
+        options[matchIdx].isCorrect = true;
+      } else {
+        const byId = options.find((o) => o.id.toUpperCase() === code);
+        if (byId) byId.isCorrect = true;
+      }
+    }
+
     return {
       ...base,
-      options: (base.options || []).map((opt, idx) => ({
-        id: opt.id || `opt_${idx}`,
-        text: opt.text.trim(),
-        isCorrect: Boolean(opt.isCorrect),
-        explanation: opt.explanation?.trim(),
-      })),
+      options,
     };
   },
 
@@ -123,10 +143,23 @@ export const SingleChoiceHandler: QuestionTypeHandler<string> = {
     _policy: ScoringPolicy,
     timeSpent: number,
   ): QuestionScore {
-    const correctOpt = q.options?.find((o) => o.isCorrect);
+    const options = q.options || [];
+    let correctOpt = options.find((o) => o.isCorrect);
+
+    // Resilient fallback to correctCode if isCorrect wasn't explicitly flagged
+    if (!correctOpt && q.correctCode) {
+      const code = String(q.correctCode).trim().toUpperCase();
+      const letterIdx = /^[A-Z]$/.test(code) ? code.charCodeAt(0) - 65 : -1;
+      if (letterIdx >= 0 && letterIdx < options.length) {
+        correctOpt = options[letterIdx];
+      } else {
+        correctOpt = options.find((o) => o.id.toUpperCase() === code);
+      }
+    }
+
     const correctAnswer = correctOpt ? correctOpt.id : '';
 
-    if (!response || response.trim() === '') {
+    if (!response || String(response).trim() === '') {
       return {
         questionId: q.id,
         status: 'UNATTEMPTED',
@@ -140,14 +173,28 @@ export const SingleChoiceHandler: QuestionTypeHandler<string> = {
       };
     }
 
-    const isCorrect = response === correctAnswer;
+    const respStr = String(response).trim();
+    // Resolve candidate option by ID, letter (A, B, C, D...), or index (opt_0, 0, 1...)
+    const candidateOpt = options.find((o, idx) => {
+      if (o.id === respStr || o.id.toUpperCase() === respStr.toUpperCase()) return true;
+      const letter = String.fromCharCode(65 + idx);
+      if (letter.toUpperCase() === respStr.toUpperCase()) return true;
+      if (respStr === `opt_${idx}` || respStr.toUpperCase() === `OPT_${idx}` || respStr === String(idx)) return true;
+      return false;
+    });
+
+    const isCorrect = Boolean(
+      (correctOpt && candidateOpt && candidateOpt.id === correctOpt.id) ||
+      (correctOpt && (respStr === correctOpt.id || respStr.toUpperCase() === q.correctCode?.toUpperCase()))
+    );
+
     return {
       questionId: q.id,
       status: isCorrect ? 'CORRECT' : 'INCORRECT',
       marksAwarded: isCorrect ? q.marks : -q.negativeMarks,
       maxMarks: q.marks,
       negativeMarks: q.negativeMarks,
-      candidateResponse: response,
+      candidateResponse: candidateOpt ? candidateOpt.id : respStr,
       correctAnswer,
       explanation: q.solution,
       timeSpentSeconds: timeSpent,
@@ -225,7 +272,9 @@ export const MultipleChoiceHandler: QuestionTypeHandler<string[]> = {
     policy: ScoringPolicy,
     timeSpent: number,
   ): QuestionScore {
-    const correctIds = new Set((q.options || []).filter((o) => o.isCorrect).map((o) => o.id));
+    const options = q.options || [];
+    const correctOptions = options.filter((o) => o.isCorrect);
+    const correctIds = new Set(correctOptions.map((o) => o.id));
     const correctAnswer = Array.from(correctIds);
 
     if (!response || !Array.isArray(response) || response.length === 0) {
@@ -242,11 +291,28 @@ export const MultipleChoiceHandler: QuestionTypeHandler<string[]> = {
       };
     }
 
-    const selectedSet = new Set(response);
+    // Resolve every candidate response item to canonical option ID
+    const resolvedCandidateIds = new Set<string>();
+    for (const item of response) {
+      const itemStr = String(item).trim();
+      const matchedOpt = options.find((o, idx) => {
+        if (o.id === itemStr || o.id.toUpperCase() === itemStr.toUpperCase()) return true;
+        const letter = String.fromCharCode(65 + idx);
+        if (letter.toUpperCase() === itemStr.toUpperCase()) return true;
+        if (itemStr === `opt_${idx}` || itemStr.toUpperCase() === `OPT_${idx}` || itemStr === String(idx)) return true;
+        return false;
+      });
+      if (matchedOpt) {
+        resolvedCandidateIds.add(matchedOpt.id);
+      } else {
+        resolvedCandidateIds.add(itemStr);
+      }
+    }
+
     let correctSelected = 0;
     let incorrectSelected = 0;
 
-    for (const id of selectedSet) {
+    for (const id of resolvedCandidateIds) {
       if (correctIds.has(id)) {
         correctSelected++;
       } else {
@@ -365,11 +431,28 @@ export const TrueFalseHandler: QuestionTypeHandler<string> = {
 
   score(
     q: QuestionModel,
-    response: string | undefined,
+    response: string | boolean | undefined,
     policy: ScoringPolicy,
     timeSpent: number,
   ): QuestionScore {
-    return SingleChoiceHandler.score(q, response, policy, timeSpent);
+    if (response === undefined || response === null || String(response).trim() === '') {
+      return SingleChoiceHandler.score(q, undefined, policy, timeSpent);
+    }
+    const respStr = String(response).trim().toLowerCase();
+    const options = q.options || [];
+    let mappedResp: string | undefined;
+
+    if (respStr === 'true' || respStr === 't' || respStr === '1' || respStr === 'opt_0') {
+      const opt = options.find((o) => o.text.trim().toLowerCase() === 'true') || options[0];
+      mappedResp = opt?.id;
+    } else if (respStr === 'false' || respStr === 'f' || respStr === '0' || respStr === 'opt_1') {
+      const opt = options.find((o) => o.text.trim().toLowerCase() === 'false') || options[1];
+      mappedResp = opt?.id;
+    } else {
+      mappedResp = String(response).trim();
+    }
+
+    return SingleChoiceHandler.score(q, mappedResp, policy, timeSpent);
   },
 
   sanitizeForCandidate(q: QuestionModel): CandidateQuestionView {
@@ -463,8 +546,9 @@ export const NumericalHandler: QuestionTypeHandler<number | string> = {
     }
 
     const diff = Math.abs(candVal - correctVal);
-    const absOk = diff <= tolAbs;
-    const relOk = tolRel > 0 ? diff <= Math.abs(correctVal) * tolRel : false;
+    // Epsilon factor prevents IEEE-754 floating point subtraction precision drift
+    const absOk = diff <= tolAbs + 1e-9;
+    const relOk = tolRel > 0 ? diff <= Math.abs(correctVal) * tolRel + 1e-9 : false;
     const isCorrect = absOk || relOk;
 
     return {
@@ -804,7 +888,7 @@ export const AssertionReasonHandler: QuestionTypeHandler<string> = {
 
   normalize(q: QuestionModel): QuestionModel {
     const base = normalizeBase(q);
-    const code = q.correctCode?.toUpperCase() as 'A' | 'B' | 'C' | 'D' | 'E';
+    const code = (q.correctCode?.toUpperCase() || 'A') as 'A' | 'B' | 'C' | 'D' | 'E';
     const standardOptions = [
       {
         id: 'A',
@@ -820,10 +904,24 @@ export const AssertionReasonHandler: QuestionTypeHandler<string> = {
       { id: 'D', text: '(A) is false but (R) is true', isCorrect: code === 'D' },
       { id: 'E', text: 'Both (A) and (R) are false', isCorrect: code === 'E' },
     ];
+
+    const finalOptions =
+      q.options && q.options.length > 0
+        ? q.options.map((opt, i) => {
+            const letter = String.fromCharCode(65 + i) as 'A' | 'B' | 'C' | 'D' | 'E';
+            return {
+              id: letter,
+              text: opt.text.trim(),
+              isCorrect: opt.isCorrect ?? code === letter,
+              explanation: opt.explanation?.trim(),
+            };
+          })
+        : standardOptions;
+
     return {
       ...base,
       correctCode: code,
-      options: q.options && q.options.length > 0 ? q.options : standardOptions,
+      options: finalOptions,
     };
   },
 
@@ -833,9 +931,9 @@ export const AssertionReasonHandler: QuestionTypeHandler<string> = {
     _policy: ScoringPolicy,
     timeSpent: number,
   ): QuestionScore {
-    const correctCode = q.correctCode || 'A';
+    const correctCode = (q.correctCode || 'A').toUpperCase();
 
-    if (!response || response.trim() === '') {
+    if (!response || String(response).trim() === '') {
       return {
         questionId: q.id,
         status: 'UNATTEMPTED',
@@ -849,14 +947,25 @@ export const AssertionReasonHandler: QuestionTypeHandler<string> = {
       };
     }
 
-    const isCorrect = response.trim().toUpperCase() === correctCode;
+    const rawResp = String(response).trim().toUpperCase();
+    let normalizedCode = rawResp;
+    const optMatch = rawResp.match(/^OPT_(\d+)$/);
+    if (optMatch) {
+      const idx = parseInt(optMatch[1], 10);
+      normalizedCode = String.fromCharCode(65 + idx);
+    } else if (/^\d+$/.test(rawResp)) {
+      const idx = parseInt(rawResp, 10);
+      normalizedCode = String.fromCharCode(65 + idx);
+    }
+
+    const isCorrect = normalizedCode === correctCode;
     return {
       questionId: q.id,
       status: isCorrect ? 'CORRECT' : 'INCORRECT',
       marksAwarded: isCorrect ? q.marks : -q.negativeMarks,
       maxMarks: q.marks,
       negativeMarks: q.negativeMarks,
-      candidateResponse: response.trim().toUpperCase(),
+      candidateResponse: normalizedCode,
       correctAnswer: correctCode,
       explanation: q.solution,
       timeSpentSeconds: timeSpent,

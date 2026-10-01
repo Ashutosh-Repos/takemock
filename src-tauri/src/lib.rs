@@ -48,7 +48,7 @@ pub fn run() {
         let app_menu = SubmenuBuilder::new(app, "TakeMock")
           .about(Some(tauri::menu::AboutMetadata {
             name: Some("TakeMock".into()),
-            version: Some("0.1.0".into()),
+            version: Some("0.1.1".into()),
             authors: Some(vec!["Ashutosh".into()]),
             comments: Some("High-Performance Local-First Exam Suite".into()),
             ..Default::default()

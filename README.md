@@ -48,7 +48,7 @@ TakeMock addresses this as a standalone macOS desktop application:
 
 | Target | Architecture | Package | Size | SHA-256 Checksum |
 |---|---|---|---|---|
-| macOS 10.15+ | Apple Silicon (`aarch64`) | [TakeMock_0.1.0_aarch64.dmg](https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.0/TakeMock_0.1.0_aarch64.dmg) | 9.2 MB | `1dc61f3616cf5f843f36d28a8efb3f283ee21092ce755a5b905ec162655e6519` |
+| macOS 10.15+ | Apple Silicon (`aarch64`) | [TakeMock_0.1.1_aarch64.dmg](https://github.com/Ashutosh-Repos/takemock/releases/download/v0.1.1/TakeMock_0.1.1_aarch64.dmg) | 9.2 MB | `4aea4a9512677fa988b7db12942a5bebd779d571c88933229e1b6d082adedf85` |
 
 You can also view all builds on the [Releases page](https://github.com/Ashutosh-Repos/takemock/releases).
 
@@ -160,7 +160,7 @@ pnpm tauri build
 ```
 Output bundles:
 - `src-tauri/target/release/bundle/macos/TakeMock.app`
-- `src-tauri/target/release/bundle/dmg/TakeMock_0.1.0_aarch64.dmg`
+- `src-tauri/target/release/bundle/dmg/TakeMock_0.1.1_aarch64.dmg`
 
 ---
 

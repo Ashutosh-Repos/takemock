@@ -355,6 +355,40 @@ export function parseSingleQuestionBlock(
     remainingBodyLines.push(line);
   }
 
+  // Discard any residual metadata key: value lines at the top of question body
+  while (remainingBodyLines.length > 0) {
+    const firstLineTrimmed = remainingBodyLines[0].trim();
+    if (!firstLineTrimmed) {
+      remainingBodyLines.shift();
+      continue;
+    }
+    const metaMatch = firstLineTrimmed.match(/^([a-zA-Z0-9_-]+)\s*:(.*)$/);
+    if (metaMatch && KNOWN_FRONTMATTER_KEYS.has(metaMatch[1].toLowerCase())) {
+      const k = metaMatch[1];
+      if (rawMetadata[k] === undefined) {
+        rawMetadata[k] = metaMatch[2].trim();
+      }
+      remainingBodyLines.shift();
+      continue;
+    }
+    break;
+  }
+
+  // Link correctCode to options if no checkbox was marked [x]
+  if (options.length > 0 && !options.some((o) => o.isCorrect) && rawMetadata.correctCode) {
+    const code = String(rawMetadata.correctCode).trim().toUpperCase();
+    let targetIdx = -1;
+    if (/^[A-Z]$/.test(code)) {
+      targetIdx = code.charCodeAt(0) - 65;
+    } else if (/^\d+$/.test(code)) {
+      const n = parseInt(code, 10);
+      targetIdx = n >= 1 && n <= options.length ? n - 1 : n;
+    }
+    if (targetIdx >= 0 && targetIdx < options.length) {
+      options[targetIdx].isCorrect = true;
+    }
+  }
+
   const cleanedBody = remainingBodyLines.join('\n').trim();
 
   // If type wasn't set, infer from structure

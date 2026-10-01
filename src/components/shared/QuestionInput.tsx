@@ -7,6 +7,7 @@
 import React from 'react';
 import type { QuestionModel, QuestionOption } from '@/types/question';
 import { MathRenderer } from './MathRenderer';
+import { isOptionSelectedByCandidate } from '@/core/engine/questionPresentation';
 
 interface QuestionInputProps {
   question: QuestionModel;
@@ -32,7 +33,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
       return (
         <div className="space-y-2">
           {options.map((opt, idx) => {
-            const isSelected = response === opt.id;
+            const isSelected = isOptionSelectedByCandidate(question, opt, idx, response);
             return (
               <label
                 key={opt.id}
@@ -87,7 +88,7 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
             Select all correct options:
           </div>
           {options.map((opt, idx) => {
-            const isSelected = currentSelected.includes(opt.id);
+            const isSelected = currentSelected.some((r) => isOptionSelectedByCandidate(question, opt, idx, r));
             return (
               <label
                 key={opt.id}
@@ -129,8 +130,8 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
 
       return (
         <div className="grid max-w-sm grid-cols-2 gap-3">
-          {options.map((opt) => {
-            const isSelected = response === opt.id;
+          {options.map((opt, idx) => {
+            const isSelected = isOptionSelectedByCandidate(question, opt, idx, response);
             return (
               <button
                 key={opt.id}
@@ -282,8 +283,8 @@ export const QuestionInput: React.FC<QuestionInputProps> = ({
       return (
         <div className="space-y-2">
           <div className="text-muted-foreground text-xs font-medium">Select option:</div>
-          {options.map((opt) => {
-            const isSelected = response === opt.id;
+          {options.map((opt, idx) => {
+            const isSelected = isOptionSelectedByCandidate(question, opt, idx, response);
             return (
               <label
                 key={opt.id}

@@ -28,6 +28,10 @@ import {
 import { MathRenderer } from '@/components/shared/MathRenderer';
 import { QuestionInput } from '@/components/shared/QuestionInput';
 import {
+  cleanQuestionBody,
+  formatQuestionType,
+} from '@/core/engine/questionPresentation';
+import {
   getNextQuestion,
   getPreviousQuestion,
   resolveQuestionVisitStatus,
@@ -60,6 +64,12 @@ export function Runner() {
     Record<string, { timeSpentSeconds: number; visitCount: number }>
   >({});
   const [answerHistory, setAnswerHistory] = useState<Record<string, AnswerHistoryEntry[]>>({});
+
+  // Synchronous mutable state refs to avoid React async batching race conditions
+  const responsesRef = useRef<Record<string, any>>({});
+  const visitStatusesRef = useRef<Record<string, QuestionVisitStatus>>({});
+  const timingsRef = useRef<Record<string, { timeSpentSeconds: number; visitCount: number }>>({});
+  const answerHistoryRef = useRef<Record<string, AnswerHistoryEntry[]>>({});
 
   // Practice mode instant checks
   const [showSolutionInstant, setShowSolutionInstant] = useState<Record<string, boolean>>({});
@@ -212,10 +222,20 @@ export function Runner() {
         if (!mounted) return;
 
         setAttempt(att);
-        setResponses(att.responses || {});
-        setVisitStatuses(att.visitStatuses || {});
-        setTimings(att.timings || {});
-        setAnswerHistory(att.answerHistory || {});
+        const initResp = att.responses || {};
+        const initVisits = att.visitStatuses || {};
+        const initTimings = att.timings || {};
+        const initHistory = att.answerHistory || {};
+
+        responsesRef.current = initResp;
+        visitStatusesRef.current = initVisits;
+        timingsRef.current = initTimings;
+        answerHistoryRef.current = initHistory;
+
+        setResponses(initResp);
+        setVisitStatuses(initVisits);
+        setTimings(initTimings);
+        setAnswerHistory(initHistory);
 
         const initialSec = att.currentSectionId || att.snapshot.sections[0]?.id || '';
         const initialQ =
@@ -298,21 +318,23 @@ export function Runner() {
     // Record time spent on leaving question
     const now = Date.now();
     const deltaSec = Math.max(0, Math.floor((now - questionEnteredTimeRef.current) / 1000));
-    const curTiming = timings[currentQuestionId] || { timeSpentSeconds: 0, visitCount: 0 };
+    const curTiming = timingsRef.current[currentQuestionId] || { timeSpentSeconds: 0, visitCount: 0 };
     const updatedTimings = {
-      ...timings,
+      ...timingsRef.current,
       [currentQuestionId]: {
         timeSpentSeconds: curTiming.timeSpentSeconds + deltaSec,
         visitCount: curTiming.visitCount + 1,
       },
     };
+    timingsRef.current = updatedTimings;
     setTimings(updatedTimings);
 
     // If destination question was NOT_VISITED, mark it as SKIPPED (visited)
-    const updatedVisits = { ...(overrideVisits || visitStatuses) };
+    const updatedVisits = { ...(overrideVisits || visitStatusesRef.current) };
     if (!updatedVisits[qId] || updatedVisits[qId] === 'NOT_VISITED') {
       updatedVisits[qId] = 'SKIPPED';
     }
+    visitStatusesRef.current = updatedVisits;
     setVisitStatuses(updatedVisits);
 
     setCurrentSectionId(secId);
@@ -329,61 +351,71 @@ export function Runner() {
       });
     }
 
-    syncToDb(responses, updatedVisits, updatedTimings, answerHistory, secId, qId);
+    syncToDb(responsesRef.current, updatedVisits, updatedTimings, answerHistoryRef.current, secId, qId);
   };
 
   // Handle Response Change
-  const handleResponseChange = (value: any) => {
-    const updatedResponses = { ...responses, [currentQuestionId]: value };
-    setResponses(updatedResponses);
+  const handleResponseChange = useCallback(
+    (value: any, targetQId?: string) => {
+      const qId = targetQId || currentQuestionId;
+      const updatedResponses = { ...responsesRef.current, [qId]: value };
+      responsesRef.current = updatedResponses;
+      setResponses(updatedResponses);
 
-    // Record answer change history
-    const now = Date.now();
-    const deltaSec = Math.max(0, Math.floor((now - questionEnteredTimeRef.current) / 1000));
-    const currentQHistory = answerHistory[currentQuestionId] || [];
-    const updatedHistory = {
-      ...answerHistory,
-      [currentQuestionId]: [
-        ...currentQHistory,
-        { timestamp: new Date().toISOString(), response: value, timeSpentSeconds: deltaSec },
-      ],
-    };
-    setAnswerHistory(updatedHistory);
+      // Record answer change history
+      const now = Date.now();
+      const deltaSec = Math.max(0, Math.floor((now - questionEnteredTimeRef.current) / 1000));
+      const currentQHistory = answerHistoryRef.current[qId] || [];
+      const updatedHistory = {
+        ...answerHistoryRef.current,
+        [qId]: [
+          ...currentQHistory,
+          { timestamp: new Date().toISOString(), response: value, timeSpentSeconds: deltaSec },
+        ],
+      };
+      answerHistoryRef.current = updatedHistory;
+      setAnswerHistory(updatedHistory);
 
-    // Update visit status
-    const currentVisit = visitStatuses[currentQuestionId];
-    const isMarked = currentVisit === 'MARKED_FOR_REVIEW' || currentVisit === 'ANSWERED_AND_MARKED';
-    const newStatus = resolveQuestionVisitStatus(value !== undefined && value !== '', isMarked);
+      // Update visit status
+      const currentVisit = visitStatusesRef.current[qId];
+      const isMarked = currentVisit === 'MARKED_FOR_REVIEW' || currentVisit === 'ANSWERED_AND_MARKED';
+      const newStatus = resolveQuestionVisitStatus(value !== undefined && value !== '', isMarked);
 
-    const updatedVisits = { ...visitStatuses, [currentQuestionId]: newStatus };
-    setVisitStatuses(updatedVisits);
+      const updatedVisits = { ...visitStatusesRef.current, [qId]: newStatus };
+      visitStatusesRef.current = updatedVisits;
+      setVisitStatuses(updatedVisits);
 
-    if (attemptId) {
-      assessmentRepository.recordEvent(attemptId, {
-        type: 'QUESTION_ANSWERED',
-        sectionId: currentSectionId,
-        questionId: currentQuestionId,
-        payload: { value },
-      });
-    }
+      if (attemptId) {
+        assessmentRepository.recordEvent(attemptId, {
+          type: 'QUESTION_ANSWERED',
+          sectionId: currentSectionId,
+          questionId: qId,
+          payload: { value },
+        });
+      }
 
-    syncToDb(
-      updatedResponses,
-      updatedVisits,
-      timings,
-      updatedHistory,
-      currentSectionId,
-      currentQuestionId,
-    );
-  };
+      syncToDb(
+        updatedResponses,
+        updatedVisits,
+        timingsRef.current,
+        updatedHistory,
+        currentSectionId,
+        qId,
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [attemptId, currentQuestionId, currentSectionId],
+  );
 
   // Action: Save & Next
   const handleSaveAndNext = () => {
     if (!attempt) return;
+    const curResponses = responsesRef.current;
     const hasResp =
-      responses[currentQuestionId] !== undefined && responses[currentQuestionId] !== '';
+      curResponses[currentQuestionId] !== undefined && curResponses[currentQuestionId] !== '';
     const newStatus = resolveQuestionVisitStatus(hasResp, false);
-    const updatedVisits = { ...visitStatuses, [currentQuestionId]: newStatus };
+    const updatedVisits = { ...visitStatusesRef.current, [currentQuestionId]: newStatus };
+    visitStatusesRef.current = updatedVisits;
     setVisitStatuses(updatedVisits);
 
     const next = getNextQuestion(attempt.snapshot, currentSectionId, currentQuestionId);
@@ -391,10 +423,10 @@ export function Runner() {
       navigateToQuestion(next.sectionId, next.questionId, updatedVisits);
     } else {
       syncToDb(
-        responses,
+        curResponses,
         updatedVisits,
-        timings,
-        answerHistory,
+        timingsRef.current,
+        answerHistoryRef.current,
         currentSectionId,
         currentQuestionId,
       );
@@ -404,10 +436,12 @@ export function Runner() {
   // Action: Mark for Review & Next
   const handleMarkForReviewAndNext = () => {
     if (!attempt) return;
+    const curResponses = responsesRef.current;
     const hasResp =
-      responses[currentQuestionId] !== undefined && responses[currentQuestionId] !== '';
+      curResponses[currentQuestionId] !== undefined && curResponses[currentQuestionId] !== '';
     const newStatus = resolveQuestionVisitStatus(hasResp, true);
-    const updatedVisits = { ...visitStatuses, [currentQuestionId]: newStatus };
+    const updatedVisits = { ...visitStatusesRef.current, [currentQuestionId]: newStatus };
+    visitStatusesRef.current = updatedVisits;
     setVisitStatuses(updatedVisits);
 
     if (attemptId) {
@@ -423,10 +457,10 @@ export function Runner() {
       navigateToQuestion(next.sectionId, next.questionId, updatedVisits);
     } else {
       syncToDb(
-        responses,
+        curResponses,
         updatedVisits,
-        timings,
-        answerHistory,
+        timingsRef.current,
+        answerHistoryRef.current,
         currentSectionId,
         currentQuestionId,
       );
@@ -435,14 +469,21 @@ export function Runner() {
 
   // Action: Clear Response
   const handleClearResponse = () => {
-    const updatedResponses = { ...responses };
+    const updatedResponses = { ...responsesRef.current };
     delete updatedResponses[currentQuestionId];
+    responsesRef.current = updatedResponses;
     setResponses(updatedResponses);
 
+    const currentStatus = visitStatusesRef.current[currentQuestionId];
+    const isMarked =
+      currentStatus === 'MARKED_FOR_REVIEW' || currentStatus === 'ANSWERED_AND_MARKED';
+    const nextStatus: QuestionVisitStatus = isMarked ? 'MARKED_FOR_REVIEW' : 'SKIPPED';
+
     const updatedVisits: Record<string, QuestionVisitStatus> = {
-      ...visitStatuses,
-      [currentQuestionId]: 'SKIPPED',
+      ...visitStatusesRef.current,
+      [currentQuestionId]: nextStatus,
     };
+    visitStatusesRef.current = updatedVisits;
     setVisitStatuses(updatedVisits);
 
     if (attemptId) {
@@ -456,8 +497,8 @@ export function Runner() {
     syncToDb(
       updatedResponses,
       updatedVisits,
-      timings,
-      answerHistory,
+      timingsRef.current,
+      answerHistoryRef.current,
       currentSectionId,
       currentQuestionId,
     );
@@ -610,14 +651,48 @@ export function Runner() {
     });
   });
 
+  // Helper for question palette tile styling adhering to Apple Liquid Glass & light tones
+  const getPaletteItemStyles = (status: QuestionVisitStatus, isCurrent: boolean) => {
+    let bgStyle =
+      'bg-white/50 dark:bg-white/[0.04] text-foreground/70 border-black/[0.06] dark:border-white/[0.08] hover:bg-white/80 dark:hover:bg-white/[0.08] hover:text-foreground shadow-[inset_0_1px_0_0_rgba(255,255,255,0.75)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]';
+    let isMarkedOnly = false;
+    let isAnsAndMark = false;
+
+    if (status === 'ANSWERED') {
+      bgStyle =
+        'bg-emerald-500/[0.13] dark:bg-emerald-400/[0.16] text-emerald-800 dark:text-emerald-200 border-emerald-500/25 dark:border-emerald-400/30 hover:bg-emerald-500/[0.22] dark:hover:bg-emerald-400/[0.26] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.65)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]';
+    } else if (status === 'SKIPPED') {
+      bgStyle =
+        'bg-rose-500/[0.13] dark:bg-rose-400/[0.16] text-rose-800 dark:text-rose-200 border-rose-500/25 dark:border-rose-400/30 hover:bg-rose-500/[0.22] dark:hover:bg-rose-400/[0.26] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.65)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]';
+    } else if (status === 'MARKED_FOR_REVIEW') {
+      // Marked for Review (Unanswered): Pure soft purple glass with purple review tag
+      isMarkedOnly = true;
+      bgStyle =
+        'bg-purple-500/[0.13] dark:bg-purple-400/[0.16] text-purple-800 dark:text-purple-200 border-purple-400/35 dark:border-purple-400/40 hover:bg-purple-500/[0.22] dark:hover:bg-purple-400/[0.26] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.65)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]';
+    } else if (status === 'ANSWERED_AND_MARKED') {
+      // Answered & Marked: Prominent Dual-tone Purple-Emerald Gradient + Emerald Border + Green Check Badge
+      isAnsAndMark = true;
+      bgStyle =
+        'bg-gradient-to-br from-purple-500/[0.22] via-purple-500/[0.14] to-emerald-500/[0.24] dark:from-purple-500/[0.26] dark:via-purple-500/[0.18] dark:to-emerald-400/[0.28] text-purple-950 dark:text-purple-50 border-emerald-500/50 dark:border-emerald-400/55 hover:from-purple-500/[0.28] hover:to-emerald-500/[0.30] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.7)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]';
+    }
+
+    // Active state: Strictly NO outline, NO ring, NO border color change.
+    // Differentiated solely by subtle elevation, gentle scale, crisp text, and Apple bottom indicator dash.
+    const activeStyle = isCurrent
+      ? 'font-bold brightness-110 dark:brightness-125 shadow-md shadow-black/8 dark:shadow-black/35 scale-[1.06] z-10 after:content-[""] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-2.5 after:h-0.5 after:rounded-full after:bg-current'
+      : 'font-medium';
+
+    return { bgStyle, activeStyle, isMarkedOnly, isAnsAndMark };
+  };
+
   return (
-    <div className="text-foreground flex min-h-screen flex-col bg-transparent font-sans select-none">
+    <div className="text-foreground flex h-screen max-h-screen w-full flex-col overflow-hidden bg-background font-sans select-none">
       {/* ======================================================================
           CBT Header Bar (Native Window Drag Region)
          ====================================================================== */}
       <header
         data-tauri-drag-region
-        className={`liquid-glass-header sticky top-0 z-40 flex items-center justify-between px-4 py-2 shadow-2xs transition-[padding] duration-150 md:px-6 ${
+        className={`liquid-glass-header shrink-0 sticky top-0 z-40 flex items-center justify-between px-4 py-2 shadow-2xs transition-[padding] duration-150 md:px-6 ${
           !isFullscreen ? 'pl-19.5 md:pl-21' : ''
         }`}
       >
@@ -722,7 +797,7 @@ export function Runner() {
          ====================================================================== */}
       <nav
         aria-label="Exam Sections"
-        className="liquid-glass-header flex items-center gap-1.5 overflow-x-auto border-b px-4 py-1.5 md:px-6"
+        className="liquid-glass-header shrink-0 flex items-center gap-1.5 overflow-x-auto border-b px-4 py-1.5 md:px-6"
       >
         <span className="text-muted-foreground mr-1 shrink-0 text-[11px] font-semibold uppercase">
           Sections:
@@ -755,20 +830,20 @@ export function Runner() {
       {/* ======================================================================
           Main Examination Split Layout
          ====================================================================== */}
-      <div className="flex flex-1 flex-col overflow-hidden pb-6 md:pb-0 lg:flex-row">
+      <div className="flex flex-1 min-h-0 w-full overflow-hidden lg:flex-row">
         {/* Left/Center: Question Stimulus & Response Form */}
-        <main className="flex-1 space-y-4 overflow-y-auto p-4 md:p-6">
+        <main className="flex flex-1 min-h-0 flex-col overflow-hidden p-3 md:p-4 lg:p-5">
           {currentQuestion ? (
-            <div className="card space-y-5 p-4 shadow-xs md:p-6">
-              {/* Question Header */}
-              <div className="border-border/60 flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+            <div className="card flex flex-1 min-h-0 flex-col overflow-hidden p-4 shadow-xs md:p-5">
+              {/* Question Header (Pinned inside card) */}
+              <div className="border-border/60 shrink-0 flex flex-wrap items-center justify-between gap-2 border-b pb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-primary text-base font-bold tracking-tight">
                     Question{' '}
                     {currentSection.questions.findIndex((q) => q.id === currentQuestion.id) + 1}
                   </span>
                   <span className="badge badge-outline border-border/80 font-mono text-[11px]">
-                    {currentQuestion.type}
+                    {formatQuestionType(currentQuestion.type)}
                   </span>
                 </div>
 
@@ -782,118 +857,123 @@ export function Runner() {
                 </div>
               </div>
 
-              {/* Question Image if any */}
-              {currentQuestion.imageUrl && (
-                <div className="border-border/60 max-w-md overflow-hidden rounded-md border">
-                  <img
-                    src={currentQuestion.imageUrl}
-                    alt={currentQuestion.imageAlt || 'Question diagram'}
-                    className="w-full object-cover"
+              {/* Scrollable Question Stimulus and Input Container */}
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 pt-3.5 pr-1.5">
+                {/* Question Image if any */}
+                {currentQuestion.imageUrl && (
+                  <div className="border-border/60 max-w-md overflow-hidden rounded-md border">
+                    <img
+                      src={currentQuestion.imageUrl}
+                      alt={currentQuestion.imageAlt || 'Question diagram'}
+                      className="w-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Question Body with KaTeX Math (Selectable for student copying) */}
+                <div className="selectable-content text-sm leading-relaxed md:text-base">
+                  <MathRenderer content={cleanQuestionBody(currentQuestion.body)} />
+                </div>
+
+                {/* Interactive Candidate Response Input */}
+                <div className="border-border/60 border-t pt-4">
+                  <QuestionInput
+                    key={currentQuestion.id}
+                    question={currentQuestion}
+                    response={responses[currentQuestion.id]}
+                    onChange={(val) => handleResponseChange(val, currentQuestion.id)}
                   />
                 </div>
-              )}
 
-              {/* Question Body with KaTeX Math (Selectable for student copying) */}
-              <div className="selectable-content text-sm leading-relaxed md:text-base">
-                <MathRenderer content={currentQuestion.body} />
-              </div>
-
-              {/* Interactive Candidate Response Input */}
-              <div className="border-border/60 border-t pt-4">
-                <QuestionInput
-                  key={currentQuestion.id}
-                  question={currentQuestion}
-                  response={responses[currentQuestion.id]}
-                  onChange={handleResponseChange}
-                />
-              </div>
-
-              {/* Practice Mode: Instant Check Answer & Verified Solution */}
-              {isPractice && (
-                <div className="border-border/60 space-y-3 border-t pt-3">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleCheckAnswer}
-                      className="btn btn-outline btn-xs gap-1.5 active:scale-95"
-                    >
-                      <CheckCircle2 className="text-success size-3.5" />
-                      Check Answer
-                    </button>
-                    {currentQuestion.solution && (
+                {/* Practice Mode: Instant Check Answer & Verified Solution */}
+                {isPractice && (
+                  <div className="border-border/60 space-y-3 border-t pt-3">
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() =>
-                          setShowSolutionInstant((prev) => ({
-                            ...prev,
-                            [currentQuestion.id]: !prev[currentQuestion.id],
-                          }))
-                        }
-                        className="btn btn-ghost btn-xs text-primary gap-1 font-medium active:scale-95"
+                        onClick={handleCheckAnswer}
+                        className="btn btn-outline btn-xs gap-1.5 active:scale-95"
                       >
-                        <Eye className="size-3.5" />
-                        {showSolutionInstant[currentQuestion.id]
-                          ? 'Hide Solution'
-                          : 'Show Solution'}
+                        <CheckCircle2 className="text-success size-3.5" />
+                        Check Answer
                       </button>
+                      {currentQuestion.solution && (
+                        <button
+                          onClick={() =>
+                            setShowSolutionInstant((prev) => ({
+                              ...prev,
+                              [currentQuestion.id]: !prev[currentQuestion.id],
+                            }))
+                          }
+                          className="btn btn-ghost btn-xs text-primary gap-1 font-medium active:scale-95"
+                        >
+                          <Eye className="size-3.5" />
+                          {showSolutionInstant[currentQuestion.id]
+                            ? 'Hide Solution'
+                            : 'Show Solution'}
+                        </button>
+                      )}
+                    </div>
+
+                    {showSolutionInstant[currentQuestion.id] && currentQuestion.solution && (
+                      <div className="bg-muted/40 border-border/60 animate-fade-in selectable-content rounded-md border p-3.5 text-xs">
+                        <div className="text-primary mb-1.5 flex items-center gap-1.5 text-[11px] font-bold tracking-wider uppercase">
+                          <Sparkles className="size-3.5" />
+                          Explanation & Solution
+                        </div>
+                        <MathRenderer content={cleanQuestionBody(currentQuestion.solution)} />
+                      </div>
                     )}
                   </div>
-
-                  {showSolutionInstant[currentQuestion.id] && currentQuestion.solution && (
-                    <div className="bg-muted/40 border-border/60 animate-fade-in selectable-content rounded-md border p-3.5 text-xs">
-                      <div className="text-primary mb-1.5 flex items-center gap-1.5 text-[11px] font-bold tracking-wider uppercase">
-                        <Sparkles className="size-3.5" />
-                        Explanation & Solution
-                      </div>
-                      <MathRenderer content={currentQuestion.solution} />
-                    </div>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ) : (
             <div className="text-muted-foreground p-8 text-center text-sm">Question not found.</div>
           )}
 
-          {/* Bottom Action Controls */}
-          <div className="bg-card border-border flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 shadow-2xs">
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handleMarkForReviewAndNext}
-                className="btn btn-outline border-border text-foreground/80 hover:bg-muted btn-sm gap-1.5 rounded-md text-xs font-medium active:scale-95"
-              >
-                <Bookmark className="size-3.5 text-amber-500" />
-                <span className="hidden sm:inline">Mark for Review & Next</span>
-                <span className="sm:hidden">Review</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleClearResponse}
-                className="btn btn-ghost btn-sm text-muted-foreground hover:text-foreground gap-1.5 rounded-md text-xs active:scale-95"
-              >
-                <RotateCcw className="size-3" />
-                Clear
-              </button>
-            </div>
+          {/* Bottom Action Controls (Always Pinned in View) */}
+          <footer className="shrink-0 pt-2.5">
+            <div className="bg-card border-border flex flex-wrap items-center justify-between gap-2 rounded-lg border p-2.5 shadow-2xs">
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleMarkForReviewAndNext}
+                  className="btn btn-outline border-border text-foreground/80 hover:bg-muted btn-sm gap-1.5 rounded-md text-xs font-medium active:scale-95"
+                >
+                  <Bookmark className="size-3.5 text-purple-500" />
+                  <span className="hidden sm:inline">Mark for Review & Next</span>
+                  <span className="sm:hidden">Review</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearResponse}
+                  className="btn btn-ghost btn-sm text-muted-foreground hover:text-foreground gap-1.5 rounded-md text-xs active:scale-95"
+                >
+                  <RotateCcw className="size-3" />
+                  Clear
+                </button>
+              </div>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handlePrevious}
-                className="btn btn-outline border-border btn-sm gap-1 rounded-md text-xs font-medium active:scale-95"
-              >
-                <ChevronLeft className="size-3.5" />
-                Previous
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveAndNext}
-                className="btn btn-primary btn-sm gap-1 rounded-md text-xs font-medium active:scale-95"
-              >
-                Save & Next
-                <ChevronRight className="size-3.5" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handlePrevious}
+                  className="btn btn-outline border-border btn-sm gap-1 rounded-md text-xs font-medium active:scale-95"
+                >
+                  <ChevronLeft className="size-3.5" />
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAndNext}
+                  className="btn btn-primary btn-sm gap-1 rounded-md text-xs font-medium active:scale-95"
+                >
+                  Save & Next
+                  <ChevronRight className="size-3.5" />
+                </button>
+              </div>
             </div>
-          </div>
+          </footer>
         </main>
 
         {/* ====================================================================
@@ -901,93 +981,126 @@ export function Runner() {
            ==================================================================== */}
         <aside
           aria-label="Question Palette"
-          className="border-border/60 bg-muted/20 hidden w-full flex-col justify-between overflow-y-auto border-t p-3.5 lg:flex lg:w-72 lg:border-t-0 lg:border-l"
+          className="border-l border-black/[0.08] dark:border-white/[0.08] bg-white/70 dark:bg-zinc-900/60 backdrop-blur-2xl hidden w-72 shrink-0 flex-col justify-between overflow-hidden p-3.5 lg:flex shadow-[-2px_0_16px_rgba(0,0,0,0.02)]"
         >
-          <div className="space-y-4">
-            {/* Palette Status Legend (Section 37 Non-color accessible) */}
-            <div className="space-y-2">
-              <h4 className="text-muted-foreground text-[11px] font-bold tracking-wider uppercase">
-                Question Palette
-              </h4>
+          <div className="flex flex-1 min-h-0 flex-col overflow-hidden space-y-3">
+            {/* Palette Status Legend (Native Glass Light Tone) */}
+            <div className="shrink-0 space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-muted-foreground text-[11px] font-bold tracking-wider uppercase">
+                  Question Palette
+                </h4>
+                <span className="text-[11px] font-mono text-muted-foreground/80">
+                  {answeredCount + skippedCount + markedCount + answeredMarkedCount} / {currentSection.questions.length} Active
+                </span>
+              </div>
               <div className="grid grid-cols-2 gap-1.5 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <span className="flex size-4.5 items-center justify-center rounded bg-emerald-600 text-[10px] font-bold text-white">
+                {/* Answered */}
+                <div className="flex items-center gap-1.5 rounded-lg bg-emerald-500/[0.08] dark:bg-emerald-400/[0.10] border border-emerald-500/20 dark:border-emerald-400/20 px-2 py-1 backdrop-blur-xs">
+                  <span className="flex size-4 items-center justify-center rounded-sm bg-emerald-500/20 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
                     ✓
                   </span>
-                  <span className="text-[11px]">Answered ({answeredCount})</span>
+                  <span className="text-[11px] text-foreground/80 font-medium truncate">Answered</span>
+                  <span className="ml-auto font-mono text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                    {answeredCount}
+                  </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="flex size-4.5 items-center justify-center rounded bg-rose-600 text-[10px] font-bold text-white">
+
+                {/* Skipped */}
+                <div className="flex items-center gap-1.5 rounded-lg bg-rose-500/[0.08] dark:bg-rose-400/[0.10] border border-rose-500/20 dark:border-rose-400/20 px-2 py-1 backdrop-blur-xs">
+                  <span className="flex size-4 items-center justify-center rounded-sm bg-rose-500/20 text-[10px] font-bold text-rose-700 dark:text-rose-300">
                     ✕
                   </span>
-                  <span className="text-[11px]">Skipped ({skippedCount})</span>
+                  <span className="text-[11px] text-foreground/80 font-medium truncate">Skipped</span>
+                  <span className="ml-auto font-mono text-[11px] font-semibold text-rose-700 dark:text-rose-300">
+                    {skippedCount}
+                  </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="flex size-4.5 items-center justify-center rounded bg-amber-500 text-[10px] font-bold text-white">
+
+                {/* Review */}
+                <div className="flex items-center gap-1.5 rounded-lg bg-purple-500/[0.08] dark:bg-purple-400/[0.10] border border-purple-500/20 dark:border-purple-400/20 px-2 py-1 backdrop-blur-xs">
+                  <span className="flex size-4 items-center justify-center rounded-sm bg-purple-500/20 text-[10px] font-bold text-purple-700 dark:text-purple-300">
                     •
                   </span>
-                  <span className="text-[11px]">Review ({markedCount})</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="flex size-4.5 items-center justify-center rounded bg-amber-500 text-[10px] font-bold text-white ring-2 ring-emerald-400">
-                    ★
+                  <span className="text-[11px] text-foreground/80 font-medium truncate">Review</span>
+                  <span className="ml-auto font-mono text-[11px] font-semibold text-purple-700 dark:text-purple-300">
+                    {markedCount}
                   </span>
-                  <span className="text-[11px]">Ans & Rev ({answeredMarkedCount})</span>
                 </div>
-                <div className="col-span-2 flex items-center gap-1.5">
-                  <span className="bg-muted text-muted-foreground border-border flex size-4.5 items-center justify-center rounded border text-[10px] font-bold">
+
+                {/* Ans & Rev */}
+                <div className="flex items-center gap-1.5 rounded-lg bg-linear-to-r from-purple-500/[0.08] to-emerald-500/[0.08] dark:from-purple-400/[0.10] dark:to-emerald-400/[0.10] border border-emerald-500/25 dark:border-emerald-400/25 px-2 py-1 backdrop-blur-xs">
+                  <span className="relative flex size-4 items-center justify-center rounded-sm bg-purple-500/20 text-[9px] font-bold text-purple-700 dark:text-purple-300">
+                    ★
+                    <span className="absolute -top-0.5 -right-0.5 size-1.5 rounded-full bg-emerald-500 shadow-2xs" />
+                  </span>
+                  <span className="text-[11px] text-foreground/80 font-medium truncate">Ans & Rev</span>
+                  <span className="ml-auto font-mono text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                    {answeredMarkedCount}
+                  </span>
+                </div>
+
+                {/* Unvisited */}
+                <div className="col-span-2 flex items-center gap-1.5 rounded-lg bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.08] px-2 py-1 backdrop-blur-xs">
+                  <span className="flex size-4 items-center justify-center rounded-sm bg-black/[0.05] dark:bg-white/[0.08] text-[10px] font-bold text-muted-foreground">
                     -
                   </span>
-                  <span className="text-[11px]">Unvisited ({notVisitedCount})</span>
+                  <span className="text-[11px] text-foreground/70 font-medium">Not Visited</span>
+                  <span className="ml-auto font-mono text-[11px] font-medium text-muted-foreground">
+                    {notVisitedCount}
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Questions Grid for Current Section */}
-            <div className="border-border/60 border-t pt-3">
-              <div className="text-muted-foreground mb-2 text-[11px] font-semibold">
+            <div className="border-border/60 flex flex-1 min-h-0 flex-col border-t pt-2.5 overflow-hidden">
+              <div className="text-muted-foreground mb-2 shrink-0 text-[11px] font-semibold">
                 Questions in {currentSection.title}:
               </div>
-              <div className="grid grid-cols-5 gap-1.5">
-                {currentSection.questions.map((q, idx) => {
-                  const isCurrent = q.id === currentQuestionId;
-                  const status = visitStatuses[q.id] || 'NOT_VISITED';
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1">
+                <div className="grid grid-cols-5 gap-1.5">
+                  {currentSection.questions.map((q, idx) => {
+                    const isCurrent = q.id === currentQuestionId;
+                    const status = visitStatuses[q.id] || 'NOT_VISITED';
+                    const { bgStyle, activeStyle, isMarkedOnly, isAnsAndMark } =
+                      getPaletteItemStyles(status, isCurrent);
 
-                  let bgStyle = 'bg-muted/60 text-muted-foreground border-border hover:bg-muted';
-                  if (status === 'ANSWERED') {
-                    bgStyle = 'bg-emerald-600 text-white border-emerald-700 shadow-2xs';
-                  } else if (status === 'SKIPPED') {
-                    bgStyle = 'bg-rose-600 text-white border-rose-700 shadow-2xs';
-                  } else if (status === 'MARKED_FOR_REVIEW') {
-                    bgStyle = 'bg-amber-500 text-white border-amber-600 shadow-2xs';
-                  } else if (status === 'ANSWERED_AND_MARKED') {
-                    bgStyle =
-                      'bg-amber-500 text-white border-amber-600 ring-2 ring-emerald-400 shadow-2xs';
-                  }
-
-                  return (
-                    <button
-                      key={q.id}
-                      onClick={() => navigateToQuestion(currentSection.id, q.id)}
-                      aria-label={`Question ${idx + 1}, ${status.replace(/_/g, ' ').toLowerCase()}`}
-                      aria-current={isCurrent ? 'page' : undefined}
-                      className={`btn btn-xs aspect-square rounded-md border p-0 font-bold transition-all active:scale-90 ${bgStyle} ${
-                        isCurrent ? 'ring-primary ring-2 ring-offset-1' : ''
-                      }`}
-                    >
-                      {idx + 1}
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={q.id}
+                        type="button"
+                        onClick={() => navigateToQuestion(currentSection.id, q.id)}
+                        aria-label={`Question ${idx + 1}, ${status.replace(/_/g, ' ').toLowerCase()}`}
+                        aria-current={isCurrent ? 'page' : undefined}
+                        className={`relative inline-flex items-center justify-center aspect-square rounded-lg border text-xs backdrop-blur-md transition-all duration-150 active:scale-95 select-none cursor-pointer outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 ${bgStyle} ${activeStyle}`}
+                      >
+                        {idx + 1}
+                        {isMarkedOnly && (
+                          <span
+                            title="Marked for Review (Unanswered)"
+                            className="pointer-events-none absolute top-1 right-1 size-1.5 rounded-full bg-purple-500 dark:bg-purple-400 shadow-2xs"
+                          />
+                        )}
+                        {isAnsAndMark && (
+                          <span
+                            title="Answered & Marked for Review"
+                            className="pointer-events-none absolute top-1 right-1 size-2 rounded-full bg-emerald-500 dark:bg-emerald-400 shadow-xs ring-1 ring-background/60"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Quick Submit button at bottom of drawer */}
-          <div className="border-border mt-4 border-t pt-3">
+          <div className="shrink-0 mt-3 border-t border-black/[0.06] dark:border-white/[0.08] pt-3">
             <button
               onClick={() => setShowSubmitModal(true)}
-              className="btn btn-outline btn-primary btn-sm w-full gap-1.5 rounded-md font-medium"
+              className="btn btn-primary btn-sm w-full gap-1.5 rounded-lg font-medium shadow-xs active:scale-95"
             >
               <Send className="size-3.5" />
               Submit Test
@@ -1004,9 +1117,9 @@ export function Runner() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="mobile-palette-title"
-          className="modal modal-open modal-bottom z-50 bg-black/40 backdrop-blur-xs lg:hidden"
+          className="modal modal-open modal-bottom z-50 bg-black/40 backdrop-blur-sm lg:hidden"
         >
-          <div className="modal-box border-border bg-card max-w-sm rounded-xl border p-4 shadow-xl">
+          <div className="modal-box border-black/[0.08] dark:border-white/[0.1] bg-white/90 dark:bg-zinc-900/90 backdrop-blur-2xl max-w-sm rounded-2xl border p-4 shadow-2xl">
             <div className="border-border/60 mb-3 flex items-center justify-between border-b pb-2.5">
               <h3 id="mobile-palette-title" className="text-sm font-semibold">
                 Question Palette: {currentSection.title}
@@ -1021,31 +1134,53 @@ export function Runner() {
               </button>
             </div>
 
-            {/* Mobile Status Legend */}
+            {/* Mobile Status Legend (Native Glass Light Tone) */}
             <div className="mb-3 grid grid-cols-2 gap-1.5 text-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="flex size-4 items-center justify-center rounded bg-emerald-600 text-[9px] font-bold text-white">
+              <div className="flex items-center gap-1.5 rounded-lg bg-emerald-500/[0.08] dark:bg-emerald-400/[0.10] border border-emerald-500/20 dark:border-emerald-400/20 px-2 py-1 backdrop-blur-xs">
+                <span className="flex size-4 items-center justify-center rounded-sm bg-emerald-500/20 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
                   ✓
                 </span>
-                <span className="text-[11px]">Answered ({answeredCount})</span>
+                <span className="text-[11px] text-foreground/80 font-medium truncate">Answered</span>
+                <span className="ml-auto font-mono text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                  {answeredCount}
+                </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="flex size-4 items-center justify-center rounded bg-rose-600 text-[9px] font-bold text-white">
+              <div className="flex items-center gap-1.5 rounded-lg bg-rose-500/[0.08] dark:bg-rose-400/[0.10] border border-rose-500/20 dark:border-rose-400/20 px-2 py-1 backdrop-blur-xs">
+                <span className="flex size-4 items-center justify-center rounded-sm bg-rose-500/20 text-[10px] font-bold text-rose-700 dark:text-rose-300">
                   ✕
                 </span>
-                <span className="text-[11px]">Skipped ({skippedCount})</span>
+                <span className="text-[11px] text-foreground/80 font-medium truncate">Skipped</span>
+                <span className="ml-auto font-mono text-[11px] font-semibold text-rose-700 dark:text-rose-300">
+                  {skippedCount}
+                </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="flex size-4 items-center justify-center rounded bg-amber-500 text-[9px] font-bold text-white">
+              <div className="flex items-center gap-1.5 rounded-lg bg-purple-500/[0.08] dark:bg-purple-400/[0.10] border border-purple-500/20 dark:border-purple-400/20 px-2 py-1 backdrop-blur-xs">
+                <span className="flex size-4 items-center justify-center rounded-sm bg-purple-500/20 text-[10px] font-bold text-purple-700 dark:text-purple-300">
                   •
                 </span>
-                <span className="text-[11px]">Review ({markedCount + answeredMarkedCount})</span>
+                <span className="text-[11px] text-foreground/80 font-medium truncate">Review</span>
+                <span className="ml-auto font-mono text-[11px] font-semibold text-purple-700 dark:text-purple-300">
+                  {markedCount}
+                </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="bg-muted text-muted-foreground border-border flex size-4 items-center justify-center rounded border text-[9px] font-bold">
+              <div className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-purple-500/[0.08] to-emerald-500/[0.08] dark:from-purple-400/[0.10] dark:to-emerald-400/[0.10] border border-emerald-500/25 dark:border-emerald-400/25 px-2 py-1 backdrop-blur-xs">
+                <span className="relative flex size-4 items-center justify-center rounded-sm bg-purple-500/20 text-[9px] font-bold text-purple-700 dark:text-purple-300">
+                  ★
+                  <span className="absolute -top-0.5 -right-0.5 size-1.5 rounded-full bg-emerald-500 shadow-2xs" />
+                </span>
+                <span className="text-[11px] text-foreground/80 font-medium truncate">Ans & Rev</span>
+                <span className="ml-auto font-mono text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                  {answeredMarkedCount}
+                </span>
+              </div>
+              <div className="col-span-2 flex items-center gap-1.5 rounded-lg bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.08] px-2 py-1 backdrop-blur-xs">
+                <span className="flex size-4 items-center justify-center rounded-sm bg-black/[0.05] dark:bg-white/[0.08] text-[10px] font-bold text-muted-foreground">
                   -
                 </span>
-                <span className="text-[11px]">Unvisited ({notVisitedCount})</span>
+                <span className="text-[11px] text-foreground/70 font-medium">Not Visited</span>
+                <span className="ml-auto font-mono text-[11px] font-medium text-muted-foreground">
+                  {notVisitedCount}
+                </span>
               </div>
             </div>
 
@@ -1054,29 +1189,36 @@ export function Runner() {
               {currentSection.questions.map((q, idx) => {
                 const isCurrent = q.id === currentQuestionId;
                 const status = visitStatuses[q.id] || 'NOT_VISITED';
-
-                let bgStyle = 'bg-muted/60 text-muted-foreground border-border';
-                if (status === 'ANSWERED') bgStyle = 'bg-emerald-600 text-white border-emerald-700';
-                else if (status === 'SKIPPED') bgStyle = 'bg-rose-600 text-white border-rose-700';
-                else if (status === 'MARKED_FOR_REVIEW')
-                  bgStyle = 'bg-amber-500 text-white border-amber-600';
-                else if (status === 'ANSWERED_AND_MARKED')
-                  bgStyle = 'bg-amber-500 text-white border-amber-600 ring-2 ring-emerald-400';
+                const { bgStyle, activeStyle, isMarkedOnly, isAnsAndMark } = getPaletteItemStyles(
+                  status,
+                  isCurrent
+                );
 
                 return (
                   <button
                     key={q.id}
+                    type="button"
                     onClick={() => {
                       navigateToQuestion(currentSection.id, q.id);
                       setShowMobilePalette(false);
                     }}
                     aria-label={`Question ${idx + 1}, ${status.replace(/_/g, ' ').toLowerCase()}`}
                     aria-current={isCurrent ? 'page' : undefined}
-                    className={`btn btn-xs aspect-square rounded-md border p-0 font-bold transition-all active:scale-90 ${bgStyle} ${
-                      isCurrent ? 'ring-primary ring-2 ring-offset-1' : ''
-                    }`}
+                    className={`relative inline-flex items-center justify-center aspect-square rounded-lg border text-xs backdrop-blur-md transition-all duration-150 active:scale-90 select-none cursor-pointer outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 ${bgStyle} ${activeStyle}`}
                   >
                     {idx + 1}
+                    {isMarkedOnly && (
+                      <span
+                        title="Marked for Review (Unanswered)"
+                        className="pointer-events-none absolute top-1 right-1 size-1.5 rounded-full bg-purple-500 dark:bg-purple-400 shadow-2xs"
+                      />
+                    )}
+                    {isAnsAndMark && (
+                      <span
+                        title="Answered & Marked for Review"
+                        className="pointer-events-none absolute top-1 right-1 size-2 rounded-full bg-emerald-500 dark:bg-emerald-400 shadow-xs ring-1 ring-background/60"
+                      />
+                    )}
                   </button>
                 );
               })}
@@ -1140,7 +1282,7 @@ export function Runner() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Review:</span>
-                <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">
+                <span className="font-mono font-semibold text-purple-600 dark:text-purple-400">
                   {markedCount + answeredMarkedCount}
                 </span>
               </div>

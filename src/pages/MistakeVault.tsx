@@ -16,6 +16,10 @@ import { assessmentRepository } from '@/core/storage/repository';
 import { showNativeAlert, writeToClipboard } from '@/core/native/tauriBridge';
 import { MacContextMenuPortal } from '@/components/ui/context-menu';
 import { useMacContextMenu } from '@/hooks/useMacContextMenu';
+import {
+  cleanQuestionBody,
+  formatQuestionType,
+} from '@/core/engine/questionPresentation';
 import type { QuestionModel } from '@/types/question';
 
 export function MistakeVault() {
@@ -298,8 +302,8 @@ export function MistakeVault() {
                         {q.topic}
                       </span>
                     )}
-                    <span className="text-muted-foreground inline-flex items-center px-2 py-0.5 font-mono text-[10px] uppercase">
-                      {q.type.replace('_', ' ')}
+                    <span className="text-muted-foreground inline-flex items-center px-2 py-0.5 font-mono text-[10px]">
+                      {formatQuestionType(q.type)}
                     </span>
                   </div>
 
@@ -312,7 +316,7 @@ export function MistakeVault() {
 
                 {/* Question Prompt Snippet - Fully responsive with zero text clipping */}
                 <div className="selectable-content text-foreground overflow-visible text-[13px] leading-relaxed font-normal wrap-break-word">
-                  <MathRenderer content={q.body} />
+                  <MathRenderer content={cleanQuestionBody(q.body)} />
                 </div>
 
                 {/* Card Action Hint */}
