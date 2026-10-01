@@ -49,7 +49,21 @@ The system operates as an **extraction, layer isolation, structural reconstructi
 └──────────────────────────┴─────────────────────────────┴──────────────────┴───────────────┘
 ```
 
-### 2.1 Storage & Model Footprint Budget ($\le$ 6.5 GB Ceiling)
+### 2.1 Execution Constraints & Physical Hardware Envelope
+
+The engine must execute deterministically on standard consumer-grade personal computers without requiring dedicated enterprise compute or external network access.
+
+| Dimension | Specification Ceiling | Operational Target |
+|---|---|---|
+| **Target Platforms** | macOS (Apple Silicon M1+), Windows 10/11 (x86_64, ARM64), Linux (x86_64, glibc $\ge$ 2.31). | Unified codebase in Rust with native OS integration. |
+| **Network Profile** | Zero WAN access. Completely air-gapped runtime. | 0 outbound network calls; all models, weights, tokenizers, and grammars locally bundled. |
+| **Memory Allocation** | Hard upper ceiling: 8.0 GB System RAM / Unified Memory. | Active working set during peak inference: $\le 3.8\text{ GB}$ ($\le 4.1\text{ GB}$ maximum safety boundary). |
+| **VRAM Footprint** | Dynamic: Supports shared unified memory (Metal) and discrete VRAM (CUDA/DirectML $\ge 4\text{ GB}$). | Fallback to multi-threaded CPU SIMD (AVX-512 / NEON) if discrete GPU is unavailable or constrained. |
+| **Throughput & Latency** | Single page: $\le 7.5\text{ s}$ ($\le 12.0\text{ s}$ ceiling). Session batch (10 pages): $\le 70\text{ s}$ ($\le 90.0\text{ s}$ ceiling). | Real-time visual progress streaming without dropping desktop UI below 60 FPS. |
+| **Package Footprint** | Total on-disk footprint (runtime + compiled weights): $\le 2.6\text{ GB}$ ($\le 6.5\text{ GB}$ ceiling). | Models quantized to 4-bit / 8-bit precision (GGUF Q4_K_M / INT8 ONNX). |
+| **OS Stability** | Zero Display Driver Resets (TDR) and Zero Swap Thrashing. | DirectML chunked $< 250\text{ ms}$ GPU fences; native Darwin memory pressure cache eviction. |
+
+### 2.2 Storage & Model Footprint Budget ($\le$ 6.5 GB Ceiling)
 
 | Component | Model / Engine Family | Format & Quant | Disk Size | Operational Role |
 |---|---|---|---|---|
@@ -63,7 +77,7 @@ The system operates as an **extraction, layer isolation, structural reconstructi
 | **Grammar DFA Tables** | llguidance DFA Trie Tables | Static Binary | 16 MB | State machines, token masks, dictionaries |
 | **Total Footprint** | — | — | **2,534 MB** | **$\le$ 39% of 6.5 GB ceiling** |
 
-### 2.2 Cross-Platform Execution Profiles
+### 2.3 Cross-Platform Execution Profiles
 
 - **macOS (Apple Silicon M1+)**: Unified memory architecture. Models are memory-mapped (`mmap`) into system memory and shared directly with the GPU via Metal Performance Shaders (MPS). Zero CPU-to-GPU copy overhead.
 - **Windows 10/11 (x86_64, ARM64)**: Discrete GPUs ($\ge$ 4 GB VRAM) run via DirectML or CUDA. Patches are processed in chunked tiles ($< 250\text{ ms}$) with explicit DirectX fence yields to prevent Windows Display Driver Model (WDDM) Timeout Detection and Recovery (TDR) resets.
@@ -89,12 +103,71 @@ Input Document Entropy
 └──────────────┘ └──────────────┘               └──────────────┘ └──────────────────┘
 ```
 
-The system ingests real-world captures containing:
-- **Geometric Manifolds**: Non-planar page curvature from book bindings, concave textbook gutters, and folded examination sheets.
-- **Optical Degradations**: Uneven directional lighting, mobile phone shadows, motion blur, and ink bleed-through from reverse pages.
-- **Topological Layouts**: Unbounded multi-column flows, irregular text wraps around scientific diagrams, and detached tabular answer keys.
-- **Dual-Layer Human Interactions**: Dense pencil/pen annotations, strike-through corrections, circled numbers, and instructor grading marks.
-- **Specialized STEM Notations**: Complex mathematical formulas, multi-line equations, chemical structures, and physical unit representations.
+The system ingests real-world captures under adverse conditions without requiring flatbed scanning or manual alignment.
+
+### 3.1 Non-Academic Noise & Input Invalidation
+
+The system must reject irrelevant imagery prior to deep model dispatch in $\le 50\text{ ms}$:
+- **Natural Imagery & Clutter**: Non-target captures (landscapes, portraits, identity cards, room interiors).
+- **High-Contrast Monospace False Targets**: Structured non-academic documents (store receipts, terminal logs, code screenshots) that exhibit text-like edge frequencies but lack academic equation distributions.
+- **Severe Physical Degradation**: Completely out-of-focus captures, extreme motion blur, or bleached flash glare where text frequency is statistically indistinguishable from noise.
+
+### 3.2 Optical, Sensor & Illumination Noise
+
+- **Mixed Polarity & Dark-Theme Documents**: Inverted media such as white chalk on blackboards, dark-mode tablet screenshots, or pages featuring dark banner headers above light printed body text.
+- **Directional Shadows & Specular Flare**: Cast shadows from user hands, mobile phone silhouettes, uneven ambient light falloff, page yellowing, and high-frequency graphite sheen under flash illumination.
+- **Substrate Artifacts**: Ink bleed-through from reverse pages, coffee stains, paper tears, punch holes, and crinkled thermal paper.
+
+### 3.3 Geometric & Manifold Deformations
+
+- **Non-Planar Manifolds**: Severe page curvature originating from tight book gutters, warped textbook spines, and curled document edges.
+- **Discontinuous Creases & Fold Self-Occlusion**: Sharp paper folds where a paper flap physically occludes underlying printed characters, creating non-differentiable displacement gradients in coordinate space ($\|\nabla \mathcal{F}\| \to \infty$).
+- **Perspective & Affine Skew**: Angled camera captures producing trapezoidal foreshortening, non-rectangular aspect ratios, and uneven focal distances across the page.
+
+### 3.4 Structural & Topological Layout Complexity
+
+- **Non-Standard Reading Orders**: Arbitrary multi-column configurations (e.g., transitioning from a full-width header to two unequal columns, switching to three columns, and returning to full-width text mid-page).
+- **Irregular Geometric Enclosure**: Text dynamically wrapping around circular circuit schematics, floating proof boxes, or irregular chemical diagrams.
+- **Cross-Page Question Splitting**: Multi-page continuity breaks where a question stem begins at the bottom of Page $N$, while its child option blocks or diagram appear at the top of Page $N+1$.
+- **Detached & Distributed Answer Keys**: Answer matrices decoupled from questions across the session (e.g., questions on Pages 1–4, with answers printed in a compact table on Page 8, or printed upside-down in the footer margin of Page 2).
+
+### 3.5 Dual-Stream Human Interaction & Handwriting Intent
+
+The document contains two concurrent layers that must not be merged naively:
+1. **Base Print Layer**: Mechanically typeset fonts, publisher layouts, diagrams, tables, and formal problem numbers.
+2. **Annotation Layer (Human Ink)**: Manual pencil/pen markings of varying pressure, contrast, and style.
+
+The annotation layer introduces multi-intent semantic conflicts that must be classified rather than cleaned:
+
+```text
+Handwriting Intent Routing
+                                       │
+        ┌──────────────────┬───────────┴───────────┬──────────────────┐
+        ▼                  ▼                       ▼                  ▼
+┌────────────────┐ ┌────────────────┐      ┌────────────────┐ ┌────────────────┐
+│   Metadata     │ │  Option Choice │      │ Inline Answer  │ │ Scratch/Noise  │
+├────────────────┤ ├────────────────┤      ├────────────────┤ ├────────────────┤
+│"Topic: Optics" │ │Tick on Option B│      │"Paris" inside  │ │Formula draft,  │
+│"Marks: 4"      │ │Circled letter  │      │blank line:     │ │doodles, "WTF"  │
+│"Subject: Math" │ │Cross on box    │      │"_____"         │ │strike-through  │
+└───────┬────────┘ └───────┬────────┘      └───────┬────────┘ └───────┬────────┘
+        │                  │                       │                  │
+        ▼                  ▼                       ▼                  ▼
+ [Override System]  [Map to Field: - [x]]   [Fill correctValue]  [Discard/Ignore]
+```
+
+#### Complex In-Situ Marking Scenarios
+- **Identical Carbon-Black Ink**: Student ballpoint or gel-pen ink matching the exact chrominance of printer carbon toner ($a^* \approx 0, b^* \approx 0$).
+- **Crossed-Out Corrections**: An option initially marked with a tick, subsequently crossed out with a dense scribble, followed by a new option marked with a tick.
+- **Algebraic Variable '$x$' vs. Strike-Out '✗'**: Differentiating a student writing the variable $x$ in an answer blank from a crossing-out gesture.
+- **Dual-Pen Instructor vs. Student Conflict**: Graded assessments containing student graphite pencil marks overlaid with instructor red ballpoint checkmarks or corrections.
+- **Numerical Inline Scratchpad Contamination**: Student working steps and rough calculations scribbled directly inside fill-in-the-blank spaces alongside the final value.
+
+### 3.6 Specialized STEM Domain Notations
+
+- **Mathematics**: High-nesting fractions, tensor indices, matrices, piecewise functions, Dirac bra-ket notations, and non-Latin variables. Must preserve font-weight semantics (e.g., bold vector $\mathbf{v}$ vs. italic scalar $v$).
+- **Chemistry**: Skeletal molecular structures, stereochemical wedge/dash bonds, reaction equilibrium arrows ($\rightleftharpoons$), and isotopic notation.
+- **Physics & Engineering**: Vector diagrams, circuit schematics, free-body force arrows, and truth-table state trees.
 
 ---
 
@@ -560,7 +633,60 @@ Dynamic Resource Governor Architecture
 
 ---
 
-## 7. Mandatory Target Output Contract (Production GBNF v3.0)
+## 7. Mandatory Target Output Contract (Production Schema & GBNF v3.0)
+
+The engine must serialize completed questions conforming to the following target specification. Output must contain zero conversational prose, markdown backtick wrappers around the entire payload, or unclosed delimiters.
+
+```yaml
+---
+schemaVersion: "3.0"
+id: [Generated/Extracted Unique ID String]
+type: [single_choice | multiple_choice | numerical]
+subject: [Extracted/Inferred Subject String]
+topic: [Extracted/Inferred Topic String]
+difficulty: [easy | medium | hard]
+marks: [Assigned Weight Numeric]
+negativeMarks: [Assigned Multiplier Numeric]
+tags: ["tag-1", "tag-2"]
+answerResolution:
+  state: [explicit_key | human_selection | teacher_graded | unresolved | model_inferred]
+  confidence: [Numeric 0.0 to 1.0]
+  sourceRef: ["page_X_matrix" | "frame_b_ink:opt_X" | "local_vlm_solver" | null]
+  # Optional: Emitted only when candidate sources conflict:
+  conflictAudit:
+    typesetKeyAvailable: [Value String]
+    typesetKeySource: [Source String]
+# For numerical types only:
+correctValue: [Derived Numeric Value | null]
+toleranceAbsolute: [Derived Tolerance Numeric]
+unit: [Derived Unit String]
+# For multiple_choice types only:
+allowPartialCredit: true
+---
+
+[Extracted Question Text with inline math using $...$ and display equations using $$...$$]
+
+# If single_choice or multiple_choice type:
+- [ ] Incorrect Distractor Option Text
+- [x] Correct Option Text
+- [ ] Incorrect Distractor Option Text
+
+=== question ===
+```
+
+### 7.1 Schema Rules & Enforcement
+
+- **Delimiter Contract**: Each discrete question record must conclude with the verbatim delimiter `\n=== question ===\n`.
+- **Selection State**: For multiple choice and single choice:
+  - If resolved, correct options must use `- [x]`, while distractors use `- [ ]`.
+  - If `state: "unresolved"`, all options must be serialized as `- [ ]`.
+- **Equation Syntax**: Inline math must strictly utilize single dollar delimiters (`$...$`). Display math must use standalone double dollar blocks (`$$\n...\n$$`). Pure ASCII approximations (e.g., `x^2`, `sqrt(x)`) are prohibited. Bold vectors must use `\mathbf{...}`.
+- **Missing & Occluded Artifacts**: Regions obscured by tears or paper folds must use the verbatim token `[MISSING_SECTION]`.
+- **Zero Output Drift**: Any output containing conversational tokens (e.g., `"Here is the parsed question:"`, `"Certainly!"`) constitutes a fatal verification failure.
+
+### 7.2 Formal Production Grammar Specification (GBNF v3.0)
+
+Autoregressive decoding must be constrained at the logit-sampling level via the following formal grammar:
 
 ```ebnf
 # Root Rule: Academic Assessment Unit
