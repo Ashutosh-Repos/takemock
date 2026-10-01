@@ -1,5 +1,5 @@
 # On-Device Academic Document Intelligence Engine (ADIE)
-## Master Engineering Specification & Production Architecture (v4.0 Final)
+## Master Engineering Specification & Production Architecture (v2.0)
 
 ---
 
