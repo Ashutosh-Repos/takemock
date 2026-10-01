@@ -13,18 +13,6 @@
       "skillPath": ".agents/skills/anti-slop/SKILL.md",
       "computedHash": "8206b8b4e691273fcff6068c8d07fd258f81a26a0d44b9d67a9a62ee9474359e"
     },
-    "apple-design": {
-      "source": "dickwu/apple-design-skill",
-      "sourceType": "github",
-      "skillPath": "SKILL.md",
-      "computedHash": "812f55b5cdda9065dbca33cf0fb81257a7ac6858b2457c69c0a5d20b19e1cec1"
-    },
-    "color-expert": {
-      "source": "meodai/skill.color-expert",
-      "sourceType": "github",
-      "skillPath": "SKILL.md",
-      "computedHash": "9b722a6f7b1f4158c175ab0b051c9c88a3facaeeab95efddce7a66a99ec385ff"
-    },
     "migrate-radix-to-base": {
       "source": "shadcn/ui",
       "sourceType": "github",
@@ -54,19 +42,6 @@
       "sourceType": "github",
       "skillPath": ".agents/skills/openspec-propose/SKILL.md",
       "computedHash": "406a71796ac111be0fddc8bc2a4137c91c967eaf43439bbcc3f2509aec7440db"
-    },
-    "react-router": {
-      "source": "remix-run/react-router",
-      "ref": "main",
-      "sourceType": "github",
-      "skillPath": ".agents/skills/react-router/SKILL.md",
-      "computedHash": "ff4d9bc724f0e56a51c453eef5b93caef1c16d3623ac49345d74fc1a5efbc05a"
-    },
-    "shadcn": {
-      "source": "shadcn/ui",
-      "sourceType": "github",
-      "skillPath": "skills/shadcn/SKILL.md",
-      "computedHash": "f615de216e085a84e31593ad0fa9062232adc40cd87b7c7ab2b8e49abf6500be"
     }
   }
 }
