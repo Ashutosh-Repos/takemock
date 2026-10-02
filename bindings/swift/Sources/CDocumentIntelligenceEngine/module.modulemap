@@ -1,5 +1,0 @@
-module CDocumentIntelligenceEngine [system] {
-    header "../../../../crates/document-intelligence-c-abi/include/document_intelligence_engine.h"
-    link "document_intelligence_engine"
-    export *
-}

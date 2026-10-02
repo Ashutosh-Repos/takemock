@@ -63,5 +63,12 @@ Thumbs.db
 # Machine Learning Model Weights
 models/*.gguf
 models/*.onnx
-test_output.yaml
-page2_output.yaml
+models/
+scratch/
+output/
+*.dylib
+*.so
+*.dll
+*.db
+*.db-shm
+*.db-wal

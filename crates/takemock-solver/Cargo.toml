@@ -1,0 +1,16 @@
+[package]
+name = "takemock-solver"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+takemock-core = { path = "../takemock-core" }
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+pathfinding = "4.11"
+strsim = "0.11"
