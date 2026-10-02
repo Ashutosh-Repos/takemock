@@ -22,6 +22,7 @@
   <a href="#download">Download</a> •
   <a href="https://ashutosh-repos.github.io/takemock/">Website</a> •
   <a href="#features">Features</a> •
+  <a href="#document-intelligence-engine-cli">ADIE CLI</a> •
   <a href="#architecture">Architecture</a> •
   <a href="#gatekeeper-on-macos">Gatekeeper Notice</a> •
   <a href="#development-setup">Development</a>
@@ -130,6 +131,32 @@ Alternatively, clear the quarantine attribute in Terminal:
 ```bash
 xattr -cr /Applications/TakeMock.app
 ```
+
+---
+
+## Document Intelligence Engine CLI
+
+TakeMock includes a native on-device **Academic Document Intelligence Engine (ADIE)** written in Rust for converting paper question sheets and mock tests into Schema v3.0 YAML Frontmatter and TakeMock CBT JSON.
+
+### Quick Commands
+
+```bash
+# Build the native CLI binary
+cargo build --release -p document-intelligence-cli
+
+# Pre-flight camera image check (< 12ms SIMD evaluation)
+./target/release/die-cli triage --image path/to/page.jpg
+
+# Ingest and export assessment photos in one step
+./target/release/die-cli process --images page1.jpg page2.jpg -o exam.yaml
+
+# Run 100-page empirical benchmark harness
+./target/release/die-cli benchmark --pages 100
+```
+
+For complete command parameters, optical triage metric definitions, developer internals, and Schema v3.0 specs:
+
+👉 **Read the [Complete CLI Guide (`CLI_GUIDE.md`)](CLI_GUIDE.md)**
 
 ---
 

@@ -1,0 +1,25 @@
+[package]
+name = "document-intelligence-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Diagnostic CLI runner and benchmark test harness for Document Intelligence Engine"
+
+[[bin]]
+name = "die-cli"
+path = "src/main.rs"
+
+[dependencies]
+document-intelligence-core = { path = "../document-intelligence-core" }
+clap.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true
+serde_json.workspace = true
+image.workspace = true
+
+[lints]
+workspace = true

@@ -42,6 +42,12 @@
       "sourceType": "github",
       "skillPath": ".agents/skills/openspec-propose/SKILL.md",
       "computedHash": "406a71796ac111be0fddc8bc2a4137c91c967eaf43439bbcc3f2509aec7440db"
+    },
+    "rust-backend": {
+      "source": "windmill-labs/windmill",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/rust-backend/SKILL.md",
+      "computedHash": "21b0db25d8f764f1dc63a39e18f19e21c8fb68a0acd56ea80d30b70df226b859"
     }
   }
 }

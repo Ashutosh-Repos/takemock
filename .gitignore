@@ -41,6 +41,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # --- Backend (Tauri / Rust) ---
+target/
 src-tauri/target/
 
 # Generated icons or bundle artifacts
@@ -58,3 +59,9 @@ src-tauri/gen/
 *.sw?
 .DS_Store
 Thumbs.db
+
+# Machine Learning Model Weights
+models/*.gguf
+models/*.onnx
+test_output.yaml
+page2_output.yaml
