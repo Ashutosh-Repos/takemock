@@ -1,148 +1,231 @@
 use std::ffi::{CStr, CString};
-use std::os::raw::{c_char, c_float, c_int};
+use std::os::raw::{c_char, c_void};
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use takemock_core::Database;
 
-pub struct EngineInstance {
+static JOB_COUNTER: AtomicU64 = AtomicU64::new(1001);
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub enum IngestionMode {
+    Mode1Decoupled = 1,
+    Mode2Integrated = 2,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub enum HardwareProfile {
+    ProfileEco = 1,
+    ProfileStandard = 2,
+    ProfilePro = 3,
+}
+
+#[repr(C)]
+pub struct EngineProgress {
+    pub progress_percentage: i32,
+    pub current_page: u32,
+    pub total_pages: u32,
+    pub current_stage: *const c_char,
+    pub error_message: *const c_char,
+}
+
+#[repr(C)]
+pub struct MemoryBuffer {
+    pub bytes: *const u8,
+    pub byte_count: usize,
+    pub filename_hint: *const c_char,
+}
+
+pub type EngineProgressCallback = Option<extern "C" fn(progress: *const EngineProgress, user_data: *mut c_void)>;
+
+pub struct EngineContext {
     pub db: Arc<Mutex<Database>>,
-    pub models_dir: PathBuf,
-    pub cache_dir: PathBuf,
+    pub storage_dir: PathBuf,
+    pub profile: HardwareProfile,
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn takemock_engine_create(
-    db_path: *const c_char,
-    models_dir: *const c_char,
-    cache_dir: *const c_char,
-) -> *mut EngineInstance {
-    let db_str = if db_path.is_null() {
-        "takemock.db"
+pub unsafe extern "C" fn takemock_engine_init(
+    storage_dir: *const c_char,
+    profile: HardwareProfile,
+) -> *mut EngineContext {
+    let s_dir = if storage_dir.is_null() {
+        PathBuf::from("takemock_data")
     } else {
-        CStr::from_ptr(db_path).to_str().unwrap_or("takemock.db")
+        let str_slice = CStr::from_ptr(storage_dir).to_str().unwrap_or("takemock_data");
+        PathBuf::from(str_slice)
     };
 
-    let models_str = if models_dir.is_null() {
-        "models"
-    } else {
-        CStr::from_ptr(models_dir).to_str().unwrap_or("models")
-    };
+    let _ = std::fs::create_dir_all(&s_dir);
+    let db_path = s_dir.join("takemock.db");
 
-    let cache_str = if cache_dir.is_null() {
-        "scratch"
-    } else {
-        CStr::from_ptr(cache_dir).to_str().unwrap_or("scratch")
-    };
-
-    let db = match Database::open(db_str) {
+    let db = match Database::open(&db_path) {
         Ok(d) => d,
         Err(_) => return std::ptr::null_mut(),
     };
 
-    let engine = Box::new(EngineInstance {
+    let ctx = Box::new(EngineContext {
         db: Arc::new(Mutex::new(db)),
-        models_dir: PathBuf::from(models_str),
-        cache_dir: PathBuf::from(cache_str),
+        storage_dir: s_dir,
+        profile,
     });
 
-    Box::into_raw(engine)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn takemock_engine_destroy(engine: *mut EngineInstance) {
-    if !engine.is_null() {
-        drop(Box::from_raw(engine));
-    }
+    Box::into_raw(ctx)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn takemock_engine_submit_job(
-    engine: *mut EngineInstance,
-    image_paths: *const *const c_char,
-    count: u32,
-    out_job_id: *mut c_char,
-    out_len: usize,
-) -> c_int {
-    if engine.is_null() || image_paths.is_null() || count == 0 {
-        return -1;
+    ctx: *mut EngineContext,
+    _mode: IngestionMode,
+    question_image_paths: *const *const c_char,
+    num_questions: u32,
+    _answer_image_paths: *const *const c_char,
+    _num_answers: u32,
+    _solution_image_paths: *const *const c_char,
+    _num_solutions: u32,
+    callback: EngineProgressCallback,
+    user_data: *mut c_void,
+) -> u64 {
+    if ctx.is_null() || question_image_paths.is_null() || num_questions == 0 {
+        return 0;
     }
 
-    let job_id = uuid::Uuid::new_v4().to_string();
-    let eng = &*engine;
+    let job_id_num = JOB_COUNTER.fetch_add(1, Ordering::SeqCst);
+    let job_id_str = format!("job-{}", job_id_num);
+    let c = &*ctx;
 
-    if let Ok(db) = eng.db.lock() {
-        if db.insert_job(&job_id, count).is_err() {
-            return -2;
-        }
+    if let Ok(db) = c.db.lock() {
+        let _ = db.insert_job(&job_id_str, num_questions);
     }
 
-    if !out_job_id.is_null() && out_len > 0 {
-        let c_job_id = CString::new(job_id.clone()).unwrap_or_default();
-        let bytes = c_job_id.as_bytes_with_nul();
-        let copy_len = bytes.len().min(out_len);
-        std::ptr::copy_nonoverlapping(bytes.as_ptr() as *const c_char, out_job_id, copy_len);
+    if let Some(cb) = callback {
+        let stage_c = CString::new("INITIALIZED").unwrap();
+        let progress = EngineProgress {
+            progress_percentage: 10,
+            current_page: 0,
+            total_pages: num_questions,
+            current_stage: stage_c.as_ptr(),
+            error_message: std::ptr::null(),
+        };
+        cb(&progress, user_data);
     }
 
-    0
+    job_id_num
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn takemock_engine_get_progress(
-    _engine: *mut EngineInstance,
-    _job_id: *const c_char,
-) -> c_float {
-    1.0
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn takemock_engine_get_results_json(
-    engine: *mut EngineInstance,
-    job_id: *const c_char,
-    out_buf: *mut c_char,
-    max_len: usize,
-) -> c_int {
-    if engine.is_null() || job_id.is_null() || out_buf.is_null() || max_len == 0 {
-        return -1;
+pub unsafe extern "C" fn takemock_engine_submit_memory_job(
+    ctx: *mut EngineContext,
+    _mode: IngestionMode,
+    question_buffers: *const MemoryBuffer,
+    num_questions: u32,
+    _answer_buffers: *const MemoryBuffer,
+    _num_answers: u32,
+    _solution_buffers: *const MemoryBuffer,
+    _num_solutions: u32,
+    callback: EngineProgressCallback,
+    user_data: *mut c_void,
+) -> u64 {
+    if ctx.is_null() || question_buffers.is_null() || num_questions == 0 {
+        return 0;
     }
 
-    let j_str = CStr::from_ptr(job_id).to_str().unwrap_or("");
-    let eng = &*engine;
+    let job_id_num = JOB_COUNTER.fetch_add(1, Ordering::SeqCst);
+    let job_id_str = format!("mem-job-{}", job_id_num);
+    let c = &*ctx;
 
-    let questions = match eng.db.lock() {
-        Ok(db) => match db.get_questions_for_job(j_str) {
-            Ok(q) => q,
-            Err(_) => return -2,
-        },
-        Err(_) => return -3,
-    };
-
-    let json_bytes = match serde_json::to_vec(&questions) {
-        Ok(b) => b,
-        Err(_) => return -4,
-    };
-
-    if json_bytes.len() + 1 > max_len {
-        return -5; // Buffer too small
+    if let Ok(db) = c.db.lock() {
+        let _ = db.insert_job(&job_id_str, num_questions);
     }
 
-    std::ptr::copy_nonoverlapping(json_bytes.as_ptr() as *const c_char, out_buf, json_bytes.len());
-    *out_buf.add(json_bytes.len()) = 0; // null-terminator
+    if let Some(cb) = callback {
+        let stage_c = CString::new("MEMORY_INGESTION").unwrap();
+        let progress = EngineProgress {
+            progress_percentage: 20,
+            current_page: 0,
+            total_pages: num_questions,
+            current_stage: stage_c.as_ptr(),
+            error_message: std::ptr::null(),
+        };
+        cb(&progress, user_data);
+    }
 
-    0
+    job_id_num
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn takemock_engine_cancel_job(
-    engine: *mut EngineInstance,
-    job_id: *const c_char,
-) -> c_int {
-    if engine.is_null() || job_id.is_null() {
-        return -1;
+    ctx: *mut EngineContext,
+    job_id: u64,
+) -> bool {
+    if ctx.is_null() {
+        return false;
     }
-    let j_str = CStr::from_ptr(job_id).to_str().unwrap_or("");
-    let eng = &*engine;
-    if let Ok(db) = eng.db.lock() {
-        let _ = db.update_job_status(j_str, "CANCELLED", None);
+    let job_id_str = format!("job-{}", job_id);
+    let c = &*ctx;
+    if let Ok(db) = c.db.lock() {
+        let _ = db.update_job_status(&job_id_str, "CANCELLED", None);
     }
-    0
+    true
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn takemock_engine_get_asset_path(
+    ctx: *mut EngineContext,
+    asset_id: *const c_char,
+) -> *const c_char {
+    if ctx.is_null() || asset_id.is_null() {
+        return std::ptr::null();
+    }
+    let id_str = CStr::from_ptr(asset_id).to_str().unwrap_or("");
+    let c = &*ctx;
+    let full_path = c.storage_dir.join("crops").join(format!("{}.webp", id_str));
+    let path_str = full_path.to_string_lossy().to_string();
+    let c_str = CString::new(path_str).unwrap_or_default();
+    c_str.into_raw()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn takemock_engine_get_result_json(
+    ctx: *mut EngineContext,
+    job_id: u64,
+) -> *mut c_char {
+    if ctx.is_null() {
+        return std::ptr::null_mut();
+    }
+
+    let job_id_str = format!("job-{}", job_id);
+    let c = &*ctx;
+
+    let questions = match c.db.lock() {
+        Ok(db) => match db.get_questions_for_job(&job_id_str) {
+            Ok(q) => q,
+            Err(_) => return std::ptr::null_mut(),
+        },
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    let json_bytes = match serde_json::to_string_pretty(&questions) {
+        Ok(s) => s,
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    let c_res = CString::new(json_bytes).unwrap_or_default();
+    c_res.into_raw()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn takemock_engine_free_string(ptr: *mut c_char) {
+    if !ptr.is_null() {
+        drop(CString::from_raw(ptr));
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn takemock_engine_destroy(ctx: *mut EngineContext) {
+    if !ctx.is_null() {
+        drop(Box::from_raw(ctx));
+    }
 }

@@ -31,13 +31,28 @@ impl VlmRunner {
         self.model_path.exists() && self.mmproj_path.exists()
     }
 
-    /// Invokes llama-cli with Metal acceleration on the high-res crop.
+    /// Invokes llama-cli with Metal acceleration on the high-res crop in non-interactive batch mode.
     pub fn infer_crop(&self, crop_path: &Path) -> Result<VlmCropResult> {
         if !self.is_available() {
             anyhow::bail!("VLM models not found at {:?} or {:?}", self.model_path, self.mmproj_path);
         }
 
-        let system_prompt = "You are a specialized exam parser. Extract the question and options in clean markdown and LaTeX ($...$). Return ONLY valid JSON in format: {\"questionText\": \"...\", \"options\": [{\"label\": \"A\", \"text\": \"...\"}], \"questionType\": \"MCQ\"}";
+        // Ensure image format is readable by llama-cli (convert webp to temp jpeg if needed)
+        let temp_dir = std::env::temp_dir();
+        let target_img_path = if let Some(ext) = crop_path.extension().and_then(|s| s.to_str()) {
+            if ext.eq_ignore_ascii_case("webp") {
+                let temp_jpeg = temp_dir.join(format!("vlm_input_{}.jpg", uuid::Uuid::new_v4()));
+                let img = image::open(crop_path)?;
+                img.save_with_format(&temp_jpeg, image::ImageFormat::Jpeg)?;
+                temp_jpeg
+            } else {
+                crop_path.to_path_buf()
+            }
+        } else {
+            crop_path.to_path_buf()
+        };
+
+        let prompt = "Extract the complete question text and all options. Format options as (A) text, (B) text, (C) text, (D) text. Use LaTeX $...$ for formulas.";
 
         let output = Command::new("llama-cli")
             .arg("-m")
@@ -45,28 +60,74 @@ impl VlmRunner {
             .arg("--mmproj")
             .arg(&self.mmproj_path)
             .arg("--image")
-            .arg(crop_path)
+            .arg(&target_img_path)
             .arg("-p")
-            .arg(system_prompt)
+            .arg(prompt)
             .arg("-n")
-            .arg("512")
+            .arg("256")
             .arg("-ngl")
             .arg("99")
+            .arg("--simple-io")
+            .arg("--single-turn")
             .arg("--no-warmup")
+            .stdin(std::process::Stdio::null())
             .output()?;
+
+        if target_img_path != crop_path {
+            let _ = std::fs::remove_file(&target_img_path);
+        }
 
         let raw_stdout = String::from_utf8_lossy(&output.stdout);
         Self::parse_vlm_output(&raw_stdout)
     }
 
-    /// Fallback rule-based parser when running fast heuristic pass
+    /// Robust option parser handling vertical stacks, inline options: (a) 3 (b) 4 (c) 5 (d) 6, and 2x2 grids.
     pub fn parse_text_options(raw_text: &str) -> (String, Vec<OptionItem>) {
-        let opt_re = Regex::new(r"(?m)^\s*[\(\[]?([A-Da-d])[\)\]\.]\s+(.+)$").unwrap();
+        let opt_pat = Regex::new(r"(?i)(?:^|\s+)[\(\[]?([A-D])[\)\]\.]\s+").unwrap();
+        let matches: Vec<_> = opt_pat.find_iter(raw_text).collect();
+
+        if !matches.is_empty() {
+            let question_statement = raw_text[..matches[0].start()].trim().to_string();
+            let mut options = Vec::new();
+
+            for i in 0..matches.len() {
+                let start = matches[i].end();
+                let end = if i + 1 < matches.len() {
+                    matches[i + 1].start()
+                } else {
+                    raw_text.len()
+                };
+
+                // Extract label
+                let match_text = matches[i].as_str();
+                let label = match_text
+                    .chars()
+                    .find(|c| c.is_ascii_alphabetic())
+                    .unwrap_or('A')
+                    .to_ascii_uppercase()
+                    .to_string();
+
+                let option_text = raw_text[start..end].trim().to_string();
+
+                options.push(OptionItem {
+                    id: format!("opt-{}", label),
+                    label,
+                    text: option_text,
+                    math_latex: None,
+                    visual_asset_crop: None,
+                });
+            }
+
+            return (question_statement, options);
+        }
+
+        // Fallback: Check standard line-by-line options
+        let line_opt_re = Regex::new(r"(?m)^\s*[\(\[]?([A-Da-d])[\)\]\.]\s+(.+)$").unwrap();
         let mut options = Vec::new();
         let mut question_lines = Vec::new();
 
         for line in raw_text.lines() {
-            if let Some(caps) = opt_re.captures(line) {
+            if let Some(caps) = line_opt_re.captures(line) {
                 let label = caps[1].to_uppercase();
                 let text = caps[2].trim().to_string();
                 options.push(OptionItem {
@@ -85,43 +146,51 @@ impl VlmRunner {
     }
 
     fn parse_vlm_output(output: &str) -> Result<VlmCropResult> {
-        // Try parsing JSON block if present
-        if let Some(start) = output.find('{') {
-            if let Some(end) = output.rfind('}') {
-                let json_slice = &output[start..=end];
-                if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(json_slice) {
-                    let q_text = parsed["questionText"].as_str().unwrap_or("").to_string();
-                    let mut opts = Vec::new();
-                    if let Some(arr) = parsed["options"].as_array() {
-                        for o in arr {
-                            let lbl = o["label"].as_str().unwrap_or("").to_string();
-                            let txt = o["text"].as_str().unwrap_or("").to_string();
-                            opts.push(OptionItem {
-                                id: format!("opt-{}", lbl),
-                                label: lbl,
-                                text: txt,
-                                math_latex: None,
-                                visual_asset_crop: None,
-                            });
-                        }
-                    }
-                    return Ok(VlmCropResult {
-                        question_text: q_text,
-                        math_latex: None,
-                        question_type: QuestionType::Mcq,
-                        options: opts,
-                        has_diagram: false,
-                    });
+        // Strip out llama-cli prompt echo and banner
+        let prompt_marker = "for formulas.";
+        let model_response = if let Some(idx) = output.find(prompt_marker) {
+            &output[idx + prompt_marker.len()..]
+        } else if let Some(idx) = output.find('>') {
+            &output[idx + 1..]
+        } else {
+            output
+        };
+
+        // Strip out exit / performance footer
+        let clean_text = if let Some(idx) = model_response.find("[ Prompt:") {
+            &model_response[..idx]
+        } else if let Some(idx) = model_response.find("Exiting...") {
+            &model_response[..idx]
+        } else {
+            model_response
+        }.trim();
+
+        let (q_text, opts) = Self::parse_text_options(clean_text);
+
+        // Deduplicate options if any prompt artifacts slipped in
+        let mut final_opts = Vec::new();
+        let mut seen_labels = std::collections::HashSet::new();
+        for opt in opts.into_iter().rev() {
+            if opt.text.trim().to_lowercase() != "text," && !opt.text.trim().to_lowercase().starts_with("text.") {
+                if seen_labels.insert(opt.label.clone()) {
+                    final_opts.push(opt);
                 }
             }
         }
+        final_opts.reverse();
 
-        let (q_text, opts) = Self::parse_text_options(output);
+        // Check if LaTeX math was extracted
+        let math_latex = if q_text.contains('$') {
+            Some(q_text.clone())
+        } else {
+            None
+        };
+
         Ok(VlmCropResult {
             question_text: q_text,
-            math_latex: None,
-            question_type: if opts.is_empty() { QuestionType::Nat } else { QuestionType::Mcq },
-            options: opts,
+            math_latex,
+            question_type: if final_opts.is_empty() { QuestionType::Nat } else { QuestionType::Mcq },
+            options: final_opts,
             has_diagram: false,
         })
     }

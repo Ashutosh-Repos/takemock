@@ -85,6 +85,17 @@ pub struct CompetingHypothesis {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SourceProvenance {
+    pub page_index: u32,
+    pub page_identifier: Option<String>,
+    pub bounding_box: [f32; 4], // [ymin, xmin, ymax, xmax] in 0.0 - 1.0 range
+    pub source_modality: String,
+    pub extraction_method: String,
+    pub model_identifier: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ReconstructedQuestion {
     pub id: String,
     pub label: String,
@@ -97,6 +108,7 @@ pub struct ReconstructedQuestion {
     pub answer_key: Option<AnswerKey>,
     pub explanation: Option<ExplanationBlock>,
     pub diagram_crop_path: Option<String>,
+    pub provenance: Option<SourceProvenance>,
     pub competing_hypotheses: Vec<CompetingHypothesis>,
     pub confidence_score: f64,
     pub source_page_numbers: Vec<u32>,

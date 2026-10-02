@@ -51,3 +51,38 @@ impl AssociationSolver {
         Ok(())
     }
 }
+
+pub struct AnswerKeyParser;
+
+impl AnswerKeyParser {
+    /// Extracts raw answer key items from inline answer text or answer sections.
+    pub fn parse_answers(text: &str) -> Vec<RawAnswerItem> {
+        let mut results = Vec::new();
+        let pattern = regex::Regex::new(r"(?i)(?:^|[\s,;])(?:Q(?:uestion)?\.?\s*)?(\d{1,3})\s*[\.\-:\)]\s*[\(\[]?([A-D](?:\s*,\s*[A-D])?|-?\d+(?:\.\d+)?)[\)\]\.]?").unwrap();
+
+        for caps in pattern.captures_iter(text) {
+            let label = caps[1].trim().to_string();
+            let ans_raw = caps[2].trim().to_string();
+
+            let parsed_options: Vec<String> = if ans_raw.chars().all(|c| c.is_ascii_alphabetic() || c == ',' || c.is_whitespace()) {
+                ans_raw
+                    .split(',')
+                    .map(|s| s.trim().to_ascii_uppercase())
+                    .filter(|s| !s.is_empty())
+                    .collect()
+            } else {
+                Vec::new()
+            };
+
+            results.push(RawAnswerItem {
+                label,
+                raw_text: ans_raw,
+                parsed_options,
+                explanation_text: None,
+            });
+        }
+
+        results
+    }
+}
+

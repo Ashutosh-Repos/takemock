@@ -14,3 +14,4 @@ thiserror.workspace = true
 tracing.workspace = true
 pathfinding = "4.11"
 strsim = "0.11"
+regex = "1.10"

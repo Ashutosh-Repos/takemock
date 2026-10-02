@@ -1122,6 +1122,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "pathfinding",
+ "regex",
  "serde",
  "serde_json",
  "strsim",
@@ -1135,14 +1136,14 @@ name = "takemock-vlm"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "image",
  "regex",
  "serde",
  "serde_json",
  "takemock-core",
- "tempfile",
  "thiserror 1.0.69",
- "tokio",
  "tracing",
+ "uuid",
 ]
 
 [[package]]
