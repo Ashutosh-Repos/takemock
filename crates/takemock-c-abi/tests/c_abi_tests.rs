@@ -139,3 +139,93 @@ fn test_c_abi_memory_job_and_cancellation() {
 
     let _ = std::fs::remove_dir_all(temp_dir);
 }
+
+#[test]
+fn test_c_abi_asset_path_cache_safety() {
+    let temp_dir = std::env::temp_dir().join(format!("takemock_asset_test_{}", uuid::Uuid::new_v4()));
+    let temp_dir_c = CString::new(temp_dir.to_str().unwrap()).unwrap();
+
+    unsafe {
+        let ctx = takemock_engine_init(temp_dir_c.as_ptr(), HardwareProfile::ProfileEco);
+        assert!(!ctx.is_null());
+
+        let asset_id_c = CString::new("test_crop_asset").unwrap();
+
+        // Call 1
+        let ptr1 = takemock_engine_get_asset_path(ctx, asset_id_c.as_ptr());
+        assert!(!ptr1.is_null());
+        let str1 = CStr::from_ptr(ptr1).to_str().unwrap();
+        assert!(str1.ends_with("test_crop_asset.webp"));
+
+        // Call 2 - must return cached pointer safely
+        let ptr2 = takemock_engine_get_asset_path(ctx, asset_id_c.as_ptr());
+        assert_eq!(ptr1, ptr2);
+
+        takemock_engine_destroy(ctx);
+    }
+
+    let _ = std::fs::remove_dir_all(temp_dir);
+}
+
+#[test]
+fn test_c_abi_mode_1_decoupled_submit_job() {
+    let temp_dir = std::env::temp_dir().join(format!("takemock_mode1_test_{}", uuid::Uuid::new_v4()));
+    let temp_dir_c = CString::new(temp_dir.to_str().unwrap()).unwrap();
+    std::fs::create_dir_all(&temp_dir).unwrap();
+
+    // Create question image
+    let q_img_path = temp_dir.join("q_page.png");
+    let q_img = image::RgbImage::from_pixel(600, 800, image::Rgb([255, 255, 255]));
+    q_img.save(&q_img_path).unwrap();
+
+    // Create answer image
+    let ans_img_path = temp_dir.join("ans_page.png");
+    let ans_img = image::RgbImage::from_pixel(600, 800, image::Rgb([255, 255, 255]));
+    ans_img.save(&ans_img_path).unwrap();
+
+    // Create solution image
+    let sol_img_path = temp_dir.join("sol_page.png");
+    let sol_img = image::RgbImage::from_pixel(600, 800, image::Rgb([255, 255, 255]));
+    sol_img.save(&sol_img_path).unwrap();
+
+    let q_c = CString::new(q_img_path.to_str().unwrap()).unwrap();
+    let ans_c = CString::new(ans_img_path.to_str().unwrap()).unwrap();
+    let sol_c = CString::new(sol_img_path.to_str().unwrap()).unwrap();
+
+    let q_array = [q_c.as_ptr()];
+    let ans_array = [ans_c.as_ptr()];
+    let sol_array = [sol_c.as_ptr()];
+
+    unsafe {
+        let ctx = takemock_engine_init(temp_dir_c.as_ptr(), HardwareProfile::ProfileEco);
+        assert!(!ctx.is_null());
+
+        let job_id = takemock_engine_submit_job(
+            ctx,
+            IngestionMode::Mode1Decoupled,
+            q_array.as_ptr(),
+            1,
+            ans_array.as_ptr(),
+            1,
+            sol_array.as_ptr(),
+            1,
+            None,
+            std::ptr::null_mut(),
+        );
+
+        assert!(job_id > 0);
+
+        // Allow worker thread to run
+        std::thread::sleep(std::time::Duration::from_millis(300));
+
+        let res_json = takemock_engine_get_result_json(ctx, job_id);
+        if !res_json.is_null() {
+            takemock_engine_free_string(res_json);
+        }
+
+        takemock_engine_destroy(ctx);
+    }
+
+    let _ = std::fs::remove_dir_all(temp_dir);
+}
+

@@ -56,6 +56,7 @@ impl ConstraintValidator {
 
     /// Validates reconstructed question against CBT domain invariants and tags confidence/issues.
     pub fn validate_and_score(q: &mut ReconstructedQuestion) {
+        q.audit_issues.clear();
         let mut score: f64 = 1.0;
 
         // 1. Validate question type vs. option count
@@ -95,7 +96,18 @@ impl ConstraintValidator {
             _ => {}
         }
 
-        // 2. Validate LaTeX syntax if formula present
+        // 2. Validate options for text or visual asset crop (C-16)
+        if q.question_type == QuestionType::Mcq || q.question_type == QuestionType::Msq {
+            for opt in &q.options {
+                if opt.text.trim().is_empty() && opt.visual_asset_crop.is_none() {
+                    q.audit_issues.push("OPTION_EMPTY_NO_VISUAL".to_string());
+                    score -= 0.15;
+                    break;
+                }
+            }
+        }
+
+        // 3. Validate LaTeX syntax if formula present
         if let Some(ref math) = q.math_latex {
             if let Err(_err) = Self::validate_latex(math) {
                 q.audit_issues.push("LATEX_SYNTAX_MALFORMED".to_string());
@@ -103,8 +115,26 @@ impl ConstraintValidator {
             }
         }
 
-        // 3. Validate answer key consistency
+        // 4. Validate stimulus completeness (Parent-Child linked questions)
+        if q.stimulus_id.is_some() {
+            if q.stimulus_text.as_ref().map_or(true, |t| t.trim().is_empty()) {
+                q.audit_issues.push("STIMULUS_TEXT_EMPTY".to_string());
+                score -= 0.20;
+            }
+        }
+
+        // 5. Validate answer key consistency
         if let Some(ref ans) = q.answer_key {
+            if let Some(special) = ans.special_resolution {
+                if special != crate::types::SpecialResolutionStatus::None {
+                    // Official exam errata (MTA, Bonus, Dropped, Cancelled, MultiAccepted)
+                    q.audit_issues.push(format!("ERRATA_{:?}", special).to_uppercase());
+                    // Errata is authoritative source truth; maintain full confidence
+                    q.confidence_score = 1.0;
+                    return;
+                }
+            }
+
             if q.question_type == QuestionType::Mcq && ans.parsed_options.len() > 1 {
                 // MCQ should have exactly 1 answer
                 q.competing_hypotheses.push(CompetingHypothesis {

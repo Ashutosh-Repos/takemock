@@ -11,6 +11,17 @@ pub struct RawQuestionSegment {
     pub text: String,
     pub bounding_box: PixelRect,
     pub fragments: Vec<PixelRect>,
+    pub stimulus_id: Option<String>,
+    pub stimulus_text: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct ActiveStimulus {
+    id: String,
+    start: u32,
+    end: u32,
+    text: String,
+    is_collecting: bool,
 }
 
 pub struct QuestionSegmenter;
@@ -52,8 +63,10 @@ impl QuestionSegmenter {
         let q_prefix_re = Regex::new(r"(?i)^\s*(?:Q(?:uestion)?|Que\.?)\s*(\d{1,3})\b").unwrap();
         let standalone_qtype_re = Regex::new(r"(?i)[\[\{\(I|lj1]?\s*(MCQ|MSQ|NAT)\s*[\]\}\)1y\.,\s]").unwrap();
         let exam_info_re = Regex::new(r"(?i)[\[\{\(I|lj1]?\s*(?:a|A)?(GATE|JEE|CAT|NEET)[-\s]*(\d{4})?\s*[:;\-\*]\s*([0-9\.]+)M?").unwrap();
+        let stimulus_header_re = Regex::new(r"(?i)(?:Statement\s+for\s+Linked(?:\s+Answer)?\s+Questions?|Common\s+Data\s+for\s+Questions?)\s*(?:Q\.?\s*)?(\d{1,3})\s*(?:to|and|&|-)\s*(\d{1,3})").unwrap();
 
         let mut segments: Vec<RawQuestionSegment> = Vec::new();
+        let mut active_stimulus: Option<ActiveStimulus> = None;
 
         let (
             mut current_label,
@@ -64,6 +77,8 @@ impl QuestionSegmenter {
             mut current_rect,
             mut current_fragments,
             mut current_line_count,
+            mut current_stimulus_id,
+            mut current_stimulus_text,
         ): (
             Option<String>,
             u32,
@@ -73,6 +88,8 @@ impl QuestionSegmenter {
             Option<PixelRect>,
             Vec<PixelRect>,
             usize,
+            Option<String>,
+            Option<String>,
         ) = if let Some(p) = pending_question {
             (
                 Some(p.label),
@@ -83,15 +100,58 @@ impl QuestionSegmenter {
                 None,
                 p.fragments,
                 1usize,
+                p.stimulus_id,
+                p.stimulus_text,
             )
         } else {
-            (None, base_index, QuestionType::Unknown, None, String::new(), None, Vec::new(), 0usize)
+            (None, base_index, QuestionType::Unknown, None, String::new(), None, Vec::new(), 0usize, None, None)
         };
 
         for line in lines {
             let line_text = line.text.trim();
             if line_text.is_empty() {
                 continue;
+            }
+
+            // Check for Common Data / Statement for Linked Questions banner
+            if let Some(caps) = stimulus_header_re.captures(line_text) {
+                let q_start: u32 = caps.get(1).and_then(|m| m.as_str().parse().ok()).unwrap_or(0);
+                let q_end: u32 = caps.get(2).and_then(|m| m.as_str().parse().ok()).unwrap_or(0);
+                if q_start > 0 && q_end >= q_start {
+                    // Finalize any previously open question
+                    if let Some(label) = current_label.take() {
+                        let mut frags = current_fragments;
+                        if let Some(r) = current_rect.take() {
+                            frags.push(r);
+                        }
+                        if !frags.is_empty() {
+                            let primary_box = frags[0];
+                            segments.push(RawQuestionSegment {
+                                label,
+                                raw_index: current_index,
+                                question_type: current_type,
+                                metadata: current_metadata.take(),
+                                text: current_text.trim().to_string(),
+                                bounding_box: primary_box,
+                                fragments: frags,
+                                stimulus_id: current_stimulus_id.take(),
+                                stimulus_text: current_stimulus_text.take(),
+                            });
+                        }
+                    }
+
+                    active_stimulus = Some(ActiveStimulus {
+                        id: format!("stim-{}-{}", q_start, q_end),
+                        start: q_start,
+                        end: q_end,
+                        text: String::new(),
+                        is_collecting: true,
+                    });
+                    current_rect = None;
+                    current_fragments = Vec::new();
+                    current_line_count = 0;
+                    continue;
+                }
             }
 
             // Skip chapter headers when no question is open yet
@@ -151,11 +211,15 @@ impl QuestionSegmenter {
                             n
                         };
 
+                        let is_explicit = detected_type != QuestionType::Unknown
+                            || detected_metadata.is_some()
+                            || active_stimulus.as_ref().map_or(false, |s| corrected_n >= s.start && corrected_n <= s.end);
+
                         if current_index == 0 {
-                            if corrected_n <= 25 {
+                            if corrected_n <= 25 || is_explicit {
                                 detected_num = Some(corrected_n.to_string());
                             }
-                        } else if corrected_n >= current_index && corrected_n <= current_index + 6 {
+                        } else if (corrected_n >= current_index && corrected_n <= current_index + 6) || is_explicit {
                             detected_num = Some(corrected_n.to_string());
                         }
                     }
@@ -166,11 +230,15 @@ impl QuestionSegmenter {
                 if let Some(caps) = q_prefix_re.captures(line_text) {
                     if let Some(num_match) = caps.get(1) {
                         let n: u32 = num_match.as_str().parse().unwrap_or(0);
+                        let is_explicit = detected_type != QuestionType::Unknown
+                            || detected_metadata.is_some()
+                            || active_stimulus.as_ref().map_or(false, |s| n >= s.start && n <= s.end);
+
                         if current_index == 0 {
-                            if n > 0 && n <= 25 {
+                            if n <= 25 || is_explicit {
                                 detected_num = Some(n.to_string());
                             }
-                        } else if n >= current_index && n <= current_index + 6 {
+                        } else if (n >= current_index && n <= current_index + 6) || is_explicit {
                             detected_num = Some(n.to_string());
                         }
                     }
@@ -191,6 +259,17 @@ impl QuestionSegmenter {
                 && (current_label.is_none()
                     || (y_distance >= 60 && current_line_count >= 2 && (has_options_so_far || current_type == QuestionType::Nat || current_line_count >= 5)));
 
+            // If collecting stimulus passage and no question open, accumulate stimulus text
+            if current_label.is_none() {
+                if let Some(ref mut stim) = active_stimulus {
+                    if stim.is_collecting && detected_num.is_none() && !is_next_question_badge {
+                        stim.text.push_str(line_text);
+                        stim.text.push('\n');
+                        continue;
+                    }
+                }
+            }
+
             let too_close = current_label.is_some() && current_line_count <= 2 && y_distance < 60;
             let starts_new_question = !too_close && (detected_num.is_some() || (is_next_question_badge && detected_num.is_none()));
 
@@ -210,10 +289,12 @@ impl QuestionSegmenter {
                             label,
                             raw_index: current_index,
                             question_type: current_type,
-                            metadata: current_metadata,
+                            metadata: current_metadata.take(),
                             text: current_text.trim().to_string(),
                             bounding_box: primary_box,
                             fragments: frags,
+                            stimulus_id: current_stimulus_id.take(),
+                            stimulus_text: current_stimulus_text.take(),
                         });
                     }
                 }
@@ -231,6 +312,25 @@ impl QuestionSegmenter {
                 current_rect = Some(line.rect);
                 current_fragments = Vec::new();
                 current_line_count = 1;
+
+                // Check stimulus association for this question
+                if let Some(ref mut stim) = active_stimulus {
+                    if current_index >= stim.start && current_index <= stim.end {
+                        stim.is_collecting = false;
+                        current_stimulus_id = Some(stim.id.clone());
+                        current_stimulus_text = Some(stim.text.trim().to_string());
+                    } else if current_index > stim.end {
+                        active_stimulus = None;
+                        current_stimulus_id = None;
+                        current_stimulus_text = None;
+                    } else {
+                        current_stimulus_id = None;
+                        current_stimulus_text = None;
+                    }
+                } else {
+                    current_stimulus_id = None;
+                    current_stimulus_text = None;
+                }
             } else {
                 // Continuation of current question
                 if current_label.is_some() {
@@ -304,6 +404,8 @@ impl QuestionSegmenter {
                 text: current_text.trim().to_string(),
                 bounding_box: primary_box,
                 fragments: frags,
+                stimulus_id: current_stimulus_id,
+                stimulus_text: current_stimulus_text,
             };
 
             let is_complete = if current_type == QuestionType::Mcq || current_type == QuestionType::Msq {
@@ -325,3 +427,71 @@ impl QuestionSegmenter {
         (segments, pending)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_common_data_linked_passage_extraction() {
+        let lines = vec![
+            TsvLine {
+                rect: PixelRect { x: 50, y: 100, width: 400, height: 20 },
+                text: "Statement for Linked Answer Questions 52 and 53:".to_string(),
+                words: Vec::new(),
+            },
+            TsvLine {
+                rect: PixelRect { x: 50, y: 130, width: 400, height: 20 },
+                text: "A 4-pole, 50 Hz, 3-phase induction motor has a rotor resistance of 0.04 ohm.".to_string(),
+                words: Vec::new(),
+            },
+            TsvLine {
+                rect: PixelRect { x: 50, y: 160, width: 400, height: 20 },
+                text: "52. [MCQ] The slip at maximum torque is:".to_string(),
+                words: Vec::new(),
+            },
+            TsvLine {
+                rect: PixelRect { x: 50, y: 190, width: 400, height: 20 },
+                text: "(A) 0.1 (B) 0.2 (C) 0.3 (D) 0.4".to_string(),
+                words: Vec::new(),
+            },
+            TsvLine {
+                rect: PixelRect { x: 50, y: 230, width: 400, height: 20 },
+                text: "53. [MCQ] The starting torque as a percentage of maximum torque is:".to_string(),
+                words: Vec::new(),
+            },
+            TsvLine {
+                rect: PixelRect { x: 50, y: 260, width: 400, height: 20 },
+                text: "(A) 25% (B) 38.4% (C) 50% (D) 72%".to_string(),
+                words: Vec::new(),
+            },
+            TsvLine {
+                rect: PixelRect { x: 50, y: 300, width: 400, height: 20 },
+                text: "54. [NAT] Independent question not linked to motor:".to_string(),
+                words: Vec::new(),
+            },
+        ];
+
+        let (segments, _) = QuestionSegmenter::segment_lines_with_continuation(&lines, 1000, 1000, None, 0);
+        assert_eq!(segments.len(), 3);
+
+        // Q52
+        let q52 = &segments[0];
+        assert_eq!(q52.label, "52");
+        assert_eq!(q52.stimulus_id.as_deref(), Some("stim-52-53"));
+        assert!(q52.stimulus_text.as_ref().unwrap().contains("induction motor"));
+
+        // Q53
+        let q53 = &segments[1];
+        assert_eq!(q53.label, "53");
+        assert_eq!(q53.stimulus_id.as_deref(), Some("stim-52-53"));
+        assert!(q53.stimulus_text.as_ref().unwrap().contains("induction motor"));
+
+        // Q54 - Should NOT have stimulus
+        let q54 = &segments[2];
+        assert_eq!(q54.label, "54");
+        assert!(q54.stimulus_id.is_none());
+        assert!(q54.stimulus_text.is_none());
+    }
+}
+

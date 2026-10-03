@@ -39,6 +39,14 @@ enum Commands {
         /// Optional path to answer key text file
         #[arg(long)]
         answer_key: Option<PathBuf>,
+
+        /// Optional path(s) to decoupled answer sheet images
+        #[arg(long, num_args = 1..)]
+        answers: Vec<PathBuf>,
+
+        /// Optional path(s) to decoupled solution sheet images
+        #[arg(long, num_args = 1..)]
+        solutions: Vec<PathBuf>,
     },
     /// Inspect orientation and layout of a single page
     Inspect {
@@ -63,8 +71,10 @@ async fn main() -> Result<()> {
             db,
             use_vlm,
             answer_key,
+            answers,
+            solutions,
         } => {
-            process_pages(&input, &output, &db, use_vlm, answer_key.as_deref()).await?;
+            process_pages(&input, &output, &db, use_vlm, answer_key.as_deref(), answers, solutions).await?;
         }
     }
 
@@ -152,6 +162,8 @@ async fn process_pages(
     db_path: &Path,
     use_vlm: bool,
     answer_key_path: Option<&Path>,
+    answers: Vec<PathBuf>,
+    solutions: Vec<PathBuf>,
 ) -> Result<()> {
     println!("{}", "\n🚀 Starting EvidGraph Desktop Offline Pipeline...".green().bold());
     if use_vlm {
@@ -181,6 +193,12 @@ async fn process_pages(
     }
 
     println!("Found {} page(s) to process.", images.len().to_string().cyan().bold());
+    if !answers.is_empty() {
+        println!("Loaded {} decoupled answer sheet(s).", answers.len().to_string().cyan().bold());
+    }
+    if !solutions.is_empty() {
+        println!("Loaded {} decoupled solution sheet(s).", solutions.len().to_string().cyan().bold());
+    }
 
     let db = Database::open(db_path)?;
     let job_id = uuid::Uuid::new_v4().to_string();
@@ -198,10 +216,15 @@ async fn process_pages(
     let cancel_token = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
 
     let inputs: Vec<InputImage> = images.into_iter().map(InputImage::Path).collect();
+    let ans_inputs: Vec<InputImage> = answers.into_iter().map(InputImage::Path).collect();
+    let sol_inputs: Vec<InputImage> = solutions.into_iter().map(InputImage::Path).collect();
+
     let config = PipelineConfig {
         storage_dir: PathBuf::from("output"),
         use_vlm,
         answer_key_path: answer_key_path.map(|p| p.to_path_buf()),
+        answer_inputs: ans_inputs,
+        solution_inputs: sol_inputs,
         ..Default::default()
     };
 

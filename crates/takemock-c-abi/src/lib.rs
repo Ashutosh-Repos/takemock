@@ -65,6 +65,7 @@ pub struct EngineContext {
     pub storage_dir: PathBuf,
     pub profile: HardwareProfile,
     pub active_jobs: Arc<Mutex<HashMap<u64, Arc<AtomicBool>>>>,
+    pub asset_cache: Arc<Mutex<HashMap<String, CString>>>,
 }
 
 #[no_mangle]
@@ -92,6 +93,7 @@ pub unsafe extern "C" fn takemock_engine_init(
         storage_dir: s_dir,
         profile,
         active_jobs: Arc::new(Mutex::new(HashMap::new())),
+        asset_cache: Arc::new(Mutex::new(HashMap::new())),
     });
 
     Box::into_raw(ctx)
@@ -103,10 +105,10 @@ pub unsafe extern "C" fn takemock_engine_submit_job(
     _mode: IngestionMode,
     question_image_paths: *const *const c_char,
     num_questions: u32,
-    _answer_image_paths: *const *const c_char,
-    _num_answers: u32,
-    _solution_image_paths: *const *const c_char,
-    _num_solutions: u32,
+    answer_image_paths: *const *const c_char,
+    num_answers: u32,
+    solution_image_paths: *const *const c_char,
+    num_solutions: u32,
     callback: EngineProgressCallback,
     user_data: *mut c_void,
 ) -> u64 {
@@ -126,6 +128,30 @@ pub unsafe extern "C" fn takemock_engine_submit_job(
 
     if paths.is_empty() {
         return 0;
+    }
+
+    let mut ans_inputs = Vec::new();
+    if !answer_image_paths.is_null() && num_answers > 0 {
+        for i in 0..num_answers as usize {
+            let p_ptr = *answer_image_paths.add(i);
+            if !p_ptr.is_null() {
+                if let Ok(s) = CStr::from_ptr(p_ptr).to_str() {
+                    ans_inputs.push(InputImage::Path(PathBuf::from(s)));
+                }
+            }
+        }
+    }
+
+    let mut sol_inputs = Vec::new();
+    if !solution_image_paths.is_null() && num_solutions > 0 {
+        for i in 0..num_solutions as usize {
+            let p_ptr = *solution_image_paths.add(i);
+            if !p_ptr.is_null() {
+                if let Ok(s) = CStr::from_ptr(p_ptr).to_str() {
+                    sol_inputs.push(InputImage::Path(PathBuf::from(s)));
+                }
+            }
+        }
     }
 
     let job_id_num = JOB_COUNTER.fetch_add(1, Ordering::SeqCst);
@@ -158,6 +184,8 @@ pub unsafe extern "C" fn takemock_engine_submit_job(
         let config = PipelineConfig {
             storage_dir,
             use_vlm: matches!(profile, HardwareProfile::ProfileStandard | HardwareProfile::ProfilePro),
+            answer_inputs: ans_inputs,
+            solution_inputs: sol_inputs,
             ..Default::default()
         };
 
@@ -212,10 +240,10 @@ pub unsafe extern "C" fn takemock_engine_submit_memory_job(
     _mode: IngestionMode,
     question_buffers: *const MemoryBuffer,
     num_questions: u32,
-    _answer_buffers: *const MemoryBuffer,
-    _num_answers: u32,
-    _solution_buffers: *const MemoryBuffer,
-    _num_solutions: u32,
+    answer_buffers: *const MemoryBuffer,
+    num_answers: u32,
+    solution_buffers: *const MemoryBuffer,
+    num_solutions: u32,
     callback: EngineProgressCallback,
     user_data: *mut c_void,
 ) -> u64 {
@@ -242,6 +270,44 @@ pub unsafe extern "C" fn takemock_engine_submit_memory_job(
 
     if inputs.is_empty() {
         return 0;
+    }
+
+    let mut ans_inputs = Vec::new();
+    if !answer_buffers.is_null() && num_answers > 0 {
+        for i in 0..num_answers as usize {
+            let buf = &*answer_buffers.add(i);
+            if !buf.bytes.is_null() && buf.byte_count > 0 {
+                let slice = std::slice::from_raw_parts(buf.bytes, buf.byte_count);
+                let hint = if !buf.filename_hint.is_null() {
+                    CStr::from_ptr(buf.filename_hint).to_str().unwrap_or("ans.png")
+                } else {
+                    "ans.png"
+                };
+                ans_inputs.push(InputImage::Memory {
+                    bytes: slice.to_vec(),
+                    hint: hint.to_string(),
+                });
+            }
+        }
+    }
+
+    let mut sol_inputs = Vec::new();
+    if !solution_buffers.is_null() && num_solutions > 0 {
+        for i in 0..num_solutions as usize {
+            let buf = &*solution_buffers.add(i);
+            if !buf.bytes.is_null() && buf.byte_count > 0 {
+                let slice = std::slice::from_raw_parts(buf.bytes, buf.byte_count);
+                let hint = if !buf.filename_hint.is_null() {
+                    CStr::from_ptr(buf.filename_hint).to_str().unwrap_or("sol.png")
+                } else {
+                    "sol.png"
+                };
+                sol_inputs.push(InputImage::Memory {
+                    bytes: slice.to_vec(),
+                    hint: hint.to_string(),
+                });
+            }
+        }
     }
 
     let job_id_num = JOB_COUNTER.fetch_add(1, Ordering::SeqCst);
@@ -273,6 +339,8 @@ pub unsafe extern "C" fn takemock_engine_submit_memory_job(
         let config = PipelineConfig {
             storage_dir,
             use_vlm: matches!(profile, HardwareProfile::ProfileStandard | HardwareProfile::ProfilePro),
+            answer_inputs: ans_inputs,
+            solution_inputs: sol_inputs,
             ..Default::default()
         };
 
@@ -353,7 +421,10 @@ pub unsafe extern "C" fn takemock_engine_get_asset_path(
     if ctx.is_null() || asset_id.is_null() {
         return std::ptr::null();
     }
-    let id_str = CStr::from_ptr(asset_id).to_str().unwrap_or("");
+    let id_str = match CStr::from_ptr(asset_id).to_str() {
+        Ok(s) => s,
+        Err(_) => return std::ptr::null(),
+    };
     let c = &*ctx;
     let filename = if id_str.ends_with(".webp") {
         id_str.to_string()
@@ -362,8 +433,15 @@ pub unsafe extern "C" fn takemock_engine_get_asset_path(
     };
     let full_path = c.storage_dir.join("crops").join(&filename);
     let path_str = full_path.to_string_lossy().to_string();
-    let c_str = CString::new(path_str).unwrap_or_default();
-    c_str.into_raw()
+
+    if let Ok(mut cache) = c.asset_cache.lock() {
+        let entry = cache.entry(path_str.clone()).or_insert_with(|| {
+            CString::new(path_str).unwrap_or_default()
+        });
+        entry.as_ptr()
+    } else {
+        std::ptr::null()
+    }
 }
 
 #[no_mangle]

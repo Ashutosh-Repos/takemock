@@ -1,5 +1,6 @@
 use anyhow::Result;
-use std::path::PathBuf;
+use regex::Regex;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use takemock_core::{ConstraintValidator, Database, ReconstructedQuestion, SourceProvenance};
@@ -25,6 +26,8 @@ pub struct PipelineConfig {
     pub vlm_mmproj_path: PathBuf,
     pub answer_key_path: Option<PathBuf>,
     pub external_answers: Vec<RawAnswerItem>,
+    pub answer_inputs: Vec<InputImage>,
+    pub solution_inputs: Vec<InputImage>,
 }
 
 impl Default for PipelineConfig {
@@ -36,8 +39,73 @@ impl Default for PipelineConfig {
             vlm_mmproj_path: PathBuf::from("models/mmproj-Qwen2-VL-2B-Instruct-f16.gguf"),
             answer_key_path: None,
             external_answers: Vec::new(),
+            answer_inputs: Vec::new(),
+            solution_inputs: Vec::new(),
         }
     }
+}
+
+fn extract_text_from_input(input: &InputImage, temp_dir: &Path) -> Result<String> {
+    let (raw_img, rot) = match input {
+        InputImage::Path(ref p) => {
+            let rot = OrientationDetector::detect_angle_from_file(p).unwrap_or(0);
+            let img = ImageProcessor::load_image(p)?;
+            (img, rot)
+        }
+        InputImage::Memory { ref bytes, hint: _ } => {
+            let img = image::load_from_memory(bytes)?;
+            let temp_input = temp_dir.join(format!("takemock_mem_helper_{}.png", uuid::Uuid::new_v4()));
+            let rot = if img.save(&temp_input).is_ok() {
+                let r = OrientationDetector::detect_angle_from_file(&temp_input).unwrap_or(0);
+                let _ = std::fs::remove_file(&temp_input);
+                r
+            } else {
+                0
+            };
+            (img, rot)
+        }
+    };
+
+    let oriented_img = ImageProcessor::rotate(&raw_img, rot);
+    let enhanced = ImageProcessor::enhance_for_ocr(&oriented_img);
+    let temp_page = temp_dir.join(format!("takemock_extract_{}.png", uuid::Uuid::new_v4()));
+    enhanced.save(&temp_page)?;
+
+    let lines = TsvParser::parse_lines_psm6(&temp_page).unwrap_or_default();
+    let _ = std::fs::remove_file(&temp_page);
+
+    let ordered = ColumnProcessor::order_lines_in_reading_order(lines);
+    let full_text = ordered.iter().map(|l| l.text.as_str()).collect::<Vec<_>>().join("\n");
+    Ok(full_text)
+}
+
+fn parse_solutions_from_text(text: &str) -> Vec<(String, String)> {
+    let anchor_re = Regex::new(r"(?im)^\s*(?:Sol(?:ution)?\.?|Exp(?:lanation)?\.?|Ans(?:wer)?\.?|Q\.?)\s*(\d{1,3})\s*[:\.\)]?\s*").unwrap();
+    let matches: Vec<_> = anchor_re.find_iter(text).collect();
+    let mut results = Vec::new();
+    if matches.is_empty() {
+        return results;
+    }
+
+    for (i, m) in matches.iter().enumerate() {
+        let label = anchor_re.captures(m.as_str())
+            .and_then(|c| c.get(1))
+            .map(|m| m.as_str().to_string())
+            .unwrap_or_default();
+
+        let start = m.end();
+        let end = if i + 1 < matches.len() {
+            matches[i + 1].start()
+        } else {
+            text.len()
+        };
+
+        let sol_body = text[start..end].trim().to_string();
+        if !label.is_empty() && !sol_body.is_empty() {
+            results.push((label, sol_body));
+        }
+    }
+    results
 }
 
 pub struct PipelineProgress {
@@ -235,6 +303,23 @@ impl PipelineEngine {
                         model_identifier: if config.use_vlm { Some("Qwen2-VL-2B-Q4_K_M".to_string()) } else { None },
                     };
 
+                    // Visual Option Slicing (C-16) for diagram-only options
+                    let mut final_options = options;
+                    if !final_options.is_empty() && final_options.iter().all(|o| o.text.trim().is_empty()) {
+                        let (crop_w, crop_h) = (crop.width(), crop.height());
+                        let opt_cnt = final_options.len() as u32;
+                        let strip_h = (crop_h / opt_cnt.max(1)).max(1);
+                        for (o_idx, opt) in final_options.iter_mut().enumerate() {
+                            let sy = o_idx as u32 * strip_h;
+                            let sh = strip_h.min(crop_h.saturating_sub(sy));
+                            let opt_crop = crop.crop_imm(0, sy, crop_w, sh);
+                            let opt_filename = format!("opt_{:?}_{}_{}.webp", qtype, seg.label, opt.label);
+                            let opt_path = crops_dir.join(&opt_filename);
+                            let _ = ImageProcessor::save_crop(&opt_crop, &opt_path);
+                            opt.visual_asset_crop = Some(opt_path.to_string_lossy().to_string());
+                        }
+                    }
+
                     let mut q = ReconstructedQuestion {
                         id: format!("q-{}-{}-{}", page_idx + 1, c_idx + 1, seg.label),
                         label: seg.label.clone(),
@@ -243,7 +328,7 @@ impl PipelineEngine {
                         question_type: qtype,
                         question_text: clean_text,
                         math_latex,
-                        options,
+                        options: final_options,
                         answer_key: None,
                         explanation: None,
                         diagram_crop_path: Some(crop_path.to_string_lossy().to_string()),
@@ -252,6 +337,10 @@ impl PipelineEngine {
                         audit_issues: Vec::new(),
                         confidence_score: 1.0,
                         source_page_numbers: vec![(page_idx + 1) as u32],
+                        stimulus_id: seg.stimulus_id,
+                        stimulus_text: seg.stimulus_text,
+                        stimulus_crop_path: None,
+                        target_unit: None,
                     };
 
                     // 5. Invariant constraint validation
@@ -289,6 +378,10 @@ impl PipelineEngine {
                 audit_issues: Vec::new(),
                 confidence_score: 0.90,
                 source_page_numbers: vec![total_pages],
+                stimulus_id: seg.stimulus_id,
+                stimulus_text: seg.stimulus_text,
+                stimulus_crop_path: None,
+                target_unit: None,
             };
             ConstraintValidator::validate_and_score(&mut q);
             if let Ok(db_guard) = db.lock() {
@@ -313,6 +406,20 @@ impl PipelineEngine {
             } else {
                 Vec::new()
             }
+        } else if !config.answer_inputs.is_empty() {
+            // Mode 1 Decoupled Ingestion: Parse answer sheets
+            let mut decoupled_answers = Vec::new();
+            for ans_input in &config.answer_inputs {
+                if let Ok(text) = extract_text_from_input(ans_input, &temp_dir) {
+                    let parsed = AnswerKeyParser::parse_answers(&text);
+                    decoupled_answers.extend(parsed);
+                }
+            }
+            if !decoupled_answers.is_empty() {
+                decoupled_answers
+            } else {
+                discovered_answers
+            }
         } else if !discovered_answers.is_empty() {
             discovered_answers
         } else {
@@ -321,11 +428,33 @@ impl PipelineEngine {
 
         if !answers_to_associate.is_empty() {
             let _ = AssociationSolver::associate(&mut all_questions, answers_to_associate);
-            // Update re-associated questions in DB
-            if let Ok(db_guard) = db.lock() {
-                for q in &all_questions {
-                    let _ = db_guard.save_question(job_id, q);
+        }
+
+        // Mode 1 Decoupled Ingestion: Parse solution / explanation sheets
+        if !config.solution_inputs.is_empty() {
+            for sol_input in &config.solution_inputs {
+                if let Ok(text) = extract_text_from_input(sol_input, &temp_dir) {
+                    let sol_pairs = parse_solutions_from_text(&text);
+                    for (sol_label, sol_text) in sol_pairs {
+                        for q in &mut all_questions {
+                            if q.label.eq_ignore_ascii_case(&sol_label) {
+                                q.explanation = Some(takemock_core::ExplanationBlock {
+                                    full_text: sol_text.clone(),
+                                    step_by_step: sol_text.lines().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect(),
+                                    math_latex_blocks: Vec::new(),
+                                    visual_asset_crops: Vec::new(),
+                                });                            }
+                        }
+                    }
                 }
+            }
+        }
+
+        // Re-validate and update questions in DB
+        if let Ok(db_guard) = db.lock() {
+            for q in &mut all_questions {
+                ConstraintValidator::validate_and_score(q);
+                let _ = db_guard.save_question(job_id, q);
             }
         }
 

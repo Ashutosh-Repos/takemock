@@ -37,26 +37,74 @@ impl ImageProcessor {
         img.crop_imm(x, y, w, h)
     }
 
-    /// Normalizes contrast and illumination for optimal Tesseract OCR extraction
-    pub fn enhance_for_ocr(img: &DynamicImage) -> DynamicImage {
-        let mut gray = img.to_luma8();
-        let mut min_val = 255u8;
-        let mut max_val = 0u8;
-
-        for p in gray.pixels() {
-            min_val = min_val.min(p[0]);
-            max_val = max_val.max(p[0]);
+    /// Suppresses faint reverse-side ghost ink on low-GSM (45-60 GSM) paper while enhancing foreground text.
+    pub fn suppress_low_gsm_bleed_through(gray: &image::GrayImage) -> image::GrayImage {
+        let (w, h) = gray.dimensions();
+        if w < 16 || h < 16 {
+            return gray.clone();
         }
 
-        if max_val > min_val + 10 {
-            let range = (max_val - min_val) as f32;
-            for p in gray.pixels_mut() {
-                let scaled = ((p[0].saturating_sub(min_val)) as f32 / range * 255.0) as u8;
-                p[0] = scaled;
+        let block_size = 32u32;
+        let grid_w = (w + block_size - 1) / block_size;
+        let grid_h = (h + block_size - 1) / block_size;
+
+        // 1. Calculate local background estimate for each block (85th percentile)
+        let mut bg_grid = vec![240u8; (grid_w * grid_h) as usize];
+        for gy in 0..grid_h {
+            for gx in 0..grid_w {
+                let start_x = gx * block_size;
+                let start_y = gy * block_size;
+                let end_x = (start_x + block_size).min(w);
+                let end_y = (start_y + block_size).min(h);
+
+                let mut samples = Vec::with_capacity(64);
+                for y in (start_y..end_y).step_by(2) {
+                    for x in (start_x..end_x).step_by(2) {
+                        samples.push(gray.get_pixel(x, y)[0]);
+                    }
+                }
+                if !samples.is_empty() {
+                    samples.sort_unstable();
+                    let idx = (samples.len() as f32 * 0.85) as usize;
+                    let bg_val = samples[idx.min(samples.len() - 1)];
+                    bg_grid[(gy * grid_w + gx) as usize] = bg_val.max(160);
+                }
             }
         }
 
-        DynamicImage::ImageLuma8(gray)
+        // 2. Adaptive pixel normalization: suppress bleed-through
+        let mut output = image::GrayImage::new(w, h);
+        let bleed_threshold = 28u8; // Ghost ink is within 28 levels of local background
+
+        for y in 0..h {
+            let gy = (y / block_size).min(grid_h - 1);
+            for x in 0..w {
+                let gx = (x / block_size).min(grid_w - 1);
+                let bg = bg_grid[(gy * grid_w + gx) as usize];
+                let p = gray.get_pixel(x, y)[0];
+
+                if p >= bg.saturating_sub(bleed_threshold) {
+                    // Faint reverse bleed or background -> Pure white
+                    output.put_pixel(x, y, image::Luma([255]));
+                } else {
+                    // Genuine foreground ink -> Contrast enhancement
+                    let delta = (bg.saturating_sub(p)) as f32;
+                    let max_delta = (bg.saturating_sub(20)) as f32;
+                    let norm = (1.0 - (delta / max_delta.max(1.0))).clamp(0.0, 1.0);
+                    let enhanced_val = (norm * 180.0) as u8;
+                    output.put_pixel(x, y, image::Luma([enhanced_val]));
+                }
+            }
+        }
+
+        output
+    }
+
+    /// Normalizes contrast, removes reverse bleed-through, and optimizes illumination for Tesseract OCR
+    pub fn enhance_for_ocr(img: &DynamicImage) -> DynamicImage {
+        let gray = img.to_luma8();
+        let cleaned = Self::suppress_low_gsm_bleed_through(&gray);
+        DynamicImage::ImageLuma8(cleaned)
     }
 
     pub fn find_column_gutter(img: &DynamicImage) -> Option<u32> {
@@ -262,3 +310,39 @@ impl ImageProcessor {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_low_gsm_bleed_through_suppression() {
+        // Create 64x64 image with:
+        // Background: 230
+        // Faint reverse-side bleed: 215 (diff 15 < 28)
+        // Dark primary ink: 50 (diff 180 > 28)
+        let mut gray = image::GrayImage::from_pixel(64, 64, image::Luma([230]));
+
+        // Draw faint bleed line
+        for x in 10..50 {
+            gray.put_pixel(x, 20, image::Luma([215]));
+        }
+
+        // Draw dark primary text line
+        for x in 10..50 {
+            gray.put_pixel(x, 40, image::Luma([50]));
+        }
+
+        let cleaned = ImageProcessor::suppress_low_gsm_bleed_through(&gray);
+
+        // Background should be 255
+        assert_eq!(cleaned.get_pixel(5, 5)[0], 255);
+
+        // Faint reverse bleed line should be suppressed to 255 (pure white)
+        assert_eq!(cleaned.get_pixel(25, 20)[0], 255);
+
+        // Dark primary text line should remain dark (< 100)
+        assert!(cleaned.get_pixel(25, 40)[0] < 100);
+    }
+}
+

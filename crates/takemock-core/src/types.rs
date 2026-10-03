@@ -54,12 +54,25 @@ pub struct NatRange {
     pub max: f64,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum SpecialResolutionStatus {
+    None,
+    MarksToAll,
+    Bonus,
+    Dropped,
+    Cancelled,
+    MultiAccepted,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AnswerKey {
     pub raw_text: String,
     pub parsed_options: Vec<String>,
     pub nat_range: Option<NatRange>,
+    #[serde(default)]
+    pub special_resolution: Option<SpecialResolutionStatus>,
     pub confidence: f64,
 }
 
@@ -109,12 +122,47 @@ pub struct ReconstructedQuestion {
     pub answer_key: Option<AnswerKey>,
     pub explanation: Option<ExplanationBlock>,
     pub diagram_crop_path: Option<String>,
+    #[serde(default)]
+    pub stimulus_id: Option<String>,
+    #[serde(default)]
+    pub stimulus_text: Option<String>,
+    #[serde(default)]
+    pub stimulus_crop_path: Option<String>,
+    #[serde(default)]
+    pub target_unit: Option<String>,
     pub provenance: Option<SourceProvenance>,
     pub competing_hypotheses: Vec<CompetingHypothesis>,
     #[serde(default)]
     pub audit_issues: Vec<String>,
     pub confidence_score: f64,
     pub source_page_numbers: Vec<u32>,
+}
+
+impl Default for ReconstructedQuestion {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            label: String::new(),
+            raw_index: 0,
+            exam_metadata: None,
+            question_type: QuestionType::Unknown,
+            question_text: String::new(),
+            math_latex: None,
+            options: Vec::new(),
+            answer_key: None,
+            explanation: None,
+            diagram_crop_path: None,
+            stimulus_id: None,
+            stimulus_text: None,
+            stimulus_crop_path: None,
+            target_unit: None,
+            provenance: None,
+            competing_hypotheses: Vec::new(),
+            audit_issues: Vec::new(),
+            confidence_score: 1.0,
+            source_page_numbers: Vec::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
