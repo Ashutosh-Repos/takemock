@@ -23,6 +23,7 @@ pub enum QuestionType {
     Msq,
     Nat,
     Match,
+    Unsupported,
     Unknown,
 }
 
@@ -110,6 +111,8 @@ pub struct ReconstructedQuestion {
     pub diagram_crop_path: Option<String>,
     pub provenance: Option<SourceProvenance>,
     pub competing_hypotheses: Vec<CompetingHypothesis>,
+    #[serde(default)]
+    pub audit_issues: Vec<String>,
     pub confidence_score: f64,
     pub source_page_numbers: Vec<u32>,
 }

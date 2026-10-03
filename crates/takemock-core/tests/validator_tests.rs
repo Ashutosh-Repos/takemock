@@ -39,6 +39,7 @@ fn test_mcq_to_msq_reclassification_when_multiple_keys() {
         diagram_crop_path: None,
         provenance: None,
         competing_hypotheses: Vec::new(),
+        audit_issues: Vec::new(),
         confidence_score: 1.0,
         source_page_numbers: vec![1],
     };

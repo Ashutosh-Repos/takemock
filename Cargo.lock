@@ -1036,6 +1036,7 @@ name = "takemock-c-abi"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "image",
  "libc",
  "serde",
  "serde_json",
@@ -1060,6 +1061,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "takemock-c-abi",
  "takemock-core",
  "takemock-cv",
  "takemock-layout",

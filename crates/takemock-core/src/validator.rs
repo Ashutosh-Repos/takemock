@@ -62,7 +62,7 @@ impl ConstraintValidator {
         match q.question_type {
             QuestionType::Nat => {
                 if !q.options.is_empty() {
-                    // Anomaly: NAT with options
+                    q.audit_issues.push("OPTION_COUNT_ANOMALY".to_string());
                     q.competing_hypotheses.push(CompetingHypothesis {
                         hypothesis_id: format!("hyp-{}", q.id),
                         question_type: QuestionType::Mcq,
@@ -77,20 +77,28 @@ impl ConstraintValidator {
             }
             QuestionType::Mcq | QuestionType::Msq => {
                 if q.options.len() < 2 {
-                    // Anomaly: MCQ with fewer than 2 options
+                    q.audit_issues.push("OPTION_COUNT_ANOMALY".to_string());
                     score -= 0.25;
                 } else if q.options.len() > 6 {
+                    q.audit_issues.push("OPTION_COUNT_ANOMALY".to_string());
                     score -= 0.15;
                 }
             }
-            _ => {
+            QuestionType::Unsupported => {
+                q.audit_issues.push("UNSUPPORTED_QUESTION_TYPE".to_string());
+                score -= 0.50;
+            }
+            QuestionType::Unknown => {
+                q.audit_issues.push("TYPE_CLASSIFICATION_UNCERTAIN".to_string());
                 score -= 0.20;
             }
+            _ => {}
         }
 
         // 2. Validate LaTeX syntax if formula present
         if let Some(ref math) = q.math_latex {
             if let Err(_err) = Self::validate_latex(math) {
+                q.audit_issues.push("LATEX_SYNTAX_MALFORMED".to_string());
                 score -= 0.10;
             }
         }
@@ -110,6 +118,18 @@ impl ConstraintValidator {
                 });
                 q.question_type = QuestionType::Msq;
             }
+
+            if !q.options.is_empty() {
+                for opt in &ans.parsed_options {
+                    if !q.options.iter().any(|o| o.label.eq_ignore_ascii_case(opt)) {
+                        q.audit_issues.push("ANSWER_OUT_OF_OPTION_DOMAIN".to_string());
+                        score -= 0.20;
+                        break;
+                    }
+                }
+            }
+        } else {
+            q.audit_issues.push("ANSWER_MISSING_IN_SOURCE".to_string());
         }
 
         q.confidence_score = score.clamp(0.1, 1.0);

@@ -9,21 +9,24 @@ fn test_zero_cascade_guarantee_on_missing_question() {
             id: "q-1".to_string(), label: "1".to_string(), raw_index: 1, exam_metadata: None,
             question_type: QuestionType::Mcq, question_text: "Q1 text".to_string(),
             math_latex: None, options: Vec::new(), answer_key: None, explanation: None,
-            diagram_crop_path: None, provenance: None, competing_hypotheses: Vec::new(), confidence_score: 1.0,
+            diagram_crop_path: None, provenance: None, competing_hypotheses: Vec::new(),
+            audit_issues: Vec::new(), confidence_score: 1.0,
             source_page_numbers: vec![1],
         },
         ReconstructedQuestion {
             id: "q-2".to_string(), label: "2".to_string(), raw_index: 2, exam_metadata: None,
             question_type: QuestionType::Mcq, question_text: "Q2 text".to_string(),
             math_latex: None, options: Vec::new(), answer_key: None, explanation: None,
-            diagram_crop_path: None, provenance: None, competing_hypotheses: Vec::new(), confidence_score: 1.0,
+            diagram_crop_path: None, provenance: None, competing_hypotheses: Vec::new(),
+            audit_issues: Vec::new(), confidence_score: 1.0,
             source_page_numbers: vec![1],
         },
         ReconstructedQuestion {
             id: "q-3".to_string(), label: "3".to_string(), raw_index: 3, exam_metadata: None,
             question_type: QuestionType::Mcq, question_text: "Q3 text".to_string(),
             math_latex: None, options: Vec::new(), answer_key: None, explanation: None,
-            diagram_crop_path: None, provenance: None, competing_hypotheses: Vec::new(), confidence_score: 1.0,
+            diagram_crop_path: None, provenance: None, competing_hypotheses: Vec::new(),
+            audit_issues: Vec::new(), confidence_score: 1.0,
             source_page_numbers: vec![1],
         },
         // Q4 is MISSING!
@@ -31,17 +34,18 @@ fn test_zero_cascade_guarantee_on_missing_question() {
             id: "q-5".to_string(), label: "5".to_string(), raw_index: 5, exam_metadata: None,
             question_type: QuestionType::Mcq, question_text: "Q5 text".to_string(),
             math_latex: None, options: Vec::new(), answer_key: None, explanation: None,
-            diagram_crop_path: None, provenance: None, competing_hypotheses: Vec::new(), confidence_score: 1.0,
+            diagram_crop_path: None, provenance: None, competing_hypotheses: Vec::new(),
+            audit_issues: Vec::new(), confidence_score: 1.0,
             source_page_numbers: vec![1],
         },
     ];
 
     let raw_answers = vec![
-        RawAnswerItem { label: "1".to_string(), raw_text: "A".to_string(), parsed_options: vec!["A".to_string()], explanation_text: None },
-        RawAnswerItem { label: "2".to_string(), raw_text: "B".to_string(), parsed_options: vec!["B".to_string()], explanation_text: None },
-        RawAnswerItem { label: "3".to_string(), raw_text: "C".to_string(), parsed_options: vec!["C".to_string()], explanation_text: None },
-        RawAnswerItem { label: "4".to_string(), raw_text: "D".to_string(), parsed_options: vec!["D".to_string()], explanation_text: None },
-        RawAnswerItem { label: "5".to_string(), raw_text: "A".to_string(), parsed_options: vec!["A".to_string()], explanation_text: None },
+        RawAnswerItem { label: "1".to_string(), raw_text: "A".to_string(), parsed_options: vec!["A".to_string()], nat_range: None, explanation_text: None },
+        RawAnswerItem { label: "2".to_string(), raw_text: "B".to_string(), parsed_options: vec!["B".to_string()], nat_range: None, explanation_text: None },
+        RawAnswerItem { label: "3".to_string(), raw_text: "C".to_string(), parsed_options: vec!["C".to_string()], nat_range: None, explanation_text: None },
+        RawAnswerItem { label: "4".to_string(), raw_text: "D".to_string(), parsed_options: vec!["D".to_string()], nat_range: None, explanation_text: None },
+        RawAnswerItem { label: "5".to_string(), raw_text: "A".to_string(), parsed_options: vec!["A".to_string()], nat_range: None, explanation_text: None },
     ];
 
     AssociationSolver::associate(&mut questions, raw_answers).unwrap();
@@ -56,3 +60,42 @@ fn test_zero_cascade_guarantee_on_missing_question() {
     assert_eq!(questions[2].answer_key.as_ref().unwrap().raw_text, "C");
     assert_eq!(questions[3].answer_key.as_ref().unwrap().raw_text, "A");
 }
+
+#[test]
+fn test_nat_interval_parsing() {
+    use takemock_solver::AnswerKeyParser;
+
+    let text = "Answer Key:\n1. A\n2: [12.4, 12.6]\n3. 14.5 to 16.0\n4 - 42\n5: B, D";
+    let answers = AnswerKeyParser::parse_answers(text);
+
+    assert_eq!(answers.len(), 5);
+
+    // Q1 -> Option A
+    assert_eq!(answers[0].label, "1");
+    assert_eq!(answers[0].parsed_options, vec!["A"]);
+    assert!(answers[0].nat_range.is_none());
+
+    // Q2 -> NAT range [12.4, 12.6]
+    assert_eq!(answers[1].label, "2");
+    let r2 = answers[1].nat_range.as_ref().unwrap();
+    assert!((r2.min - 12.4).abs() < 1e-4);
+    assert!((r2.max - 12.6).abs() < 1e-4);
+
+    // Q3 -> NAT range 14.5 to 16.0
+    assert_eq!(answers[2].label, "3");
+    let r3 = answers[2].nat_range.as_ref().unwrap();
+    assert!((r3.min - 14.5).abs() < 1e-4);
+    assert!((r3.max - 16.0).abs() < 1e-4);
+
+    // Q4 -> NAT single value 42
+    assert_eq!(answers[3].label, "4");
+    let r4 = answers[3].nat_range.as_ref().unwrap();
+    assert!((r4.min - 42.0).abs() < 1e-4);
+    assert!((r4.max - 42.0).abs() < 1e-4);
+
+    // Q5 -> MSQ options B, D
+    assert_eq!(answers[4].label, "5");
+    assert_eq!(answers[4].parsed_options, vec!["B", "D"]);
+    assert!(answers[4].nat_range.is_none());
+}
+

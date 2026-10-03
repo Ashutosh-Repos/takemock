@@ -15,6 +15,7 @@ takemock-cv = { path = "../takemock-cv" }
 takemock-layout = { path = "../takemock-layout" }
 takemock-solver = { path = "../takemock-solver" }
 takemock-vlm = { path = "../takemock-vlm" }
+takemock-c-abi = { path = "../takemock-c-abi" }
 uuid.workspace = true
 clap.workspace = true
 tokio.workspace = true
