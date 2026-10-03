@@ -36,7 +36,7 @@ fn test_zero_cascade_guarantee_on_missing_question() {
         RawAnswerItem { label: "5".to_string(), raw_text: "A".to_string(), parsed_options: vec!["A".to_string()], nat_range: None, special_resolution: None, target_unit: None, explanation_text: None },
     ];
 
-    AssociationSolver::associate(&mut questions, raw_answers).unwrap();
+    let report = AssociationSolver::associate(&mut questions, raw_answers).unwrap();
 
     // Verify:
     // Q1 -> A
@@ -47,6 +47,28 @@ fn test_zero_cascade_guarantee_on_missing_question() {
     assert_eq!(questions[1].answer_key.as_ref().unwrap().raw_text, "B");
     assert_eq!(questions[2].answer_key.as_ref().unwrap().raw_text, "C");
     assert_eq!(questions[3].answer_key.as_ref().unwrap().raw_text, "A");
+
+    // Verify Sequence Gap & Unassigned Answer Parking
+    assert_eq!(report.unassigned_answers.len(), 1);
+    assert_eq!(report.unassigned_answers[0].label, "4");
+    assert_eq!(report.detected_gaps, vec![(4, 4)]);
+    assert!(questions[3].audit_issues.contains(&"SEQUENCE_GAP_DETECTED".to_string()));
+    assert!(questions[3].audit_issues.contains(&"OFF_BY_ONE_SUSPECTED".to_string()));
+}
+
+#[test]
+fn test_solution_terminal_claim_parser() {
+    use takemock_solver::SolutionClaimParser;
+
+    let sol_mcq = "Given equation f(x) = 0.\nRoots are 1 and 2.\nTherefore, the correct option is (C).";
+    let claim = SolutionClaimParser::parse_terminal_claim(sol_mcq).unwrap();
+    assert_eq!(claim.claimed_options, vec!["C"]);
+    assert!(claim.claimed_nat.is_none());
+
+    let sol_nat = "Work done W = F * d = 10 * 4.25 = 42.5 J.\nHence, required value is 42.5.";
+    let claim_nat = SolutionClaimParser::parse_terminal_claim(sol_nat).unwrap();
+    assert_eq!(claim_nat.claimed_options, Vec::<String>::new());
+    assert!((claim_nat.claimed_nat.unwrap() - 42.5).abs() < 1e-4);
 }
 
 #[test]

@@ -13,6 +13,12 @@ pub struct RawAnswerItem {
     pub explanation_text: Option<String>,
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct AssociationReport {
+    pub unassigned_answers: Vec<RawAnswerItem>,
+    pub detected_gaps: Vec<(u32, u32)>,
+}
+
 pub struct AssociationSolver;
 
 impl AssociationSolver {
@@ -20,10 +26,29 @@ impl AssociationSolver {
     pub fn associate(
         questions: &mut [ReconstructedQuestion],
         raw_answers: Vec<RawAnswerItem>,
-    ) -> Result<()> {
+    ) -> Result<AssociationReport> {
         let mut answer_map: HashMap<String, RawAnswerItem> = HashMap::new();
         for ans in raw_answers {
             answer_map.insert(ans.label.trim().to_string(), ans);
+        }
+
+        // 1. Detect sequence gaps across reconstructed questions (Section 30.2)
+        let mut detected_gaps = Vec::new();
+        for i in 1..questions.len() {
+            let prev_idx = questions[i - 1].raw_index;
+            let curr_idx = questions[i].raw_index;
+            if curr_idx > prev_idx + 1 && prev_idx > 0 {
+                detected_gaps.push((prev_idx + 1, curr_idx - 1));
+                questions[i].audit_issues.push("SEQUENCE_GAP_DETECTED".to_string());
+
+                // Check if any missing question has an answer parked in the answer map
+                for missing_num in (prev_idx + 1)..curr_idx {
+                    if answer_map.contains_key(&missing_num.to_string()) {
+                        questions[i].audit_issues.push("OFF_BY_ONE_SUSPECTED".to_string());
+                        break;
+                    }
+                }
+            }
         }
 
         for q in questions.iter_mut() {
@@ -67,7 +92,61 @@ impl AssociationSolver {
             }
         }
 
-        Ok(())
+        // Collect any unassigned answers safely parked to prevent cascade
+        let unassigned_answers: Vec<RawAnswerItem> = answer_map.into_values().collect();
+
+        Ok(AssociationReport {
+            unassigned_answers,
+            detected_gaps,
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SolutionTerminalClaim {
+    pub claimed_options: Vec<String>,
+    pub claimed_nat: Option<f64>,
+    pub claim_sentence: String,
+}
+
+pub struct SolutionClaimParser;
+
+impl SolutionClaimParser {
+    /// Extracts terminal conclusion or final assertion from an explanation/solution text.
+    pub fn parse_terminal_claim(solution_text: &str) -> Option<SolutionTerminalClaim> {
+        let opt_claim_re = regex::Regex::new(r"(?i)(?:hence|therefore|thus|so|correct\s+option|correct\s+answer|right\s+option|right\s+choice|ans(?:wer)?)\b[^\n\.]*?[\(\[]?([A-Da-d])[\)\]\.]?(?:\s+is\s+correct|\s+is\s+right|\s*$|\.)").unwrap();
+        let nat_claim_re = regex::Regex::new(r"(?i)(?:hence|therefore|thus|so|ans(?:wer)?|value)\s*(?:is|=|:)\s*(-?\d+(?:\.\d+)?)\b").unwrap();
+
+        let lines: Vec<&str> = solution_text.lines().map(|l| l.trim()).filter(|l| !l.is_empty()).collect();
+        let search_window: Vec<&str> = lines.iter().rev().take(5).copied().collect();
+
+        for line in &search_window {
+            if let Some(caps) = opt_claim_re.captures(line) {
+                if let Some(m) = caps.get(1) {
+                    return Some(SolutionTerminalClaim {
+                        claimed_options: vec![m.as_str().to_ascii_uppercase()],
+                        claimed_nat: None,
+                        claim_sentence: line.to_string(),
+                    });
+                }
+            }
+        }
+
+        for line in &search_window {
+            if let Some(caps) = nat_claim_re.captures(line) {
+                if let Some(m) = caps.get(1) {
+                    if let Ok(val) = m.as_str().parse::<f64>() {
+                        return Some(SolutionTerminalClaim {
+                            claimed_options: Vec::new(),
+                            claimed_nat: Some(val),
+                            claim_sentence: line.to_string(),
+                        });
+                    }
+                }
+            }
+        }
+
+        None
     }
 }
 

@@ -81,47 +81,100 @@ impl VlmRunner {
         Self::parse_vlm_output(&raw_stdout)
     }
 
-    /// Robust option parser handling vertical stacks, inline options: (a) 3 (b) 4 (c) 5 (d) 6, and 2x2 grids.
+    /// Robust option parser handling vertical stacks, inline options: (a) 3 (b) 4 (c) 5 (d) 6, 2x2 grids, and numbered options (1)-(4).
     pub fn parse_text_options(raw_text: &str) -> (String, Vec<OptionItem>) {
+        // 1. Check for alphabetical options: (A), (B), (C), (D) or A., B., C., D.
         let opt_pat = Regex::new(r"(?i)(?:^|\s+)[\(\[]?([A-D])[\)\]\.]\s+").unwrap();
         let matches: Vec<_> = opt_pat.find_iter(raw_text).collect();
 
-        if !matches.is_empty() {
-            let question_statement = raw_text[..matches[0].start()].trim().to_string();
-            let mut options = Vec::new();
+        if matches.len() >= 2 {
+            let labels: Vec<String> = matches.iter()
+                .map(|m| {
+                    m.as_str()
+                        .chars()
+                        .find(|c| c.is_ascii_alphabetic())
+                        .unwrap_or('A')
+                        .to_ascii_uppercase()
+                        .to_string()
+                })
+                .collect();
 
-            for i in 0..matches.len() {
-                let start = matches[i].end();
-                let end = if i + 1 < matches.len() {
-                    matches[i + 1].start()
-                } else {
-                    raw_text.len()
-                };
+            // Must start with 'A' to be a valid option set
+            if labels[0] == "A" {
+                let question_statement = raw_text[..matches[0].start()].trim().to_string();
+                let mut options = Vec::new();
 
-                // Extract label
-                let match_text = matches[i].as_str();
-                let label = match_text
-                    .chars()
-                    .find(|c| c.is_ascii_alphabetic())
-                    .unwrap_or('A')
-                    .to_ascii_uppercase()
-                    .to_string();
+                for i in 0..matches.len() {
+                    let start = matches[i].end();
+                    let end = if i + 1 < matches.len() {
+                        matches[i + 1].start()
+                    } else {
+                        raw_text.len()
+                    };
 
-                let option_text = raw_text[start..end].trim().to_string();
+                    let label = labels[i].clone();
+                    let option_text = raw_text[start..end].trim().to_string();
 
-                options.push(OptionItem {
-                    id: format!("opt-{}", label),
-                    label,
-                    text: option_text,
-                    math_latex: None,
-                    visual_asset_crop: None,
-                });
+                    options.push(OptionItem {
+                        id: format!("opt-{}", label),
+                        label,
+                        text: option_text,
+                        math_latex: None,
+                        visual_asset_crop: None,
+                    });
+                }
+
+                return (question_statement, options);
             }
-
-            return (question_statement, options);
         }
 
-        // Fallback: Check standard line-by-line options
+        // 2. Check for numbered inline options: (1), (2), (3), (4)
+        let num_opt_pat = Regex::new(r"(?:^|\s+)[\(\[]?([1-4])[\)\]\.]\s+").unwrap();
+        let num_matches: Vec<_> = num_opt_pat.find_iter(raw_text).collect();
+
+        if num_matches.len() >= 2 {
+            let num_labels: Vec<u32> = num_matches.iter()
+                .filter_map(|m| {
+                    m.as_str().chars().find(|c| c.is_ascii_digit()).and_then(|c| c.to_digit(10))
+                })
+                .collect();
+
+            if num_labels.first() == Some(&1) && num_labels.get(1) == Some(&2) {
+                let question_statement = raw_text[..num_matches[0].start()].trim().to_string();
+                let mut options = Vec::new();
+
+                for i in 0..num_matches.len() {
+                    let start = num_matches[i].end();
+                    let end = if i + 1 < num_matches.len() {
+                        num_matches[i + 1].start()
+                    } else {
+                        raw_text.len()
+                    };
+
+                    let letter_label = match num_labels[i] {
+                        1 => "A",
+                        2 => "B",
+                        3 => "C",
+                        4 => "D",
+                        _ => "A",
+                    }.to_string();
+
+                    let option_text = raw_text[start..end].trim().to_string();
+
+                    options.push(OptionItem {
+                        id: format!("opt-{}", letter_label),
+                        label: letter_label,
+                        text: option_text,
+                        math_latex: None,
+                        visual_asset_crop: None,
+                    });
+                }
+
+                return (question_statement, options);
+            }
+        }
+
+        // 3. Fallback: Check standard line-by-line options (A-D)
         let line_opt_re = Regex::new(r"(?m)^\s*[\(\[]?([A-Da-d])[\)\]\.]\s+(.+)$").unwrap();
         let mut options = Vec::new();
         let mut question_lines = Vec::new();
@@ -142,7 +195,44 @@ impl VlmRunner {
             }
         }
 
-        (question_lines.join("\n").trim().to_string(), options)
+        if options.len() >= 2 && options[0].label == "A" {
+            return (question_lines.join("\n").trim().to_string(), options);
+        }
+
+        // 4. Fallback: Check line-by-line numbered options (1-4)
+        let line_num_opt_re = Regex::new(r"(?m)^\s*[\(\[]?([1-4])[\)\]\.]\s+(.+)$").unwrap();
+        let mut num_options = Vec::new();
+        let mut num_question_lines = Vec::new();
+
+        for line in raw_text.lines() {
+            if let Some(caps) = line_num_opt_re.captures(line) {
+                let digit: u32 = caps[1].parse().unwrap_or(0);
+                let letter_label = match digit {
+                    1 => "A",
+                    2 => "B",
+                    3 => "C",
+                    4 => "D",
+                    _ => "A",
+                }.to_string();
+                let text = caps[2].trim().to_string();
+                num_options.push(OptionItem {
+                    id: format!("opt-{}", letter_label),
+                    label: letter_label,
+                    text,
+                    math_latex: None,
+                    visual_asset_crop: None,
+                });
+            } else {
+                num_question_lines.push(line);
+            }
+        }
+
+        if num_options.len() >= 2 && num_options[0].label == "A" {
+            return (num_question_lines.join("\n").trim().to_string(), num_options);
+        }
+
+        // No valid multi-option set found; retain full text as question statement
+        (raw_text.trim().to_string(), Vec::new())
     }
 
     fn parse_vlm_output(output: &str) -> Result<VlmCropResult> {

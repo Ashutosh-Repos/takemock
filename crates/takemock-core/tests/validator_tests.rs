@@ -124,3 +124,159 @@ fn test_stimulus_text_validation() {
     assert!(q_empty_stim.audit_issues.contains(&"STIMULUS_TEXT_EMPTY".to_string()));
 }
 
+#[test]
+fn test_intra_source_contradiction_mcq() {
+    let mut q = ReconstructedQuestion {
+        id: "q-contra-mcq".to_string(),
+        label: "28".to_string(),
+        raw_index: 28,
+        question_type: QuestionType::Mcq,
+        question_text: "Which of the following is correct?".to_string(),
+        options: vec![
+            OptionItem { id: "opt-A".to_string(), label: "A".to_string(), text: "First".to_string(), math_latex: None, visual_asset_crop: None },
+            OptionItem { id: "opt-B".to_string(), label: "B".to_string(), text: "Second".to_string(), math_latex: None, visual_asset_crop: None },
+            OptionItem { id: "opt-C".to_string(), label: "C".to_string(), text: "Third".to_string(), math_latex: None, visual_asset_crop: None },
+        ],
+        answer_key: Some(AnswerKey {
+            raw_text: "B".to_string(),
+            parsed_options: vec!["B".to_string()],
+            nat_range: None,
+            special_resolution: None,
+            confidence: 1.0,
+        }),
+        explanation: Some(ExplanationBlock {
+            full_text: "Solving the equation step by step:\nx = 5.\nTherefore, the correct option is (C).".to_string(),
+            step_by_step: vec!["Solving step by step".to_string(), "Therefore, the correct option is (C).".to_string()],
+            math_latex_blocks: Vec::new(),
+            visual_asset_crops: Vec::new(),
+        }),
+        source_page_numbers: vec![1],
+        ..Default::default()
+    };
+
+    ConstraintValidator::validate_and_score(&mut q);
+    assert!(q.audit_issues.contains(&"KEY_VS_SOLUTION_DISCREPANCY".to_string()));
+    assert!(q.confidence_score < 0.70);
+    assert_eq!(q.competing_hypotheses.len(), 1);
+    assert!(q.competing_hypotheses[0].reason.contains("Answer Key indicates 'B'"));
+    assert!(q.competing_hypotheses[0].reason.contains("Worked Solution claims 'C'"));
+}
+
+#[test]
+fn test_intra_source_contradiction_nat() {
+    let mut q = ReconstructedQuestion {
+        id: "q-contra-nat".to_string(),
+        label: "30".to_string(),
+        raw_index: 30,
+        question_type: QuestionType::Nat,
+        question_text: "Find the steady-state temperature in degrees:".to_string(),
+        options: Vec::new(),
+        answer_key: Some(AnswerKey {
+            raw_text: "12.4 to 12.6".to_string(),
+            parsed_options: Vec::new(),
+            nat_range: Some(NatRange { min: 12.4, max: 12.6 }),
+            special_resolution: None,
+            confidence: 1.0,
+        }),
+        explanation: Some(ExplanationBlock {
+            full_text: "Applying boundary conditions, T = 25.0.\nHence, required value is 25.0.".to_string(),
+            step_by_step: vec!["Applying boundary conditions".to_string()],
+            math_latex_blocks: Vec::new(),
+            visual_asset_crops: Vec::new(),
+        }),
+        source_page_numbers: vec![1],
+        ..Default::default()
+    };
+
+    ConstraintValidator::validate_and_score(&mut q);
+    assert!(q.audit_issues.contains(&"KEY_VS_SOLUTION_DISCREPANCY".to_string()));
+    assert!(q.confidence_score < 0.70);
+    assert_eq!(q.competing_hypotheses.len(), 1);
+    assert!(q.competing_hypotheses[0].reason.contains("claims 25.00"));
+}
+
+#[test]
+fn test_intra_source_agreement_no_discrepancy() {
+    let mut q = ReconstructedQuestion {
+        id: "q-agree".to_string(),
+        label: "5".to_string(),
+        raw_index: 5,
+        question_type: QuestionType::Mcq,
+        question_text: "Sample aligned question".to_string(),
+        options: vec![
+            OptionItem { id: "opt-A".to_string(), label: "A".to_string(), text: "Alpha".to_string(), math_latex: None, visual_asset_crop: None },
+            OptionItem { id: "opt-B".to_string(), label: "B".to_string(), text: "Beta".to_string(), math_latex: None, visual_asset_crop: None },
+        ],
+        answer_key: Some(AnswerKey {
+            raw_text: "A".to_string(),
+            parsed_options: vec!["A".to_string()],
+            nat_range: None,
+            special_resolution: None,
+            confidence: 1.0,
+        }),
+        explanation: Some(ExplanationBlock {
+            full_text: "Since Alpha is true, hence option (A) is correct.".to_string(),
+            step_by_step: vec![],
+            math_latex_blocks: Vec::new(),
+            visual_asset_crops: Vec::new(),
+        }),
+        source_page_numbers: vec![1],
+        ..Default::default()
+    };
+
+    ConstraintValidator::validate_and_score(&mut q);
+    assert!(!q.audit_issues.contains(&"KEY_VS_SOLUTION_DISCREPANCY".to_string()));
+    assert_eq!(q.confidence_score, 1.0);
+}
+
+#[test]
+fn test_subjective_unsupported_question_reclassification() {
+    let mut q = ReconstructedQuestion {
+        id: "q-essay".to_string(),
+        label: "15".to_string(),
+        raw_index: 15,
+        question_type: QuestionType::Mcq, // Initial default
+        question_text: "Explain the working principle of a 4-stroke internal combustion engine with neat sketches.".to_string(),
+        options: Vec::new(),
+        answer_key: None,
+        source_page_numbers: vec![1],
+        ..Default::default()
+    };
+
+    ConstraintValidator::validate_and_score(&mut q);
+    assert_eq!(q.question_type, QuestionType::Unsupported);
+    assert!(q.audit_issues.contains(&"UNSUPPORTED_QUESTION_TYPE".to_string()));
+}
+
+#[test]
+fn test_nat_target_unit_extraction_from_question_text() {
+    let mut q = ReconstructedQuestion {
+        id: "q-unit".to_string(),
+        label: "7".to_string(),
+        raw_index: 7,
+        question_type: QuestionType::Nat,
+        question_text: "The total power dissipated across the resistor is ________ kW.".to_string(),
+        options: Vec::new(),
+        target_unit: None,
+        answer_key: Some(AnswerKey {
+            raw_text: "4.5".to_string(),
+            parsed_options: Vec::new(),
+            nat_range: Some(NatRange { min: 4.5, max: 4.5 }),
+            special_resolution: None,
+            confidence: 1.0,
+        }),
+        source_page_numbers: vec![1],
+        ..Default::default()
+    };
+
+    ConstraintValidator::validate_and_score(&mut q);
+    assert_eq!(q.target_unit.as_deref(), Some("kW"));
+}
+
+#[test]
+fn test_unbalanced_latex_environments() {
+    assert!(ConstraintValidator::validate_latex(r"\begin{matrix} 1 & 0 \end{matrix}").is_ok());
+    assert!(ConstraintValidator::validate_latex(r"\begin{matrix} 1 & 0").is_err());
+    assert!(ConstraintValidator::validate_latex(r"\begin{matrix} 1 & 0 \end{matrix} \begin{cases} x").is_err());
+}
+
