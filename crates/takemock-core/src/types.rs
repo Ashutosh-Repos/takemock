@@ -74,6 +74,21 @@ pub struct AnswerKey {
     #[serde(default)]
     pub special_resolution: Option<SpecialResolutionStatus>,
     pub confidence: f64,
+    #[serde(default)]
+    pub origin: Option<String>,
+}
+
+impl Default for AnswerKey {
+    fn default() -> Self {
+        Self {
+            raw_text: String::new(),
+            parsed_options: Vec::new(),
+            nat_range: None,
+            special_resolution: None,
+            confidence: 1.0,
+            origin: Some("SOURCE".to_string()),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -136,6 +151,8 @@ pub struct ReconstructedQuestion {
     pub audit_issues: Vec<String>,
     pub confidence_score: f64,
     pub source_page_numbers: Vec<u32>,
+    #[serde(default)]
+    pub resolution_status: Option<String>,
 }
 
 impl Default for ReconstructedQuestion {
@@ -161,6 +178,7 @@ impl Default for ReconstructedQuestion {
             audit_issues: Vec::new(),
             confidence_score: 1.0,
             source_page_numbers: Vec::new(),
+            resolution_status: None,
         }
     }
 }

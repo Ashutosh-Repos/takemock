@@ -341,7 +341,12 @@ impl PipelineEngine {
                         stimulus_text: seg.stimulus_text,
                         stimulus_crop_path: None,
                         target_unit: None,
+                        resolution_status: None,
                     };
+
+                    if norm_xmin <= 0.015 || norm_xmax >= 0.985 {
+                        q.audit_issues.push("OCCLUSION_NEAR_BOUNDARY".to_string());
+                    }
 
                     // 5. Invariant constraint validation
                     ConstraintValidator::validate_and_score(&mut q);
@@ -361,6 +366,10 @@ impl PipelineEngine {
         // Flush final pending question if any
         if let Some(seg) = pending_question {
             let (txt, opts) = VlmRunner::parse_text_options(&seg.text);
+            let trimmed = txt.trim();
+            let ends_with_punct = trimmed.ends_with('.') || trimmed.ends_with('?') || trimmed.ends_with(':');
+            let is_truncated = !ends_with_punct && opts.is_empty();
+
             let mut q = ReconstructedQuestion {
                 id: format!("q-final-{}", seg.label),
                 label: seg.label.clone(),
@@ -375,13 +384,14 @@ impl PipelineEngine {
                 diagram_crop_path: None,
                 provenance: None,
                 competing_hypotheses: Vec::new(),
-                audit_issues: Vec::new(),
-                confidence_score: 0.90,
+                audit_issues: if is_truncated { vec!["TRUNCATED_CONTINUATION".to_string()] } else { Vec::new() },
+                confidence_score: if is_truncated { 0.65 } else { 0.90 },
                 source_page_numbers: vec![total_pages],
                 stimulus_id: seg.stimulus_id,
                 stimulus_text: seg.stimulus_text,
                 stimulus_crop_path: None,
                 target_unit: None,
+                resolution_status: None,
             };
             ConstraintValidator::validate_and_score(&mut q);
             if let Ok(db_guard) = db.lock() {

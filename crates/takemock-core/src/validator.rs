@@ -114,6 +114,17 @@ impl ConstraintValidator {
                     score -= 0.15;
                 }
             }
+            QuestionType::Match => {
+                if q.options.len() < 2 {
+                    q.audit_issues.push("OPTION_COUNT_ANOMALY".to_string());
+                    score -= 0.25;
+                }
+                let has_match_syntax = q.options.iter().any(|o| o.text.contains('-') || o.text.contains("->"));
+                if !has_match_syntax && !q.options.is_empty() {
+                    q.audit_issues.push("MATCH_MAPPING_UNCERTAIN".to_string());
+                    score -= 0.15;
+                }
+            }
             QuestionType::Unsupported => {
                 q.audit_issues.push("UNSUPPORTED_QUESTION_TYPE".to_string());
                 score -= 0.50;
@@ -122,11 +133,10 @@ impl ConstraintValidator {
                 q.audit_issues.push("TYPE_CLASSIFICATION_UNCERTAIN".to_string());
                 score -= 0.20;
             }
-            _ => {}
         }
 
         // 4. Validate options for text or visual asset crop (C-16)
-        if q.question_type == QuestionType::Mcq || q.question_type == QuestionType::Msq {
+        if q.question_type == QuestionType::Mcq || q.question_type == QuestionType::Msq || q.question_type == QuestionType::Match {
             for opt in &q.options {
                 if opt.text.trim().is_empty() && opt.visual_asset_crop.is_none() {
                     q.audit_issues.push("OPTION_EMPTY_NO_VISUAL".to_string());
@@ -175,6 +185,21 @@ impl ConstraintValidator {
                     reason: "MCQ has multiple correct keys; reclassifying to MSQ".to_string(),
                 });
                 q.question_type = QuestionType::Msq;
+            }
+
+            // NAT question with discrete letter key (Section 30.2)
+            if q.question_type == QuestionType::Nat && !ans.parsed_options.is_empty() && ans.nat_range.is_none() {
+                q.audit_issues.push("TYPE_CLASSIFICATION_UNCERTAIN".to_string());
+                q.competing_hypotheses.push(CompetingHypothesis {
+                    hypothesis_id: format!("hyp-nat-mismatch-{}", q.id),
+                    question_type: QuestionType::Mcq,
+                    label: q.label.clone(),
+                    text: q.question_text.clone(),
+                    confidence: 0.70,
+                    source_model: "Validator::ArchetypeCheck".to_string(),
+                    reason: format!("Question tagged as NAT but answer key specifies discrete option {:?}", ans.parsed_options),
+                });
+                score -= 0.30;
             }
 
             if !q.options.is_empty() {
@@ -261,10 +286,22 @@ impl ConstraintValidator {
             }
         }
 
-        if is_authoritative_errata {
-            q.confidence_score = 1.0;
+        let final_score = if is_authoritative_errata {
+            1.0
         } else {
-            q.confidence_score = score.clamp(0.1, 1.0);
+            score.clamp(0.1, 1.0)
+        };
+        q.confidence_score = final_score;
+
+        // Compute resolution status (Section 32 / 37)
+        if q.answer_key.is_none() {
+            q.resolution_status = Some("UNRESOLVED_IN_SOURCE".to_string());
+        } else if is_authoritative_errata {
+            q.resolution_status = Some("ERRATA_OVERRIDE".to_string());
+        } else if final_score < 0.85 || q.audit_issues.iter().any(|i| i.contains("DISCREPANCY") || i.contains("SUSPECTED")) {
+            q.resolution_status = Some("REVIEW_REQUIRED".to_string());
+        } else {
+            q.resolution_status = Some("RESOLVED".to_string());
         }
     }
 }

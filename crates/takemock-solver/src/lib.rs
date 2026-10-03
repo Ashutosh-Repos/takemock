@@ -64,6 +64,7 @@ impl AssociationSolver {
                     nat_range,
                     special_resolution,
                     confidence: 1.0,
+                    origin: Some("SOURCE".to_string()),
                 });
 
                 if ans.target_unit.is_some() && q.target_unit.is_none() {

@@ -33,6 +33,7 @@ fn test_mcq_to_msq_reclassification_when_multiple_keys() {
             nat_range: None,
             special_resolution: None,
             confidence: 1.0,
+            origin: Some("SOURCE".to_string()),
         }),
         source_page_numbers: vec![1],
         ..Default::default()
@@ -60,6 +61,7 @@ fn test_special_resolution_errata_validation() {
             nat_range: None,
             special_resolution: Some(SpecialResolutionStatus::MarksToAll),
             confidence: 1.0,
+            origin: Some("SOURCE".to_string()),
         }),
         source_page_numbers: vec![1],
         ..Default::default()
@@ -143,6 +145,7 @@ fn test_intra_source_contradiction_mcq() {
             nat_range: None,
             special_resolution: None,
             confidence: 1.0,
+            origin: Some("SOURCE".to_string()),
         }),
         explanation: Some(ExplanationBlock {
             full_text: "Solving the equation step by step:\nx = 5.\nTherefore, the correct option is (C).".to_string(),
@@ -177,6 +180,7 @@ fn test_intra_source_contradiction_nat() {
             nat_range: Some(NatRange { min: 12.4, max: 12.6 }),
             special_resolution: None,
             confidence: 1.0,
+            origin: Some("SOURCE".to_string()),
         }),
         explanation: Some(ExplanationBlock {
             full_text: "Applying boundary conditions, T = 25.0.\nHence, required value is 25.0.".to_string(),
@@ -213,6 +217,7 @@ fn test_intra_source_agreement_no_discrepancy() {
             nat_range: None,
             special_resolution: None,
             confidence: 1.0,
+            origin: Some("SOURCE".to_string()),
         }),
         explanation: Some(ExplanationBlock {
             full_text: "Since Alpha is true, hence option (A) is correct.".to_string(),
@@ -264,6 +269,7 @@ fn test_nat_target_unit_extraction_from_question_text() {
             nat_range: Some(NatRange { min: 4.5, max: 4.5 }),
             special_resolution: None,
             confidence: 1.0,
+            origin: Some("SOURCE".to_string()),
         }),
         source_page_numbers: vec![1],
         ..Default::default()
@@ -278,5 +284,107 @@ fn test_unbalanced_latex_environments() {
     assert!(ConstraintValidator::validate_latex(r"\begin{matrix} 1 & 0 \end{matrix}").is_ok());
     assert!(ConstraintValidator::validate_latex(r"\begin{matrix} 1 & 0").is_err());
     assert!(ConstraintValidator::validate_latex(r"\begin{matrix} 1 & 0 \end{matrix} \begin{cases} x").is_err());
+}
+
+#[test]
+fn test_match_the_following_validation() {
+    let mut q = ReconstructedQuestion {
+        id: "q-match".to_string(),
+        label: "35".to_string(),
+        raw_index: 35,
+        question_type: QuestionType::Match,
+        question_text: "Match List-I with List-II:\nList-I\nP. Quick sort\nQ. Merge sort\nList-II\n1. O(n log n) worst case\n2. O(n^2) worst case".to_string(),
+        options: vec![
+            OptionItem { id: "opt-A".to_string(), label: "A".to_string(), text: "P-2, Q-1".to_string(), math_latex: None, visual_asset_crop: None },
+            OptionItem { id: "opt-B".to_string(), label: "B".to_string(), text: "P-1, Q-2".to_string(), math_latex: None, visual_asset_crop: None },
+        ],
+        answer_key: Some(AnswerKey {
+            raw_text: "A".to_string(),
+            parsed_options: vec!["A".to_string()],
+            nat_range: None,
+            special_resolution: None,
+            confidence: 1.0,
+            origin: Some("SOURCE".to_string()),
+        }),
+        source_page_numbers: vec![1],
+        ..Default::default()
+    };
+
+    ConstraintValidator::validate_and_score(&mut q);
+    assert_eq!(q.question_type, QuestionType::Match);
+    assert_eq!(q.resolution_status.as_deref(), Some("RESOLVED"));
+    assert_eq!(q.confidence_score, 1.0);
+    assert!(!q.audit_issues.contains(&"MATCH_MAPPING_UNCERTAIN".to_string()));
+}
+
+#[test]
+fn test_nat_with_discrete_option_key_mismatch() {
+    let mut q = ReconstructedQuestion {
+        id: "q-nat-mismatch".to_string(),
+        label: "40".to_string(),
+        raw_index: 40,
+        question_type: QuestionType::Nat,
+        question_text: "The value of determinant is:".to_string(),
+        options: Vec::new(),
+        answer_key: Some(AnswerKey {
+            raw_text: "B".to_string(),
+            parsed_options: vec!["B".to_string()],
+            nat_range: None,
+            special_resolution: None,
+            confidence: 1.0,
+            origin: Some("SOURCE".to_string()),
+        }),
+        source_page_numbers: vec![1],
+        ..Default::default()
+    };
+
+    ConstraintValidator::validate_and_score(&mut q);
+    assert!(q.audit_issues.contains(&"TYPE_CLASSIFICATION_UNCERTAIN".to_string()));
+    assert_eq!(q.resolution_status.as_deref(), Some("REVIEW_REQUIRED"));
+    assert!(q.confidence_score <= 0.70);
+    assert!(q.competing_hypotheses.iter().any(|h| h.reason.contains("discrete option")));
+}
+
+#[test]
+fn test_resolution_status_lifecycle() {
+    // 1. Unresolved in source
+    let mut q_no_key = ReconstructedQuestion {
+        id: "q-unres".to_string(),
+        label: "1".to_string(),
+        raw_index: 1,
+        question_type: QuestionType::Mcq,
+        options: vec![
+            OptionItem { id: "opt-A".to_string(), label: "A".to_string(), text: "1".to_string(), math_latex: None, visual_asset_crop: None },
+            OptionItem { id: "opt-B".to_string(), label: "B".to_string(), text: "2".to_string(), math_latex: None, visual_asset_crop: None },
+        ],
+        answer_key: None,
+        ..Default::default()
+    };
+    ConstraintValidator::validate_and_score(&mut q_no_key);
+    assert_eq!(q_no_key.resolution_status.as_deref(), Some("UNRESOLVED_IN_SOURCE"));
+
+    // 2. Errata override
+    let mut q_errata = ReconstructedQuestion {
+        id: "q-err".to_string(),
+        label: "2".to_string(),
+        raw_index: 2,
+        question_type: QuestionType::Mcq,
+        options: vec![
+            OptionItem { id: "opt-A".to_string(), label: "A".to_string(), text: "1".to_string(), math_latex: None, visual_asset_crop: None },
+            OptionItem { id: "opt-B".to_string(), label: "B".to_string(), text: "2".to_string(), math_latex: None, visual_asset_crop: None },
+        ],
+        answer_key: Some(AnswerKey {
+            raw_text: "MTA".to_string(),
+            parsed_options: Vec::new(),
+            nat_range: None,
+            special_resolution: Some(SpecialResolutionStatus::MarksToAll),
+            confidence: 1.0,
+            origin: Some("SOURCE".to_string()),
+        }),
+        ..Default::default()
+    };
+    ConstraintValidator::validate_and_score(&mut q_errata);
+    assert_eq!(q_errata.resolution_status.as_deref(), Some("ERRATA_OVERRIDE"));
+    assert_eq!(q_errata.confidence_score, 1.0);
 }
 

@@ -64,6 +64,7 @@ impl QuestionSegmenter {
         let standalone_qtype_re = Regex::new(r"(?i)[\[\{\(I|lj1]?\s*(MCQ|MSQ|NAT)\s*[\]\}\)1y\.,\s]").unwrap();
         let exam_info_re = Regex::new(r"(?i)[\[\{\(I|lj1]?\s*(?:a|A)?(GATE|JEE|CAT|NEET)[-\s]*(\d{4})?\s*[:;\-\*]\s*([0-9\.]+)M?").unwrap();
         let stimulus_header_re = Regex::new(r"(?i)(?:Statement\s+for\s+Linked(?:\s+Answer)?\s+Questions?|Common\s+Data\s+for\s+Questions?)\s*(?:Q\.?\s*)?(\d{1,3})\s*(?:to|and|&|-)\s*(\d{1,3})").unwrap();
+        let match_re = Regex::new(r"(?i)\b(?:match\s+the\s+following|match\s+list|list-i\b|group-i\b)").unwrap();
 
         let mut segments: Vec<RawQuestionSegment> = Vec::new();
         let mut active_stimulus: Option<ActiveStimulus> = None;
@@ -166,7 +167,7 @@ impl QuestionSegmenter {
             let mut detected_type = QuestionType::Unknown;
             let mut detected_metadata: Option<ExamMetadata> = None;
 
-            // 1. Detect question type: [MCQ], [MSQ], [NAT]
+            // 1. Detect question type: [MCQ], [MSQ], [NAT], or Match
             if let Some(caps) = standalone_qtype_re.captures(line_text) {
                 let t_str = caps.get(1).map(|m| m.as_str().to_uppercase()).unwrap_or_default();
                 detected_type = match t_str.as_str() {
@@ -175,6 +176,9 @@ impl QuestionSegmenter {
                     "NAT" => QuestionType::Nat,
                     _ => QuestionType::Unknown,
                 };
+            }
+            if detected_type == QuestionType::Unknown && match_re.is_match(line_text) {
+                detected_type = QuestionType::Match;
             }
 
             // 2. Detect Exam Metadata: [GATE-2026 : 1M] or [GATE-2013 - 2M]
@@ -343,6 +347,8 @@ impl QuestionSegmenter {
                     }
                     if detected_type != QuestionType::Unknown && current_type == QuestionType::Unknown {
                         current_type = detected_type;
+                    } else if detected_type == QuestionType::Match {
+                        current_type = QuestionType::Match;
                     }
 
                     if let Some(ref mut rect) = current_rect {
