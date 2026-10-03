@@ -65,6 +65,7 @@ impl QuestionSegmenter {
         let exam_info_re = Regex::new(r"(?i)[\[\{\(I|lj1]?\s*(?:a|A)?(GATE|JEE|CAT|NEET)[-\s]*(\d{4})?\s*[:;\-\*]\s*([0-9\.]+)M?").unwrap();
         let stimulus_header_re = Regex::new(r"(?i)(?:Statement\s+for\s+Linked(?:\s+Answer)?\s+Questions?|Common\s+Data\s+for\s+Questions?)\s*(?:Q\.?\s*)?(\d{1,3})\s*(?:to|and|&|-)\s*(\d{1,3})").unwrap();
         let match_re = Regex::new(r"(?i)\b(?:match\s+the\s+following|match\s+list|list-i\b|group-i\b)").unwrap();
+        let header_banner_re = Regex::new(r"(?i)^\s*(?:CHAPTER\b|SECTION\b|PART\b|UNIT\b|EXERCISE\b|TOPIC\b|\d+\s*[\.:]\s*[A-Z\s&]{4,}$)").unwrap();
 
         let mut segments: Vec<RawQuestionSegment> = Vec::new();
         let mut active_stimulus: Option<ActiveStimulus> = None;
@@ -155,10 +156,13 @@ impl QuestionSegmenter {
                 }
             }
 
-            // Skip chapter headers when no question is open yet
+            // Skip chapter/section headers or running head banners before any question is open
             if current_label.is_none() {
+                let is_top_margin = line.rect.y < (page_height as f32 * 0.12) as u32;
+                let is_banner = header_banner_re.is_match(line_text);
                 let upper = line_text.to_uppercase();
-                if upper.contains("CHAPTER") || upper.contains("FUNCTIONAL DEPENDENCY") || upper.contains("NORMALIZATION") {
+                let is_all_caps_title = upper == line_text && line_text.len() >= 6 && !line_text.contains('?') && !line_text.contains("[MCQ") && !line_text.contains("[NAT");
+                if is_banner || (is_top_margin && is_all_caps_title) {
                     continue;
                 }
             }
@@ -200,7 +204,7 @@ impl QuestionSegmenter {
                 if let Some(num_match) = caps.get(1) {
                     let n: u32 = num_match.as_str().parse().unwrap_or(0);
                     let is_start = num_match.start() <= 6;
-                    if n > 0 && n <= 200 && (is_start || detected_type != QuestionType::Unknown || detected_metadata.is_some()) {
+                    if n > 0 && n <= 1000 && (is_start || detected_type != QuestionType::Unknown || detected_metadata.is_some()) {
                         // Check for clipped tens digit (e.g., "7." when expecting 17)
                         let corrected_n = if n <= current_index && current_index >= 10 && current_index < 100 {
                             let tens = (current_index / 10) * 10;

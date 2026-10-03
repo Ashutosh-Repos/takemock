@@ -102,7 +102,7 @@ pub unsafe extern "C" fn takemock_engine_init(
 #[no_mangle]
 pub unsafe extern "C" fn takemock_engine_submit_job(
     ctx: *mut EngineContext,
-    _mode: IngestionMode,
+    mode: IngestionMode,
     question_image_paths: *const *const c_char,
     num_questions: u32,
     answer_image_paths: *const *const c_char,
@@ -182,6 +182,7 @@ pub unsafe extern "C" fn takemock_engine_submit_job(
 
     std::thread::spawn(move || {
         let config = PipelineConfig {
+            mode,
             storage_dir,
             use_vlm: matches!(profile, HardwareProfile::ProfileStandard | HardwareProfile::ProfilePro),
             answer_inputs: ans_inputs,
@@ -237,7 +238,7 @@ pub unsafe extern "C" fn takemock_engine_submit_job(
 #[no_mangle]
 pub unsafe extern "C" fn takemock_engine_submit_memory_job(
     ctx: *mut EngineContext,
-    _mode: IngestionMode,
+    mode: IngestionMode,
     question_buffers: *const MemoryBuffer,
     num_questions: u32,
     answer_buffers: *const MemoryBuffer,
@@ -337,6 +338,7 @@ pub unsafe extern "C" fn takemock_engine_submit_memory_job(
 
     std::thread::spawn(move || {
         let config = PipelineConfig {
+            mode,
             storage_dir,
             use_vlm: matches!(profile, HardwareProfile::ProfileStandard | HardwareProfile::ProfilePro),
             answer_inputs: ans_inputs,

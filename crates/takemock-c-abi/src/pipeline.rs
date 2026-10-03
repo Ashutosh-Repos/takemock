@@ -18,8 +18,11 @@ pub enum InputImage {
     },
 }
 
+use crate::IngestionMode;
+
 #[derive(Debug, Clone)]
 pub struct PipelineConfig {
+    pub mode: IngestionMode,
     pub storage_dir: PathBuf,
     pub use_vlm: bool,
     pub vlm_model_path: PathBuf,
@@ -33,6 +36,7 @@ pub struct PipelineConfig {
 impl Default for PipelineConfig {
     fn default() -> Self {
         Self {
+            mode: IngestionMode::Mode1Decoupled,
             storage_dir: PathBuf::from("output"),
             use_vlm: false,
             vlm_model_path: PathBuf::from("models/Qwen2-VL-2B-Instruct-Q4_K_M.gguf"),
@@ -308,11 +312,41 @@ impl PipelineEngine {
                     if !final_options.is_empty() && final_options.iter().all(|o| o.text.trim().is_empty()) {
                         let (crop_w, crop_h) = (crop.width(), crop.height());
                         let opt_cnt = final_options.len() as u32;
-                        let strip_h = (crop_h / opt_cnt.max(1)).max(1);
+
+                        // Calculate stem text height offset so Option A does not capture question stem
+                        let total_lines = seg.text.lines().count().max(1);
+                        let stem_lines = clean_text.lines().count().max(1);
+                        let stem_ratio = (stem_lines as f32 / total_lines as f32).clamp(0.20, 0.60);
+                        let stem_h = ((crop_h as f32) * stem_ratio) as u32;
+                        let opt_area_y = stem_h.min(crop_h.saturating_sub(40));
+                        let opt_area_h = crop_h.saturating_sub(opt_area_y);
+
+                        // Check if 2x2 grid (for 4 options on wide crops) or vertical stack
+                        let is_2x2 = opt_cnt == 4 && crop_w as f32 >= crop_h as f32 * 0.75;
+
                         for (o_idx, opt) in final_options.iter_mut().enumerate() {
-                            let sy = o_idx as u32 * strip_h;
-                            let sh = strip_h.min(crop_h.saturating_sub(sy));
-                            let opt_crop = crop.crop_imm(0, sy, crop_w, sh);
+                            let (sx, sy, sw, sh) = if is_2x2 {
+                                let col = (o_idx % 2) as u32;
+                                let row = (o_idx / 2) as u32;
+                                let half_w = crop_w / 2;
+                                let half_h = (opt_area_h / 2).max(1);
+                                (
+                                    col * half_w,
+                                    opt_area_y + row * half_h,
+                                    half_w.min(crop_w.saturating_sub(col * half_w)),
+                                    half_h.min(opt_area_h.saturating_sub(row * half_h)),
+                                )
+                            } else {
+                                let strip_h = (opt_area_h / opt_cnt.max(1)).max(1);
+                                (
+                                    0,
+                                    opt_area_y + o_idx as u32 * strip_h,
+                                    crop_w,
+                                    strip_h.min(opt_area_h.saturating_sub(o_idx as u32 * strip_h)),
+                                )
+                            };
+
+                            let opt_crop = crop.crop_imm(sx, sy, sw.max(1), sh.max(1));
                             let opt_filename = format!("opt_{:?}_{}_{}.webp", qtype, seg.label, opt.label);
                             let opt_path = crops_dir.join(&opt_filename);
                             let _ = ImageProcessor::save_crop(&opt_crop, &opt_path);
@@ -409,31 +443,50 @@ impl PipelineEngine {
         });
 
         // 6. Zero-Cascade Association Solver for Answer Keys
-        let answers_to_associate = if let Some(ref ak_path) = config.answer_key_path {
-            if ak_path.exists() {
-                let ak_text = std::fs::read_to_string(ak_path).unwrap_or_default();
-                AnswerKeyParser::parse_answers(&ak_text)
-            } else {
-                Vec::new()
-            }
-        } else if !config.answer_inputs.is_empty() {
-            // Mode 1 Decoupled Ingestion: Parse answer sheets
-            let mut decoupled_answers = Vec::new();
-            for ans_input in &config.answer_inputs {
-                if let Ok(text) = extract_text_from_input(ans_input, &temp_dir) {
-                    let parsed = AnswerKeyParser::parse_answers(&text);
-                    decoupled_answers.extend(parsed);
+        let answers_to_associate = match config.mode {
+            IngestionMode::Mode2Integrated => {
+                // Integrated mode: answers present inline within the question pages take priority
+                if !discovered_answers.is_empty() {
+                    discovered_answers
+                } else if let Some(ref ak_path) = config.answer_key_path {
+                    if ak_path.exists() {
+                        let ak_text = std::fs::read_to_string(ak_path).unwrap_or_default();
+                        AnswerKeyParser::parse_answers(&ak_text)
+                    } else {
+                        config.external_answers
+                    }
+                } else {
+                    config.external_answers
                 }
             }
-            if !decoupled_answers.is_empty() {
-                decoupled_answers
-            } else {
-                discovered_answers
+            IngestionMode::Mode1Decoupled => {
+                // Decoupled mode: separate answer sheets/files take priority
+                if !config.answer_inputs.is_empty() {
+                    let mut decoupled_answers = Vec::new();
+                    for ans_input in &config.answer_inputs {
+                        if let Ok(text) = extract_text_from_input(ans_input, &temp_dir) {
+                            let parsed = AnswerKeyParser::parse_answers(&text);
+                            decoupled_answers.extend(parsed);
+                        }
+                    }
+                    if !decoupled_answers.is_empty() {
+                        decoupled_answers
+                    } else {
+                        discovered_answers
+                    }
+                } else if let Some(ref ak_path) = config.answer_key_path {
+                    if ak_path.exists() {
+                        let ak_text = std::fs::read_to_string(ak_path).unwrap_or_default();
+                        AnswerKeyParser::parse_answers(&ak_text)
+                    } else {
+                        discovered_answers
+                    }
+                } else if !discovered_answers.is_empty() {
+                    discovered_answers
+                } else {
+                    config.external_answers
+                }
             }
-        } else if !discovered_answers.is_empty() {
-            discovered_answers
-        } else {
-            config.external_answers
         };
 
         if !answers_to_associate.is_empty() {

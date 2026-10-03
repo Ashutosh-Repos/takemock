@@ -209,19 +209,25 @@ fn test_c_abi_mode_1_decoupled_submit_job() {
             1,
             sol_array.as_ptr(),
             1,
-            None,
+            Some(test_callback),
             std::ptr::null_mut(),
         );
 
         assert!(job_id > 0);
 
-        // Allow worker thread to run
-        std::thread::sleep(std::time::Duration::from_millis(300));
+        // Wait for pipeline execution to complete
+        for _ in 0..50 {
+            if TEST_COMPLETED.load(Ordering::SeqCst) {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
 
         let res_json = takemock_engine_get_result_json(ctx, job_id);
-        if !res_json.is_null() {
-            takemock_engine_free_string(res_json);
-        }
+        assert!(!res_json.is_null());
+        let json_str = CStr::from_ptr(res_json).to_str().unwrap();
+        assert!(json_str.starts_with('[') && json_str.ends_with(']'));
+        takemock_engine_free_string(res_json);
 
         takemock_engine_destroy(ctx);
     }
