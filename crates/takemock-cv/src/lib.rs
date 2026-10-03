@@ -74,7 +74,6 @@ impl ImageProcessor {
 
         // 2. Adaptive pixel normalization: suppress bleed-through
         let mut output = image::GrayImage::new(w, h);
-        let bleed_threshold = 28u8; // Ghost ink is within 28 levels of local background
 
         for y in 0..h {
             let gy = (y / block_size).min(grid_h - 1);
@@ -83,6 +82,7 @@ impl ImageProcessor {
                 let bg = bg_grid[(gy * grid_w + gx) as usize];
                 let p = gray.get_pixel(x, y)[0];
 
+                let bleed_threshold = 28u8;
                 if p >= bg.saturating_sub(bleed_threshold) {
                     // Faint reverse bleed or background -> Pure white
                     output.put_pixel(x, y, image::Luma([255]));
@@ -116,10 +116,10 @@ impl ImageProcessor {
             return None;
         }
 
-        let start_x = (w as f32 * 0.38) as u32;
-        let end_x = (w as f32 * 0.62) as u32;
-        let y_start = (h as f32 * 0.15) as u32;
-        let y_end = (h as f32 * 0.85) as u32;
+        let start_x = (w as f32 * 0.44) as u32;
+        let end_x = (w as f32 * 0.55) as u32;
+        let y_start = (h as f32 * 0.20) as u32;
+        let y_end = (h as f32 * 0.80) as u32;
         let sample_step_y = 6u32;
 
         // Sample background illumination
@@ -156,8 +156,8 @@ impl ImageProcessor {
 
     pub fn find_page_margins(gray: &image::GrayImage, gutter_x: u32) -> (u32, u32) {
         let (w, h) = gray.dimensions();
-        let y_start = (h as f32 * 0.15) as u32;
-        let y_end = (h as f32 * 0.85) as u32;
+        let y_start = (h as f32 * 0.20) as u32;
+        let y_end = (h as f32 * 0.80) as u32;
         let sample_step_y = 6usize;
 
         let mut sum_brightness = 0u64;

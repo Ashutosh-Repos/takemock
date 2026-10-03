@@ -122,8 +122,8 @@ impl TsvParser {
             });
         }
 
-        // Sort lines top-to-bottom, left-to-right on approximately same row
-        lines.sort_by_key(|l| (l.rect.y / 20, l.rect.x, l.rect.y));
+        // Sort lines top-to-bottom, left-to-right strictly
+        lines.sort_by_key(|l| (l.rect.y, l.rect.x));
 
         Ok(lines)
     }

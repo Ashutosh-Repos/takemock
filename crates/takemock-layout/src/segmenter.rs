@@ -59,7 +59,7 @@ impl QuestionSegmenter {
         pending_question: Option<RawQuestionSegment>,
         base_index: u32,
     ) -> (Vec<RawQuestionSegment>, Option<RawQuestionSegment>) {
-        let anchor_prefix_re = Regex::new(r"(?i)(?:^|[^\w\d])(?:Q(?:uestion)?\.?\s*)?(\d{1,3})\s*(?:\.|\s+[\[\{\(I|lj1]?(?:MCQ|MSQ|NAT|GATE))").unwrap();
+        let anchor_prefix_re = Regex::new(r"(?i)(?:^|[^\w\d]|\b[a-zA-Z]\s*)(?:[\(\[]\s*)?(?:Q(?:uestion)?\.?\s*)?(\d{1,3}|[Zz])\s*(?:[\.,:\)]|\s+[\[\{\(I|lj1]?(?:MCQ|MSQ|NAT|GATE)|\s+[a-zA-Z])").unwrap();
         let q_prefix_re = Regex::new(r"(?i)^\s*(?:Q(?:uestion)?|Que\.?)\s*(\d{1,3})\b").unwrap();
         let standalone_qtype_re = Regex::new(r"(?i)[\[\{\(I|lj1]?\s*(MCQ|MSQ|NAT)\s*[\]\}\)1y\.,\s]").unwrap();
         let exam_info_re = Regex::new(r"(?i)[\[\{\(I|lj1]?\s*(?:a|A)?(GATE|JEE|CAT|NEET)[-\s]*(\d{4})?\s*[:;\-\*]\s*([0-9\.]+)M?").unwrap();
@@ -114,6 +114,7 @@ impl QuestionSegmenter {
             if line_text.is_empty() {
                 continue;
             }
+            println!("   [SEG_LINE] y={} txt={:?}", line.rect.y, line_text);
 
             // Check for Common Data / Statement for Linked Questions banner
             if let Some(caps) = stimulus_header_re.captures(line_text) {
@@ -202,16 +203,30 @@ impl QuestionSegmenter {
             // 3. Detect Question Number Anchor: "1." or "Q2" or "4 INAT"
             if let Some(caps) = anchor_prefix_re.captures(line_text) {
                 if let Some(num_match) = caps.get(1) {
-                    let n: u32 = num_match.as_str().parse().unwrap_or(0);
-                    let is_start = num_match.start() <= 6;
+                    let raw_str = num_match.as_str();
+                    let n: u32 = if raw_str.eq_ignore_ascii_case("z") {
+                        7
+                    } else {
+                        raw_str.parse().unwrap_or(0)
+                    };
+                    let is_start = num_match.start() <= 8;
                     if n > 0 && n <= 1000 && (is_start || detected_type != QuestionType::Unknown || detected_metadata.is_some()) {
-                        // Check for clipped tens digit (e.g., "7." when expecting 17)
-                        let corrected_n = if n <= current_index && current_index >= 10 && current_index < 100 {
+                        // Check for clipped tens digit (e.g., "7." when expecting 17, or "1." when expecting 41)
+                        // or extra leading digit noise (e.g. "438." when expecting 38)
+                        // or misrecognized tens digit (e.g., "45." when expecting 15, or "97." when expecting 27, or "79." when expecting 29)
+                        let corrected_n = if current_index >= 10 && current_index < 100 {
+                            let expected = current_index + 1;
                             let tens = (current_index / 10) * 10;
-                            if tens + n == current_index + 1 {
+                            if n == expected {
+                                expected
+                            } else if n % 100 == expected {
+                                expected
+                            } else if n <= current_index && tens + n == expected {
                                 tens + n
-                            } else if tens + 10 + n == current_index + 1 {
+                            } else if n <= current_index && tens + 10 + n == expected {
                                 tens + 10 + n
+                            } else if n > current_index && tens + (n % 10) == expected {
+                                expected
                             } else {
                                 n
                             }
@@ -227,7 +242,7 @@ impl QuestionSegmenter {
                             if corrected_n <= 25 || is_explicit {
                                 detected_num = Some(corrected_n.to_string());
                             }
-                        } else if (corrected_n >= current_index && corrected_n <= current_index + 6) || is_explicit {
+                        } else if (corrected_n >= current_index && corrected_n <= current_index + 10) || is_explicit {
                             detected_num = Some(corrected_n.to_string());
                         }
                     }
@@ -238,16 +253,35 @@ impl QuestionSegmenter {
                 if let Some(caps) = q_prefix_re.captures(line_text) {
                     if let Some(num_match) = caps.get(1) {
                         let n: u32 = num_match.as_str().parse().unwrap_or(0);
+                        let corrected_n = if current_index >= 10 && current_index < 100 {
+                            let expected = current_index + 1;
+                            let tens = (current_index / 10) * 10;
+                            if n == expected {
+                                expected
+                            } else if n % 100 == expected {
+                                expected
+                            } else if n <= current_index && tens + n == expected {
+                                tens + n
+                            } else if n <= current_index && tens + 10 + n == expected {
+                                tens + 10 + n
+                            } else if n > current_index && tens + (n % 10) == expected {
+                                expected
+                            } else {
+                                n
+                            }
+                        } else {
+                            n
+                        };
                         let is_explicit = detected_type != QuestionType::Unknown
                             || detected_metadata.is_some()
-                            || active_stimulus.as_ref().map_or(false, |s| n >= s.start && n <= s.end);
+                            || active_stimulus.as_ref().map_or(false, |s| corrected_n >= s.start && corrected_n <= s.end);
 
                         if current_index == 0 {
-                            if n <= 25 || is_explicit {
-                                detected_num = Some(n.to_string());
+                            if corrected_n <= 25 || is_explicit {
+                                detected_num = Some(corrected_n.to_string());
                             }
-                        } else if (n >= current_index && n <= current_index + 6) || is_explicit {
-                            detected_num = Some(n.to_string());
+                        } else if (corrected_n >= current_index && corrected_n <= current_index + 10) || is_explicit {
+                            detected_num = Some(corrected_n.to_string());
                         }
                     }
                 }
@@ -278,7 +312,10 @@ impl QuestionSegmenter {
                 }
             }
 
-            let too_close = current_label.is_some() && current_line_count <= 2 && y_distance < 60;
+            let is_sequential = detected_num.as_ref()
+                .and_then(|s| s.parse::<u32>().ok())
+                .map_or(false, |n| n == current_index + 1);
+            let too_close = current_label.is_some() && !is_sequential && current_line_count <= 2 && y_distance < 60;
             let starts_new_question = !too_close && (detected_num.is_some() || (is_next_question_badge && detected_num.is_none()));
 
             if starts_new_question {

@@ -9,9 +9,9 @@ impl ColumnProcessor {
         blocks
     }
 
-    /// Orders lines strictly in natural reading order (top-to-bottom, left-to-right for same row).
+    /// Orders lines strictly in natural reading order (top-to-bottom, left-to-right).
     pub fn order_lines_in_reading_order(mut lines: Vec<TsvLine>) -> Vec<TsvLine> {
-        lines.sort_by_key(|l| (l.rect.y / 20, l.rect.x, l.rect.y));
+        lines.sort_by_key(|l| (l.rect.y, l.rect.x));
         lines
     }
 }

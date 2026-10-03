@@ -83,21 +83,33 @@ impl VlmRunner {
 
     /// Robust option parser handling vertical stacks, inline options: (a) 3 (b) 4 (c) 5 (d) 6, 2x2 grids, and numbered options (1)-(4).
     pub fn parse_text_options(raw_text: &str) -> (String, Vec<OptionItem>) {
-        // 1. Check for alphabetical options: (A), (B), (C), (D) or A., B., C., D.
-        let opt_pat = Regex::new(r"(?i)(?:^|\s+)[\(\[]?([A-D])[\)\]\.]\s+").unwrap();
+        // 1. Check for alphabetical options: (A), (B), (C), (D) or A., B., C., D. (with OCR @ recovery)
+        let opt_pat = Regex::new(r"(?i)(?:^|\s+)[\(\[]?([A-D@])[\)\]\.]\s*").unwrap();
         let matches: Vec<_> = opt_pat.find_iter(raw_text).collect();
 
         if matches.len() >= 2 {
-            let labels: Vec<String> = matches.iter()
+            let mut labels: Vec<String> = matches.iter()
                 .map(|m| {
-                    m.as_str()
-                        .chars()
-                        .find(|c| c.is_ascii_alphabetic())
-                        .unwrap_or('A')
-                        .to_ascii_uppercase()
-                        .to_string()
+                    let s = m.as_str();
+                    if s.contains('@') {
+                        "@".to_string()
+                    } else {
+                        s.chars()
+                            .find(|c| c.is_ascii_alphabetic())
+                            .unwrap_or('A')
+                            .to_ascii_uppercase()
+                            .to_string()
+                    }
                 })
                 .collect();
+
+            // Correct common OCR '@' confusion for (a) or (c)
+            if labels[0] == "@" && labels.get(1).map_or(false, |l| l == "B") {
+                labels[0] = "A".to_string();
+            }
+            if labels.len() >= 3 && labels[2] == "@" && labels[0] == "A" && labels[1] == "B" {
+                labels[2] = "C".to_string();
+            }
 
             // Must start with 'A' to be a valid option set
             if labels[0] == "A" {
